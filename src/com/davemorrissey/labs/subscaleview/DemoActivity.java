@@ -18,7 +18,7 @@ public class DemoActivity extends Activity {
         setContentView(R.layout.main);
 
         try {
-            ((SubsamplingScaleImageView)findViewById(id.imageView)).setImageAsset("IMG_3615.JPG");
+            ((SubsamplingScaleImageView)findViewById(id.imageView)).setImageAsset("DSC00266.JPG");
         } catch (IOException e) {
             Log.e(DemoActivity.class.getSimpleName(), "Could not load asset", e);
         }
