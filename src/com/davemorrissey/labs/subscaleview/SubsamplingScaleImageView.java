@@ -28,7 +28,9 @@ import android.view.View.OnTouchListener;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -85,7 +87,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     private int fullImageSampleSize;
 
     // Map of zoom level to tile grid
-    private Map<Integer, Tile[][]> tileMap;
+    private Map<Integer, List<Tile>> tileMap;
 
     // Debug values
     private PointF vCenterStart;
@@ -308,15 +310,11 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         // First check for missing tiles - if there are any we need the base layer underneath to avoid gaps
         boolean hasMissingTiles = false;
-        for (Map.Entry<Integer, Tile[][]> tileMapEntry : tileMap.entrySet()) {
+        for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
             if (tileMapEntry.getKey() == sampleSize) {
-                Tile[][] tileGrid = tileMapEntry.getValue();
-                for (int x = 0; x < tileGrid.length; x++) {
-                    for (int y = 0; y < tileGrid[x].length; y++) {
-                        Tile tile = tileGrid[x][y];
-                        if (tile.visible && (tile.loading || tile.bitmap == null)) {
-                            hasMissingTiles = true;
-                        }
+                for (Tile tile : tileMapEntry.getValue()) {
+                    if (tile.visible && (tile.loading || tile.bitmap == null)) {
+                        hasMissingTiles = true;
                     }
                 }
             }
@@ -326,15 +324,11 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         paint.setAntiAlias(true);
         paint.setFilterBitmap(true);
         paint.setDither(true);
-        for (Map.Entry<Integer, Tile[][]> tileMapEntry : tileMap.entrySet()) {
+        for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
             if (tileMapEntry.getKey() == sampleSize || hasMissingTiles) {
-                Tile[][] tileGrid = tileMapEntry.getValue();
-                for (int x = 0; x < tileGrid.length; x++) {
-                    for (int y = 0; y < tileGrid[x].length; y++) {
-                        Tile tile = tileGrid[x][y];
-                        if (!tile.loading && tile.bitmap != null) {
-                            canvas.drawBitmap(tile.bitmap, null, convertRect(sourceToViewRect(tile.sRect)), paint);
-                        }
+                for (Tile tile : tileMapEntry.getValue()) {
+                    if (!tile.loading && tile.bitmap != null) {
+                        canvas.drawBitmap(tile.bitmap, null, convertRect(sourceToViewRect(tile.sRect)), paint);
                     }
                 }
             }
@@ -359,12 +353,10 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         initialiseTileMap();
 
-        Tile[][] baseGrid = tileMap.get(fullImageSampleSize);
-        for (int x = 0; x < baseGrid.length; x++) {
-            for (int y = 0; y < baseGrid[x].length; y++) {
-                BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, baseGrid[x][y]);
-                task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
-            }
+        List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
+        for (Tile baseTile : baseGrid) {
+            BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, baseTile);
+            task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
         }
 
     }
@@ -381,36 +373,31 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         // Load tiles of the correct sample size that are on screen. Discard tiles off screen, and those that are higher
         // resolution than required, or lower res than required but not the base layer, so the base layer is always present.
-        for (Map.Entry<Integer, Tile[][]> tileMapEntry : tileMap.entrySet()) {
-            Tile[][] tileGrid = tileMapEntry.getValue();
-            for (int x = 0; x < tileGrid.length; x++) {
-                for (int y = 0; y < tileGrid[x].length; y++) {
-
-                    Tile tile = tileGrid[x][y];
-                    if (tile.sampleSize < sampleSize || (tile.sampleSize > sampleSize && tile.sampleSize != fullImageSampleSize)) {
+        for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
+            for (Tile tile : tileMapEntry.getValue()) {
+                if (tile.sampleSize < sampleSize || (tile.sampleSize > sampleSize && tile.sampleSize != fullImageSampleSize)) {
+                    tile.visible = false;
+                    if (tile.bitmap != null) {
+                        tile.bitmap.recycle();
+                        tile.bitmap = null;
+                    }
+                }
+                if (tile.sampleSize == sampleSize) {
+                    if (RectF.intersects(sVisRect, convertRect(tile.sRect))) {
+                        tile.visible = true;
+                        if (!tile.loading && tile.bitmap == null && load) {
+                            BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, tile);
+                            task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
+                        }
+                    } else if (tile.sampleSize != fullImageSampleSize) {
                         tile.visible = false;
                         if (tile.bitmap != null) {
                             tile.bitmap.recycle();
                             tile.bitmap = null;
                         }
                     }
-                    if (tile.sampleSize == sampleSize) {
-                        if (RectF.intersects(sVisRect, convertRect(tile.sRect))) {
-                            tile.visible = true;
-                            if (!tile.loading && tile.bitmap == null && load) {
-                                BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, tile);
-                                task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
-                            }
-                        } else if (tile.sampleSize != fullImageSampleSize) {
-                            tile.visible = false;
-                            if (tile.bitmap != null) {
-                                tile.bitmap.recycle();
-                                tile.bitmap = null;
-                            }
-                        }
-                    } else if (tile.sampleSize == fullImageSampleSize) {
-                        tile.visible = true;
-                    }
+                } else if (tile.sampleSize == fullImageSampleSize) {
+                    tile.visible = true;
                 }
             }
         }
@@ -478,7 +465,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * Once source image and view dimensions are known, creates a map of sample size to tile grid.
      */
     private void initialiseTileMap() {
-        this.tileMap = new LinkedHashMap<Integer, Tile[][]>();
+        this.tileMap = new LinkedHashMap<Integer, List<Tile>>();
         int sampleSize = fullImageSampleSize;
         int tilesPerSide = 1;
         while (true) {
@@ -493,12 +480,10 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                 subTileWidth = sTileWidth/sampleSize;
                 subTileHeight = sTileHeight/sampleSize;
             }
-            Tile[][] tileGrid = new Tile[tilesPerSide][tilesPerSide];
+            List<Tile> tileGrid = new ArrayList<Tile>(tilesPerSide * tilesPerSide);
             for (int x = 0; x < tilesPerSide; x++) {
                 for (int y = 0; y < tilesPerSide; y++) {
                     Tile tile = new Tile();
-                    tile.x = x;
-                    tile.y = y;
                     tile.sampleSize = sampleSize;
                     tile.sRect = new Rect(
                             x * sTileWidth,
@@ -506,7 +491,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                             (x + 1) * sTileWidth,
                             (y + 1) * sTileHeight
                     );
-                    tileGrid[x][y] = tile;
+                    tileGrid.add(tile);
                 }
             }
             tileMap.put(sampleSize, tileGrid);
@@ -579,8 +564,6 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         private Rect sRect;
         private int sampleSize;
-        private int x;
-        private int y;
         private Bitmap bitmap;
         private boolean loading;
         private boolean visible;
