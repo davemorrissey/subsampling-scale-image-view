@@ -116,7 +116,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * @param extFile URI of the file to display
      */
     public void setImageFile(String extFile) throws IOException {
-        this.decoder = BitmapRegionDecoder.newInstance(extFile, true);
+        BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
+        task.executeOnExecutor(BitmapInitTask.SERIAL_EXECUTOR);
         try {
             initialize();
             invalidate();
@@ -130,7 +131,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * @param assetName asset name.
      */
     public void setImageAsset(String assetName) throws IOException {
-        this.decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(assetName, AssetManager.ACCESS_RANDOM), true);
+        BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
+        task.executeOnExecutor(BitmapInitTask.SERIAL_EXECUTOR);
         try {
             initialize();
             invalidate();
@@ -151,8 +153,6 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * because the view dimensions will normally be unknown when this method is called.
      */
     private void initialize() throws IOException {
-        sWidth = decoder.getWidth();
-        sHeight = decoder.getHeight();
         setOnTouchListener(this);
         detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
@@ -167,7 +167,6 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
-
     }
 
     /**
@@ -355,8 +354,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
         for (Tile baseTile : baseGrid) {
-            BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, baseTile);
-            task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
+            BitmapTileTask task = new BitmapTileTask(this, decoder, baseTile);
+            task.executeOnExecutor(BitmapTileTask.SERIAL_EXECUTOR);
         }
 
     }
@@ -386,8 +385,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                     if (RectF.intersects(sVisRect, convertRect(tile.sRect))) {
                         tile.visible = true;
                         if (!tile.loading && tile.bitmap == null && load) {
-                            BitmapWorkerTask task = new BitmapWorkerTask(this, decoder, tile);
-                            task.executeOnExecutor(BitmapWorkerTask.SERIAL_EXECUTOR);
+                            BitmapTileTask task = new BitmapTileTask(this, decoder, tile);
+                            task.executeOnExecutor(BitmapTileTask.SERIAL_EXECUTOR);
                         }
                     } else if (tile.sampleSize != fullImageSampleSize) {
                         tile.visible = false;
@@ -505,21 +504,82 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     }
 
     /**
+     * Called by worker task when decoder is ready and image size is known.
+     */
+    private void onImageInited(BitmapRegionDecoder decoder, int sWidth, int sHeight) {
+        this.decoder = decoder;
+        this.sWidth = sWidth;
+        this.sHeight = sHeight;
+        invalidate();
+    }
+
+    /**
      * Called by worker task when a tile has loaded. Redraws the view.
      */
-    private void onTileLoaded(Tile tile) {
+    private void onTileLoaded() {
         invalidate();
+    }
+
+    /**
+     * Async task used to get image details without blocking the UI thread.
+     */
+    private static class BitmapInitTask extends AsyncTask<Void, Void, Point> {
+        private final WeakReference<SubsamplingScaleImageView> viewRef;
+        private final WeakReference<Context> contextRef;
+        private final String source;
+        private final boolean sourceIsAsset;
+        private WeakReference<BitmapRegionDecoder> decoderRef;
+
+        public BitmapInitTask(SubsamplingScaleImageView view, Context context, String source, boolean sourceIsAsset) {
+            this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
+            this.contextRef = new WeakReference<Context>(context);
+            this.source = source;
+            this.sourceIsAsset = sourceIsAsset;
+        }
+
+        @Override
+        protected Point doInBackground(Void... params) {
+            try {
+                if (viewRef != null && contextRef != null) {
+                    Context context = contextRef.get();
+                    if (context != null) {
+                        BitmapRegionDecoder decoder;
+                        if (sourceIsAsset) {
+                            decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(source, AssetManager.ACCESS_RANDOM), true);
+                        } else {
+                            decoder = BitmapRegionDecoder.newInstance(source, true);
+                        }
+                        decoderRef = new WeakReference<BitmapRegionDecoder>(decoder);
+                        return new Point(decoder.getWidth(), decoder.getHeight());
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to initialise bitmap decoder", e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Point point) {
+            if (viewRef != null && decoderRef != null) {
+                final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
+                final BitmapRegionDecoder decoder = decoderRef.get();
+                if (subsamplingScaleImageView != null && decoder != null && point != null) {
+                    subsamplingScaleImageView.onImageInited(decoder, point.x, point.y);
+                }
+            }
+        }
     }
 
     /**
      * Async task used to load images without blocking the UI thread.
      */
-    private static class BitmapWorkerTask extends AsyncTask<Void, Void, Bitmap> {
+    private static class BitmapTileTask extends AsyncTask<Void, Void, Bitmap> {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
         private final WeakReference<BitmapRegionDecoder> decoderRef;
         private final WeakReference<Tile> tileRef;
 
-        public BitmapWorkerTask(SubsamplingScaleImageView view, BitmapRegionDecoder decoder, Tile tile) {
+        public BitmapTileTask(SubsamplingScaleImageView view, BitmapRegionDecoder decoder, Tile tile) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
             this.decoderRef = new WeakReference<BitmapRegionDecoder>(decoder);
             this.tileRef = new WeakReference<Tile>(tile);
@@ -554,7 +614,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                 if (subsamplingScaleImageView != null && tile != null) {
                     tile.bitmap = bitmap;
                     tile.loading = false;
-                    subsamplingScaleImageView.onTileLoaded(tile);
+                    subsamplingScaleImageView.onTileLoaded();
                 }
             }
         }
