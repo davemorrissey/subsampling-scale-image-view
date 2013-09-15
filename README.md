@@ -15,6 +15,7 @@ Supports:
 * Pinch to zoom
 * Panning while zooming
 * One finger pan with momentum
+* Dynamically swapping image
 * Can be easily extended to add overlays
 * Tiles over 2048px are avoided to support hardware acceleration
 
@@ -22,5 +23,4 @@ Limitations:
 * Requires SDK 10 (Gingerbread).
 * BitmapRegionDecoder does not support decoding an image from resources - the image file needs to be in assets or external storage.
 * Very wide or tall images may still cause out of memory errors because each tile has same w:h ratio as the source image. Fixing this should be fairly easy if required.
-* Does not support changing the image after one is loaded. This is another fairly simple change.
 * This view does not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
