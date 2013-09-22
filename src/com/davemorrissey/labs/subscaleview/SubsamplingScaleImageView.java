@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Displays an image subsampled as necessary to avoid loading too much image data into memory. After a pinch to zoom in,
@@ -116,7 +117,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     public void setImageFile(String extFile) throws IOException {
         reset();
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
-        task.executeOnExecutor(BitmapInitTask.SERIAL_EXECUTOR);
+        task.execute();
         try {
             initialize();
             invalidate();
@@ -132,7 +133,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     public void setImageAsset(String assetName) throws IOException {
         reset();
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
-        task.executeOnExecutor(BitmapInitTask.SERIAL_EXECUTOR);
+        task.execute();
         try {
             initialize();
             invalidate();
@@ -395,7 +396,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
         for (Tile baseTile : baseGrid) {
             BitmapTileTask task = new BitmapTileTask(this, decoder, baseTile);
-            task.executeOnExecutor(BitmapTileTask.SERIAL_EXECUTOR);
+            task.execute();
         }
 
     }
@@ -426,7 +427,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                         tile.visible = true;
                         if (!tile.loading && tile.bitmap == null && load) {
                             BitmapTileTask task = new BitmapTileTask(this, decoder, tile);
-                            task.executeOnExecutor(BitmapTileTask.SERIAL_EXECUTOR);
+                            task.execute();
                         }
                     } else if (tile.sampleSize != fullImageSampleSize) {
                         tile.visible = false;
