@@ -690,6 +690,9 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * Convert screen coordinate to source coordinate.
      */
     public PointF viewToSourceCoord(float vx, float vy) {
+        if (vTranslate == null) {
+            return null;
+        }
         float sx = (vx - vTranslate.x)/scale;
         float sy = (vy - vTranslate.y)/scale;
         return new PointF(sx, sy);
