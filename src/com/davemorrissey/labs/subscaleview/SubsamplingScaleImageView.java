@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
+import android.media.ExifInterface;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.FloatMath;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 /**
  * Displays an image subsampled as necessary to avoid loading too much image data into memory. After a pinch to zoom in,
@@ -52,6 +52,15 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
 
+    public static final int ORIENTATION_USE_EXIF = -1;
+    public static final int ORIENTATION_0 = 0;
+    public static final int ORIENTATION_90 = 90;
+    public static final int ORIENTATION_180 = 180;
+    public static final int ORIENTATION_270 = 270;
+
+    // Image orientation setting
+    private int orientation = ORIENTATION_0;
+
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
 
@@ -69,9 +78,10 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     private Float pendingScale;
     private PointF sPendingCenter;
 
-    // Source image dimensions
+    // Source image dimensions and orientation - dimensions relate to the unrotated image
     private int sWidth;
     private int sHeight;
+    private int sOrientation;
 
     // Is two-finger zooming in progress
     private boolean isZooming;
@@ -111,11 +121,33 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     }
 
     /**
+     * Sets the image orientation. It's best to call this before setting the image file or asset, because it may waste
+     * loading of tiles. However, this can be freely called at any time.
+     */
+    public void setOrientation(int orientation) {
+        if (orientation != ORIENTATION_0 &&
+                orientation != ORIENTATION_90 &&
+                orientation != ORIENTATION_180 &&
+                orientation != ORIENTATION_270 &&
+                orientation != ORIENTATION_USE_EXIF) {
+            throw new IllegalArgumentException("Invalid orientation: " + orientation);
+        }
+        this.orientation = orientation;
+        reset(false);
+        try {
+            initialize();
+            invalidate();
+        } catch (IOException e) {
+            Log.e(TAG, "Image view orientation change failed", e);
+        }
+    }
+
+    /**
      * Display an image from a file in internal or external storage
      * @param extFile URI of the file to display
      */
     public void setImageFile(String extFile) throws IOException {
-        reset();
+        reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
         try {
@@ -131,7 +163,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * @param assetName asset name.
      */
     public void setImageAsset(String assetName) throws IOException {
-        reset();
+        reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
         task.execute();
         try {
@@ -143,15 +175,36 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     }
 
     /**
-     * Reset all state before setting/changing image.
+     * Reset all state before setting/changing image or setting new rotation.
      */
-    private void reset() {
+    private void reset(boolean newImage) {
         setOnTouchListener(null);
-        if (decoder != null) {
-            synchronized (decoder) {
-                decoder.recycle();
+        scale = 0f;
+        scaleStart = 0f;
+        vTranslate = null;
+        vTranslateStart = null;
+        pendingScale = 0f;
+        sPendingCenter = null;
+        isZooming = false;
+        detector = null;
+        fullImageSampleSize = 0;
+        tileMap = null;
+        vCenterStart = null;
+        vDistStart = 0;
+        flingStart = 0;
+        flingFrom = null;
+        flingMomentum = null;
+        if (newImage) {
+            if (decoder != null) {
+                synchronized (decoder) {
+                    decoder.recycle();
+                }
+                decoder = null;
             }
-            decoder = null;
+            sWidth = 0;
+            sHeight = 0;
+            sOrientation = 0;
+            readySent = false;
         }
         if (tileMap != null) {
             for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
@@ -162,24 +215,6 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                 }
             }
         }
-        scale = 0f;
-        scaleStart = 0f;
-        vTranslate = null;
-        vTranslateStart = null;
-        pendingScale = 0f;
-        sPendingCenter = null;
-        sWidth = 0;
-        sHeight = 0;
-        isZooming = false;
-        detector = null;
-        fullImageSampleSize = 0;
-        tileMap = null;
-        vCenterStart = null;
-        vDistStart = 0;
-        flingStart = 0;
-        flingFrom = null;
-        flingMomentum = null;
-        readySent = false;
     }
 
     /**
@@ -190,8 +225,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     }
 
     /**
-     * Sets up gesture detection and finds the original image dimensions. Nothing else is done until onDraw() is called
-     * because the view dimensions will normally be unknown when this method is called.
+     * Sets up gesture detection. Nothing else is done until onDraw() is called because the view dimensions will normally
+     * be unknown when this method is called.
      */
     private void initialize() throws IOException {
         setOnTouchListener(this);
@@ -346,7 +381,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         }
 
         // Optimum sample size for current scale
-        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (sWidth * scale), (int) (sHeight * scale)));
+        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (sWidth() * scale), (int) (sHeight() * scale)));
 
         // First check for missing tiles - if there are any we need the base layer underneath to avoid gaps
         boolean hasMissingTiles = false;
@@ -386,7 +421,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
         // Load double resolution - next level will be split into four tiles and at the center all four are required,
         // so don't bother with tiling until the next level 16 tiles are needed.
-        fullImageSampleSize = calculateInSampleSize((int)(sWidth * scale), (int)(sHeight * scale));
+        fullImageSampleSize = calculateInSampleSize((int)(sWidth() * scale), (int)(sHeight() * scale));
         if (fullImageSampleSize > 1) {
             fullImageSampleSize /= 2;
         }
@@ -407,7 +442,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * @param load Whether to load the new tiles needed. Use false while scrolling/panning for performance.
      */
     private void refreshRequiredTiles(boolean load) {
-        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (scale * sWidth), (int) (scale * sHeight)));
+        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (scale * sWidth()), (int) (scale * sHeight())));
         RectF vVisRect = new RectF(0, 0, getWidth(), getHeight());
         RectF sVisRect = viewToSourceRect(vVisRect);
 
@@ -454,11 +489,11 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
             return 32;
         }
 
-        if (sHeight > reqHeight || sWidth > reqWidth) {
+        if (sHeight() > reqHeight || sWidth() > reqWidth) {
 
             // Calculate ratios of height and width to requested height and width
-            final int heightRatio = Math.round((float) sHeight / (float) reqHeight);
-            final int widthRatio = Math.round((float) sWidth / (float) reqWidth);
+            final int heightRatio = Math.round((float) sHeight() / (float) reqHeight);
+            final int widthRatio = Math.round((float) sWidth() / (float) reqWidth);
 
             // Choose the smallest ratio as inSampleSize value, this will guarantee
             // a final image with both dimensions larger than or equal to the
@@ -484,12 +519,12 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
             vTranslate = new PointF(0, 0);
         }
 
-        float minScale = Math.min(getWidth() / (float) sWidth, getHeight() / (float) sHeight);
+        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight);
         scale = Math.max(minScale, scale);
         scale = Math.min(maxScale, scale);
 
-        float scaleWidth = scale * sWidth;
-        float scaleHeight = scale * sHeight;
+        float scaleWidth = scale * sWidth();
+        float scaleHeight = scale * sHeight();
 
         vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth);
         vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight);
@@ -509,14 +544,14 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         int sampleSize = fullImageSampleSize;
         int tilesPerSide = 1;
         while (true) {
-            int sTileWidth = sWidth/tilesPerSide;
-            int sTileHeight = sHeight/tilesPerSide;
+            int sTileWidth = sWidth()/tilesPerSide;
+            int sTileHeight = sHeight()/tilesPerSide;
             int subTileWidth = sTileWidth/sampleSize;
             int subTileHeight = sTileHeight/sampleSize;
             while (subTileWidth > 2048 || subTileHeight > 2048) {
                 tilesPerSide *= 2;
-                sTileWidth = sWidth/tilesPerSide;
-                sTileHeight = sHeight/tilesPerSide;
+                sTileWidth = sWidth()/tilesPerSide;
+                sTileHeight = sHeight()/tilesPerSide;
                 subTileWidth = sTileWidth/sampleSize;
                 subTileHeight = sTileHeight/sampleSize;
             }
@@ -545,12 +580,13 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     }
 
     /**
-     * Called by worker task when decoder is ready and image size is known.
+     * Called by worker task when decoder is ready and image size and EXIF orientation is known.
      */
-    private void onImageInited(BitmapRegionDecoder decoder, int sWidth, int sHeight) {
+    private void onImageInited(BitmapRegionDecoder decoder, int sWidth, int sHeight, int sOrientation) {
         this.decoder = decoder;
         this.sWidth = sWidth;
         this.sHeight = sHeight;
+        this.sOrientation = sOrientation;
         invalidate();
     }
 
@@ -564,7 +600,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     /**
      * Async task used to get image details without blocking the UI thread.
      */
-    private static class BitmapInitTask extends AsyncTask<Void, Void, Point> {
+    private static class BitmapInitTask extends AsyncTask<Void, Void, int[]> {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
         private final WeakReference<Context> contextRef;
         private final String source;
@@ -579,19 +615,38 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         }
 
         @Override
-        protected Point doInBackground(Void... params) {
+        protected int[] doInBackground(Void... params) {
             try {
                 if (viewRef != null && contextRef != null) {
                     Context context = contextRef.get();
                     if (context != null) {
                         BitmapRegionDecoder decoder;
+                        int exifOrientation = ORIENTATION_0;
                         if (sourceIsAsset) {
                             decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(source, AssetManager.ACCESS_RANDOM), true);
                         } else {
                             decoder = BitmapRegionDecoder.newInstance(source, true);
+                            try {
+                                ExifInterface exifInterface = new ExifInterface(source);
+                                int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                                if (orientationAttr == ExifInterface.ORIENTATION_NORMAL) {
+                                    exifOrientation = ORIENTATION_0;
+                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_90) {
+                                    exifOrientation = ORIENTATION_90;
+                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_180) {
+                                    exifOrientation = ORIENTATION_180;
+                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_270) {
+                                    exifOrientation = ORIENTATION_270;
+                                } else {
+                                    Log.w(TAG, "Unsupported EXIF orientation: " + orientationAttr);
+                                }
+                            } catch (Exception e) {
+                                Log.w(TAG, "Could not get EXIF orientation of image");
+                            }
+
                         }
                         decoderRef = new WeakReference<BitmapRegionDecoder>(decoder);
-                        return new Point(decoder.getWidth(), decoder.getHeight());
+                        return new int[] { decoder.getWidth(), decoder.getHeight(), exifOrientation };
                     }
                 }
             } catch (Exception e) {
@@ -601,12 +656,12 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         }
 
         @Override
-        protected void onPostExecute(Point point) {
+        protected void onPostExecute(int[] xyo) {
             if (viewRef != null && decoderRef != null) {
                 final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
                 final BitmapRegionDecoder decoder = decoderRef.get();
-                if (subsamplingScaleImageView != null && decoder != null && point != null) {
-                    subsamplingScaleImageView.onImageInited(decoder, point.x, point.y);
+                if (subsamplingScaleImageView != null && decoder != null && xyo != null && xyo.length == 3) {
+                    subsamplingScaleImageView.onImageInited(decoder, xyo[0], xyo[1], xyo[2]);
                 }
             }
         }
@@ -633,12 +688,20 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                 if (decoderRef != null && tileRef != null && viewRef != null) {
                     final BitmapRegionDecoder decoder = decoderRef.get();
                     final Tile tile = tileRef.get();
-                    if (decoder != null && tile != null && !decoder.isRecycled()) {
+                    final SubsamplingScaleImageView view = viewRef.get();
+                    if (decoder != null && tile != null && view != null && !decoder.isRecycled()) {
                         synchronized (decoder) {
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inSampleSize = tile.sampleSize;
                             options.inPreferredConfig = Config.RGB_565;
-                            return decoder.decodeRegion(tile.sRect, options);
+                            Bitmap bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
+                            int rotation = view.getRequiredRotation();
+                            if (rotation != 0) {
+                                Matrix matrix = new Matrix();
+                                matrix.postRotate(rotation);
+                                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                            }
+                            return bitmap;
                         }
                     }
                 }
@@ -672,7 +735,60 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
     }
 
+    /**
+     * Get source width taking rotation into account.
+     */
+    private int sWidth() {
+        int rotation = getRequiredRotation();
+        if (rotation == 90 || rotation == 270) {
+            return sHeight;
+        } else {
+            return sWidth;
+        }
+    }
 
+    /**
+     * Get source height taking rotation into account.
+     */
+    private int sHeight() {
+        int rotation = getRequiredRotation();
+        if (rotation == 90 || rotation == 270) {
+            return sWidth;
+        } else {
+            return sHeight;
+        }
+    }
+
+    /**
+     * Converts source rectangle from tile, which treats the image file as if it were in the correct orientation already,
+     * to the rectangle of the image that needs to be loaded.
+     */
+    private Rect fileSRect(Rect sRect) {
+        if (getRequiredRotation() == 0) {
+            return sRect;
+        } else if (getRequiredRotation() == 90) {
+            return new Rect(sRect.top, sHeight - sRect.right, sRect.bottom, sHeight - sRect.left);
+        } else if (getRequiredRotation() == 180) {
+            return new Rect(sWidth - sRect.right, sHeight - sRect.bottom, sWidth - sRect.left, sHeight - sRect.top);
+        } else {
+            return new Rect(sWidth - sRect.bottom, sRect.left, sWidth - sRect.top, sRect.right);
+        }
+    }
+
+    /**
+     * Determines the rotation to be applied to tiles, based on EXIF orientation or chosen setting.
+     */
+    private int getRequiredRotation() {
+        if (orientation == ORIENTATION_USE_EXIF) {
+            return sOrientation;
+        } else {
+            return orientation;
+        }
+    }
+
+    /**
+     * Pythagoras distance between two points.
+     */
     private float distance(float x0, float x1, float y0, float y1) {
         float x = x0 - x1;
         float y = y0 - y1;

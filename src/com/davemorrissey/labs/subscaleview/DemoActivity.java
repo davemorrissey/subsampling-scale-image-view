@@ -4,23 +4,29 @@ import android.app.Activity;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 import com.davemorrissey.labs.subscaleview.R.id;
 
 import java.io.IOException;
 
-public class DemoActivity extends Activity {
+public class DemoActivity extends Activity implements OnClickListener {
 
     private static final String STATE_SCALE = "state-scale";
     private static final String STATE_CENTER_X = "state-center-x";
     private static final String STATE_CENTER_Y = "state-center-y";
 
+    private int orientation = 0;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        findViewById(id.rotate).setOnClickListener(this);
         try {
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-            imageView.setImageAsset("DSC00266.JPG");
+            imageView.setOrientation(orientation);
+            imageView.setImageAsset("DSC04285.JPG");
 
             if (savedInstanceState != null &&
                     savedInstanceState.containsKey(STATE_SCALE) &&
@@ -30,6 +36,15 @@ public class DemoActivity extends Activity {
             }
         } catch (IOException e) {
             Log.e(DemoActivity.class.getSimpleName(), "Could not load asset", e);
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == id.rotate) {
+            orientation = (orientation + 90) % 360;
+            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
+            imageView.setOrientation(orientation);
         }
     }
 

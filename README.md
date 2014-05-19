@@ -16,6 +16,8 @@ Supports:
 * Panning while zooming
 * One finger pan with momentum
 * Dynamically swapping image
+* Dynamically rotating image (0, 90, 180, 270)
+* Optional automatic rotation of image based on EXIF
 * Can be easily extended to add overlays
 * Tiles over 2048px are avoided to support hardware acceleration
 
@@ -24,3 +26,4 @@ Limitations:
 * BitmapRegionDecoder does not support decoding an image from resources - the image file needs to be in assets or external storage.
 * Very wide or tall images may still cause out of memory errors because each tile has same w:h ratio as the source image. Fixing this should be fairly easy if required.
 * This view does not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
+* Images stored in assets cannot be rotated based on EXIF. This shouldn't be a problem as you'll know the orientation of your files.
