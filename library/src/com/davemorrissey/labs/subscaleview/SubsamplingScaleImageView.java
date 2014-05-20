@@ -885,7 +885,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     /**
      * Returns the source point at the center of the view.
      */
-    protected PointF getCenter() {
+    public PointF getCenter() {
         int mX = getWidth()/2;
         int mY = getHeight()/2;
         return viewToSourceCoord(mX, mY);
@@ -894,7 +894,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     /**
      * Returns the current scale value.
      */
-    protected float getScale() {
+    public float getScale() {
         return scale;
     }
 

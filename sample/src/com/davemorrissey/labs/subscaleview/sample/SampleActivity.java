@@ -1,4 +1,4 @@
-package com.davemorrissey.labs.subscaleview;
+package com.davemorrissey.labs.subscaleview.sample;
 
 import android.app.Activity;
 import android.graphics.PointF;
@@ -6,11 +6,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import com.davemorrissey.labs.subscaleview.R.id;
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.davemorrissey.labs.subscaleview.sample.R.id;
 
 import java.io.IOException;
 
-public class DemoActivity extends Activity implements OnClickListener {
+public class SampleActivity extends Activity implements OnClickListener {
 
     private static final String STATE_SCALE = "state-scale";
     private static final String STATE_CENTER_X = "state-center-x";
@@ -35,7 +36,7 @@ public class DemoActivity extends Activity implements OnClickListener {
                 imageView.setScaleAndCenter(savedInstanceState.getFloat(STATE_SCALE), new PointF(savedInstanceState.getFloat(STATE_CENTER_X), savedInstanceState.getFloat(STATE_CENTER_Y)));
             }
         } catch (IOException e) {
-            Log.e(DemoActivity.class.getSimpleName(), "Could not load asset", e);
+            Log.e(SampleActivity.class.getSimpleName(), "Could not load asset", e);
         }
     }
 
