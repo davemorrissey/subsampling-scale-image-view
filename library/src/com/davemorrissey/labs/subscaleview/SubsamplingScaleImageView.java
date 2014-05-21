@@ -19,13 +19,14 @@ import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -48,7 +49,7 @@ import java.util.Map;
  * v prefixes - coordinates, translations and distances measured in screen (view) pixels
  * s prefixes - coordinates, translations and distances measured in source image pixels (scaled)
  */
-public class SubsamplingScaleImageView extends View implements OnTouchListener {
+public class SubsamplingScaleImageView extends View {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
 
@@ -85,6 +86,10 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
 
     // Is two-finger zooming in progress
     private boolean isZooming;
+    // Is one-finger panning in progress
+    private boolean isPanning;
+    // Is an press in progress
+    private boolean isPressed;
 
     // Fling detector
     private GestureDetector detector;
@@ -110,14 +115,31 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
     // Whether a ready notification has been sent to subclasses
     private boolean readySent = false;
 
+    // Long click listener
+    private OnLongClickListener onLongClickListener;
+
+    // Long click handler
+    private Handler handler;
+    private static final int MESSAGE_LONG_CLICK = 1;
+
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
         this.context = context;
+        this.handler = new Handler(new Handler.Callback() {
+            public boolean handleMessage(Message message) {
+                if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
+                    isPressed = false;
+                    SubsamplingScaleImageView.super.setOnLongClickListener(onLongClickListener);
+                    performLongClick();
+                    SubsamplingScaleImageView.super.setOnLongClickListener(null);
+                }
+                return true;
+            }
+        });
     }
 
     public SubsamplingScaleImageView(Context context) {
-        super(context);
-        this.context = context;
+        this(context, null);
     }
 
     /**
@@ -186,6 +208,8 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         pendingScale = 0f;
         sPendingCenter = null;
         isZooming = false;
+        isPanning = false;
+        isPressed = false;
         detector = null;
         fullImageSampleSize = 0;
         tileMap = null;
@@ -229,7 +253,6 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
      * be unknown when this method is called.
      */
     private void initialize() throws IOException {
-        setOnTouchListener(this);
         detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -254,19 +277,22 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
         float vDistEnd;
         flingMomentum = null;
         flingFrom = null;
-        // Detect flings
-        if (detector == null || detector.onTouchEvent(event)) {
-            return true;
-        }
         // Abort if not ready
         if (vTranslate == null) {
             return true;
         }
+        // Detect flings
+        if (detector == null || detector.onTouchEvent(event)) {
+            return true;
+        }
+
         int touchCount = event.getPointerCount();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_1_DOWN:
             case MotionEvent.ACTION_POINTER_2_DOWN:
+                getParent().requestDisallowInterceptTouchEvent(true);
+                isPressed = true;
                 if (touchCount >= 2) {
                     // Start pinch to zoom. Calculate distance between touch points and center point of the pinch.
                     float distance = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1));
@@ -274,55 +300,117 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
                     vDistStart = distance;
                     vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
                     vCenterStart = new PointF((event.getX(0) + event.getX(1))/2, (event.getY(0) + event.getY(1))/2);
-                    isZooming = true;
+
+                    // Cancel long click timer
+                    handler.removeMessages(MESSAGE_LONG_CLICK);
                 } else {
                     // Start one-finger pan
                     vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
                     vCenterStart = new PointF(event.getX(), event.getY());
+
+                    // Start long click timer
+                    handler.sendEmptyMessageDelayed(MESSAGE_LONG_CLICK, 600);
                 }
+                return true;
             case MotionEvent.ACTION_MOVE:
-                if (touchCount >= 2 && isZooming) {
-                    // Calculate new distance between touch points, to scale and pan relative to start values.
-                    vDistEnd = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1));
-                    vCenterEnd = new PointF((event.getX(0) + event.getX(1))/2, (event.getY(0) + event.getY(1))/2);
-                    scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
+                boolean consumed = false;
+                if (isPressed) {
+                    if (touchCount >= 2) {
+                        // Calculate new distance between touch points, to scale and pan relative to start values.
+                        vDistEnd = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1));
+                        vCenterEnd = new PointF((event.getX(0) + event.getX(1))/2, (event.getY(0) + event.getY(1))/2);
 
-                    // Translate to place the source image coordinate that was at the center of the pinch at the start
-                    // at the center of the pinch now, to give simultaneous pan + zoom.
-                    float vLeftStart = vCenterStart.x - vTranslateStart.x;
-                    float vTopStart = vCenterStart.y - vTranslateStart.y;
-                    float vLeftNow = vLeftStart * (scale/scaleStart);
-                    float vTopNow = vTopStart * (scale/scaleStart);
-                    vTranslate.x = vCenterEnd.x - vLeftNow;
-                    vTranslate.y = vCenterEnd.y - vTopNow;
+                        if (distance(vCenterStart.x, vCenterEnd.x, vCenterStart.y, vCenterEnd.y) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
+                            isZooming = true;
+                            isPanning = true;
+                            consumed = true;
 
-                    fitToBounds();
-                    refreshRequiredTiles(false);
-                } else if (!isZooming) {
-                    // One finger pan - translate the image
-                    vTranslate.x = vTranslateStart.x + (event.getX() - vCenterStart.x);
-                    vTranslate.y = vTranslateStart.y + (event.getY() - vCenterStart.y);
-                    fitToBounds();
-                    refreshRequiredTiles(false);
+                            scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
+
+                            // Translate to place the source image coordinate that was at the center of the pinch at the start
+                            // at the center of the pinch now, to give simultaneous pan + zoom.
+                            float vLeftStart = vCenterStart.x - vTranslateStart.x;
+                            float vTopStart = vCenterStart.y - vTranslateStart.y;
+                            float vLeftNow = vLeftStart * (scale/scaleStart);
+                            float vTopNow = vTopStart * (scale/scaleStart);
+                            vTranslate.x = vCenterEnd.x - vLeftNow;
+                            vTranslate.y = vCenterEnd.y - vTopNow;
+
+                            fitToBounds();
+                            refreshRequiredTiles(false);
+                        }
+                    } else if (!isZooming) {
+                        // One finger pan - translate the image
+                        float dx = Math.abs(event.getX() - vCenterStart.x);
+                        float dy = Math.abs(event.getY() - vCenterStart.y);
+                        if (dx > 5 || dy > 5 || isPanning) {
+                            consumed = true;
+                            vTranslate.x = vTranslateStart.x + (event.getX() - vCenterStart.x);
+                            vTranslate.y = vTranslateStart.y + (event.getY() - vCenterStart.y);
+
+                            float lastX = vTranslate.x;
+                            float lastY = vTranslate.y;
+                            fitToBounds();
+                            if (lastX == vTranslate.x || (lastY == vTranslate.y && dy > 10) || isPanning) {
+                                isPanning = true;
+                            } else if (dx > 5) {
+                                // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
+                                isPressed = false;
+                                handler.removeMessages(MESSAGE_LONG_CLICK);
+                                getParent().requestDisallowInterceptTouchEvent(false);
+                            }
+
+                            refreshRequiredTiles(false);
+                        }
+                    }
                 }
-                invalidate();
+                if (consumed) {
+                    handler.removeMessages(MESSAGE_LONG_CLICK);
+                    invalidate();
+                    return true;
+                }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_POINTER_2_UP:
-                if (event.getPointerCount() < 2) {
-                    isZooming = false;
+                handler.removeMessages(MESSAGE_LONG_CLICK);
+                if (isPressed && (isZooming || isPanning)) {
+                    if (isZooming && touchCount == 2) {
+                        // Convert from zoom to pan with remaining touch
+                        isPanning = true;
+                        vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
+                        if (event.getActionIndex() == 1) {
+                            vCenterStart = new PointF(event.getX(0), event.getY(0));
+                        } else {
+                            vCenterStart = new PointF(event.getX(1), event.getY(1));
+                        }
+                    }
+                    if (touchCount < 3) {
+                        // End zooming when only one touch point
+                        isZooming = false;
+                    }
+                    if (touchCount < 2) {
+                        // End panning when no touch points
+                        isPanning = false;
+                    }
+                    // Trigger load of tiles now required
+                    refreshRequiredTiles(true);
+                    return true;
+                } else if (isPressed) {
+                    performClick();
                 }
-                // Trigger load of tiles now required
-                refreshRequiredTiles(true);
-                break;
+                if (touchCount == 1) {
+                    isZooming = false;
+                    isPanning = false;
+                }
+                return true;
         }
-        return true;
+        return super.onTouchEvent(event);
     }
 
     @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        return super.onTouchEvent(event);
+    public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
+        this.onLongClickListener = onLongClickListener;
     }
 
     /**
@@ -377,6 +465,7 @@ public class SubsamplingScaleImageView extends View implements OnTouchListener {
             refreshRequiredTiles(true);
             flingMomentum = null;
             flingFrom = null;
+            isPanning = false;
             invalidate();
         }
 

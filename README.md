@@ -20,6 +20,8 @@ Supports:
 * Optional automatic rotation of image based on EXIF
 * Can be easily extended to add overlays
 * Tiles over 2048px are avoided to support hardware acceleration
+* Compatible with OnClickListener and OnLongClickListener
+* Works within a ViewPager
 
 Limitations:
 * Requires SDK 10 (Gingerbread).
