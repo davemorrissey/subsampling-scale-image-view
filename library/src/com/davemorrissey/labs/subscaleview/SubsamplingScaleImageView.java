@@ -451,8 +451,12 @@ public class SubsamplingScaleImageView extends View {
 
         // Everything is set up and coordinates are valid. Inform subclasses.
         if (!readySent) {
-            onImageReady();
             readySent = true;
+            new Thread(new Runnable() {
+                public void run() {
+                    onImageReady();
+                }
+            }).start();
         }
 
         // If animating a fling, calculate the position with easing equations.
