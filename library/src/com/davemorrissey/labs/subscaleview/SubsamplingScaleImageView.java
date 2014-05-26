@@ -610,7 +610,7 @@ public class SubsamplingScaleImageView extends View {
             vTranslate = new PointF(0, 0);
         }
 
-        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight);
+        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
         scale = Math.max(minScale, scale);
         scale = Math.min(maxScale, scale);
 
