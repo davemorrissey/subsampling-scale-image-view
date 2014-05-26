@@ -159,12 +159,8 @@ public class SubsamplingScaleImageView extends View {
         }
         this.orientation = orientation;
         reset(false);
-        try {
-            initialize();
-            invalidate();
-        } catch (IOException e) {
-            Log.e(TAG, "Image view orientation change failed", e);
-        }
+        initialize();
+        invalidate();
     }
 
     /**
@@ -175,12 +171,8 @@ public class SubsamplingScaleImageView extends View {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
-        try {
-            initialize();
-            invalidate();
-        } catch (IOException e) {
-            Log.e(TAG, "Image view init failed", e);
-        }
+        initialize();
+        invalidate();
     }
 
     /**
@@ -191,12 +183,8 @@ public class SubsamplingScaleImageView extends View {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
         task.execute();
-        try {
-            initialize();
-            invalidate();
-        } catch (IOException e) {
-            Log.e(TAG, "Image view init failed", e);
-        }
+        initialize();
+        invalidate();
     }
 
     /**
@@ -255,7 +243,7 @@ public class SubsamplingScaleImageView extends View {
      * Sets up gesture detection. Nothing else is done until onDraw() is called because the view dimensions will normally
      * be unknown when this method is called.
      */
-    private void initialize() throws IOException {
+    private void initialize() {
         detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -269,6 +257,17 @@ public class SubsamplingScaleImageView extends View {
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
+    }
+
+    /**
+     * On resize, zoom out to full size again. Various behaviours are possible, override this method to use another.
+     */
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        if (readySent) {
+            reset(false);
+            initialize();
+        }
     }
 
     /**
