@@ -192,7 +192,6 @@ public class SubsamplingScaleImageView extends View {
      * Reset all state before setting/changing image or setting new rotation.
      */
     private void reset(boolean newImage) {
-        setOnTouchListener(null);
         scale = 0f;
         scaleStart = 0f;
         vTranslate = null;
