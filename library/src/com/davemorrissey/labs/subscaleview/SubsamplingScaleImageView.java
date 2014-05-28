@@ -161,6 +161,7 @@ public class SubsamplingScaleImageView extends View {
         reset(false);
         initialize();
         invalidate();
+        requestLayout();
     }
 
     /**
@@ -268,6 +269,35 @@ public class SubsamplingScaleImageView extends View {
             reset(false);
             initialize();
         }
+    }
+
+    /**
+     * Measures the width and height of the view, preserving the aspect ratio of the image displayed if wrap_content is
+     * used. The image will scale within this box, not resizing the view as it is zoomed.
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
+        int heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
+        int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int parentHeight = MeasureSpec.getSize(heightMeasureSpec);
+        boolean resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
+        boolean resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+        int width = parentWidth;
+        int height = parentHeight;
+        if (sWidth > 0 && sHeight > 0) {
+            if (resizeWidth && resizeHeight) {
+                width = sWidth();
+                height = sHeight();
+            } else if (resizeHeight) {
+                height = (int)((((double)sHeight()/(double)sWidth()) * width));
+            } else if (resizeWidth) {
+                width = (int)((((double)sWidth()/(double)sHeight()) * height));
+            }
+        }
+        width = Math.max(width, getSuggestedMinimumWidth());
+        height = Math.max(height, getSuggestedMinimumHeight());
+        setMeasuredDimension(width, height);
     }
 
     /**
@@ -682,6 +712,7 @@ public class SubsamplingScaleImageView extends View {
         this.sWidth = sWidth;
         this.sHeight = sHeight;
         this.sOrientation = sOrientation;
+        requestLayout();
         invalidate();
     }
 
