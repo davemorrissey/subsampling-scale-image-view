@@ -61,8 +61,8 @@ Add the view to your layout XML as shown below. Normally you should set width an
 
         <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
             android:id="@+id/imageView"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
     </RelativeLayout>
 
@@ -86,8 +86,8 @@ For a zero code approach to showing an image from your assets, you need to defin
 
         <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
             ssiv:assetName="map.png"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"/>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
             
     </RelativeLayout>
 
