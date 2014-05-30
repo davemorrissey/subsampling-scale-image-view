@@ -18,6 +18,7 @@ package com.davemorrissey.labs.subscaleview;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.content.res.TypedArray;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.media.ExifInterface;
@@ -31,6 +32,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import com.davemorrissey.labs.subscaleview.R.styleable;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -149,6 +151,16 @@ public class SubsamplingScaleImageView extends View {
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
+        // Handle XML attribute asset name.
+        if (attr != null) {
+            TypedArray typedAttr = getContext().obtainStyledAttributes(attr, styleable.SubsamplingScaleImageView);
+            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_assetName)) {
+                String assetName = typedAttr.getString(styleable.SubsamplingScaleImageView_assetName);
+                if (assetName != null && assetName.length() > 0) {
+                    setImageAsset(assetName);
+                }
+            }
+        }
     }
 
     public SubsamplingScaleImageView(Context context) {
