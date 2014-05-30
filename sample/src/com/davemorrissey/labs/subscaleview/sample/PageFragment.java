@@ -19,7 +19,6 @@ package com.davemorrissey.labs.subscaleview.sample;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,8 +27,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
-
-import java.io.IOException;
 
 public class PageFragment extends Fragment implements OnClickListener, OnLongClickListener {
 
@@ -64,23 +61,19 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
         }
 
         rootView.findViewById(id.rotate).setOnClickListener(this);
-        try {
-            if (asset != null) {
-                SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-                imageView.setOrientation(orientation);
-                imageView.setImageAsset(asset);
-                imageView.setOnClickListener(this);
-                imageView.setOnLongClickListener(this);
+        if (asset != null) {
+            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+            imageView.setOrientation(orientation);
+            imageView.setImageAsset(asset);
+            imageView.setOnClickListener(this);
+            imageView.setOnLongClickListener(this);
 
-                if (savedInstanceState != null &&
-                        savedInstanceState.containsKey(STATE_SCALE) &&
-                        savedInstanceState.containsKey(STATE_CENTER_X) &&
-                        savedInstanceState.containsKey(STATE_CENTER_Y)) {
-                    imageView.setScaleAndCenter(savedInstanceState.getFloat(STATE_SCALE), new PointF(savedInstanceState.getFloat(STATE_CENTER_X), savedInstanceState.getFloat(STATE_CENTER_Y)));
-                }
+            if (savedInstanceState != null &&
+                    savedInstanceState.containsKey(STATE_SCALE) &&
+                    savedInstanceState.containsKey(STATE_CENTER_X) &&
+                    savedInstanceState.containsKey(STATE_CENTER_Y)) {
+                imageView.setScaleAndCenter(savedInstanceState.getFloat(STATE_SCALE), new PointF(savedInstanceState.getFloat(STATE_CENTER_X), savedInstanceState.getFloat(STATE_CENTER_Y)));
             }
-        } catch (IOException e) {
-            Log.e(SampleActivity.class.getSimpleName(), "Could not load asset", e);
         }
 
         return rootView;
