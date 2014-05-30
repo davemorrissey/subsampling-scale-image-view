@@ -33,10 +33,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Displays an image subsampled as necessary to avoid loading too much image data into memory. After a pinch to zoom in,
@@ -61,6 +58,8 @@ public class SubsamplingScaleImageView extends View {
     public static final int ORIENTATION_90 = 90;
     public static final int ORIENTATION_180 = 180;
     public static final int ORIENTATION_270 = 270;
+
+    private static final List<Integer> VALID_ORIENTATIONS = Arrays.asList(ORIENTATION_0, ORIENTATION_90, ORIENTATION_180, ORIENTATION_270, ORIENTATION_USE_EXIF);
 
     // Image orientation setting
     private int orientation = ORIENTATION_0;
@@ -161,11 +160,7 @@ public class SubsamplingScaleImageView extends View {
      * loading of tiles. However, this can be freely called at any time.
      */
     public void setOrientation(int orientation) {
-        if (orientation != ORIENTATION_0 &&
-                orientation != ORIENTATION_90 &&
-                orientation != ORIENTATION_180 &&
-                orientation != ORIENTATION_270 &&
-                orientation != ORIENTATION_USE_EXIF) {
+        if (!VALID_ORIENTATIONS.contains(orientation)) {
             throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
         this.orientation = orientation;
@@ -175,11 +170,26 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Display an image from a file in internal or external storage
-     * @param extFile URI of the file to display
+     * Display an image from a file in internal or external storage.
+     * @param extFile URI of the file to display.
      */
     public void setImageFile(String extFile) {
         reset(true);
+        BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
+        task.execute();
+        invalidate();
+    }
+
+    /**
+     * Display an image from a file in internal or external storage, starting with a given orientation setting, scale
+     * and center. This is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation.
+     * @param extFile URI of the file to display.
+     * @param state State to be restored. Nullable.
+     */
+    public void setImageFile(String extFile, ImageViewState state) {
+        reset(true);
+        restoreState(state);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
         invalidate();
@@ -190,7 +200,19 @@ public class SubsamplingScaleImageView extends View {
      * @param assetName asset name.
      */
     public void setImageAsset(String assetName) {
+        setImageAsset(assetName, null);
+    }
+
+    /**
+     * Display an image from a file in assets, starting with a given orientation setting, scale and center. This is the
+     * best method to use when you want scale and center to be restored after screen orientation change; it avoids any
+     * redundant loading of tiles in the wrong orientation.
+     * @param assetName asset name.
+     * @param state State to be restored. Nullable.
+     */
+    public void setImageAsset(String assetName, ImageViewState state) {
         reset(true);
+        restoreState(state);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
         task.execute();
         invalidate();
@@ -850,6 +872,18 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Set scale, center and orientation from saved state.
+     */
+    private void restoreState(ImageViewState state) {
+        if (state != null && state.getCenter() != null && VALID_ORIENTATIONS.contains(state.getOrientation())) {
+            this.orientation = state.getOrientation();
+            this.pendingScale = state.getScale();
+            this.sPendingCenter = state.getCenter();
+            invalidate();
+        }
+    }
+
+    /**
      * In SDK 14 and above, use canvas max bitmap width and height instead of the default 2048, to avoid redundant tiling.
      */
     private Point getMaxBitmapDimensions(Canvas canvas) {
@@ -1072,11 +1106,30 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Returns the orientation setting. This can return {@link #ORIENTATION_USE_EXIF}, in which case it doesn't tell you
+     * the applied orientation of the image. For that, use {@link #getAppliedOrientation()}.
+     */
+    public int getOrientation() {
+        return orientation;
+    }
+
+    /**
      * Returns the actual orientation of the image relative to the source file. This will be based on the source file's
      * EXIF orientation if you're using ORIENTATION_USE_EXIF. Values are 0, 90, 180, 270.
      */
-    public int getOrientation() {
+    public int getAppliedOrientation() {
         return getRequiredRotation();
+    }
+
+    /**
+     * Get the current state of the view (scale, center, orientation) for restoration after rotate. Will return null if
+     * the view is not ready.
+     */
+    public ImageViewState getState() {
+        if (vTranslate != null && sWidth > 0 && sHeight > 0) {
+            return new ImageViewState(getScale(), getCenter(), getOrientation());
+        }
+        return null;
     }
 
 }

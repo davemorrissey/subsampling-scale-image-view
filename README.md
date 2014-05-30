@@ -22,6 +22,7 @@ Supports:
 * Can be easily extended to add overlays
 * Compatible with OnClickListener and OnLongClickListener
 * Works within a ViewPager to create a photo gallery
+* Supports restoring scale, center and orientation after rotate
 * Designed for extension
 * Respects maximum bitmap size (in SDK14+ this is Canvas.getMaximumBitmapWidth/Height, for older versions 2048px)
 
