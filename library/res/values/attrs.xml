@@ -18,6 +18,8 @@ limitations under the License.
 
     <declare-styleable name="SubsamplingScaleImageView">
         <attr name="assetName" format="string"/>
+        <attr name="panEnabled" format="boolean"/>
+        <attr name="zoomEnabled" format="boolean"/>
     </declare-styleable>
 
 </resources>

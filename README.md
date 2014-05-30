@@ -25,6 +25,7 @@ pinch to zoom is required to view the high resolution detail.
 * Pan while zooming
 * Seamless switch between pan and zoom
 * Fling momentum after panning
+* Options to disable pan and/or zoom gestures
 
 #### Overridable event detection
 * Supports `OnClickListener` and `OnLongClickListener`
