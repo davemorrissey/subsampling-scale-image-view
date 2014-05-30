@@ -22,6 +22,8 @@ import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -445,7 +447,7 @@ public class SubsamplingScaleImageView extends View {
 
         // On first render with no tile map ready, initialise it and kick off async base image loading.
         if (tileMap == null) {
-            initialiseBaseLayer();
+            initialiseBaseLayer(getMaxBitmapDimensions(canvas));
             return;
         }
 
@@ -523,7 +525,7 @@ public class SubsamplingScaleImageView extends View {
      * Called on first draw when the view has dimensions. Calculates the initial sample size and starts async loading of
      * the base layer image - the whole source subsampled as necessary.
      */
-    private synchronized void initialiseBaseLayer() {
+    private synchronized void initialiseBaseLayer(Point maxTileDimensions) {
 
         fitToBounds();
 
@@ -534,7 +536,7 @@ public class SubsamplingScaleImageView extends View {
             fullImageSampleSize /= 2;
         }
 
-        initialiseTileMap();
+        initialiseTileMap(maxTileDimensions);
 
         List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
         for (Tile baseTile : baseGrid) {
@@ -647,7 +649,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Once source image and view dimensions are known, creates a map of sample size to tile grid.
      */
-    private void initialiseTileMap() {
+    private void initialiseTileMap(Point maxTileDimensions) {
         this.tileMap = new LinkedHashMap<Integer, List<Tile>>();
         int sampleSize = fullImageSampleSize;
         int tilesPerSide = 1;
@@ -656,7 +658,7 @@ public class SubsamplingScaleImageView extends View {
             int sTileHeight = sHeight()/tilesPerSide;
             int subTileWidth = sTileWidth/sampleSize;
             int subTileHeight = sTileHeight/sampleSize;
-            while (subTileWidth > 2048 || subTileHeight > 2048) {
+            while (subTileWidth > maxTileDimensions.x || subTileHeight > maxTileDimensions.y) {
                 tilesPerSide *= 2;
                 sTileWidth = sWidth()/tilesPerSide;
                 sTileHeight = sHeight()/tilesPerSide;
@@ -842,6 +844,22 @@ public class SubsamplingScaleImageView extends View {
         private boolean loading;
         private boolean visible;
 
+    }
+
+    /**
+     * In SDK 14 and above, use canvas max bitmap width and height instead of the default 2048, to avoid redundant tiling.
+     */
+    private Point getMaxBitmapDimensions(Canvas canvas) {
+        if (VERSION.SDK_INT >= 14) {
+            try {
+                int maxWidth = (Integer)Canvas.class.getMethod("getMaximumBitmapWidth").invoke(canvas);
+                int maxHeight = (Integer)Canvas.class.getMethod("getMaximumBitmapHeight").invoke(canvas);
+                return new Point(maxWidth, maxHeight);
+            } catch (Exception e) {
+                // Return default
+            }
+        }
+        return new Point(2048, 2048);
     }
 
     /**

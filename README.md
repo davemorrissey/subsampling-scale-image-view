@@ -12,6 +12,7 @@ Tested with images up to 20000x13000px, but such large images are unusably slow 
 
 Supports:
 * Display of images of any size
+* Loading from assets or external files
 * Pinch to zoom
 * Panning while zooming
 * One finger pan with momentum
@@ -19,9 +20,10 @@ Supports:
 * Dynamically rotating image (0, 90, 180, 270)
 * Optional automatic rotation of image based on EXIF
 * Can be easily extended to add overlays
-* Tiles over 2048px are avoided to support hardware acceleration
 * Compatible with OnClickListener and OnLongClickListener
-* Works within a ViewPager
+* Works within a ViewPager to create a photo gallery
+* Designed for extension
+* Respects maximum bitmap size (in SDK14+ this is Canvas.getMaximumBitmapWidth/Height, for older versions 2048px)
 
 Limitations:
 * Requires SDK 10 (Gingerbread).
