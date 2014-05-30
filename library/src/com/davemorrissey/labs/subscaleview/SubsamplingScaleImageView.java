@@ -68,8 +68,6 @@ public class SubsamplingScaleImageView extends View {
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
 
-    private Context context;
-
     // Current scale and scale at start of zoom
     private float scale;
     private float scaleStart;
@@ -127,7 +125,6 @@ public class SubsamplingScaleImageView extends View {
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
-        this.context = context;
         this.handler = new Handler(new Handler.Callback() {
             public boolean handleMessage(Message message) {
                 if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
@@ -137,6 +134,19 @@ public class SubsamplingScaleImageView extends View {
                     SubsamplingScaleImageView.super.setOnLongClickListener(null);
                 }
                 return true;
+            }
+        });
+        this.detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (readySent && vTranslate != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
+                    flingMomentum = new PointF(velocityX * 0.5f, velocityY * 0.5f);
+                    flingFrom = new PointF(vTranslate.x, vTranslate.y);
+                    flingStart = System.currentTimeMillis();
+                    invalidate();
+                    return true;
+                }
+                return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
     }
@@ -159,7 +169,6 @@ public class SubsamplingScaleImageView extends View {
         }
         this.orientation = orientation;
         reset(false);
-        initialize();
         invalidate();
         requestLayout();
     }
@@ -172,7 +181,6 @@ public class SubsamplingScaleImageView extends View {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
-        initialize();
         invalidate();
     }
 
@@ -184,7 +192,6 @@ public class SubsamplingScaleImageView extends View {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
         task.execute();
-        initialize();
         invalidate();
     }
 
@@ -201,7 +208,6 @@ public class SubsamplingScaleImageView extends View {
         isZooming = false;
         isPanning = false;
         isPressed = false;
-        detector = null;
         fullImageSampleSize = 0;
         tileMap = null;
         vCenterStart = null;
@@ -240,33 +246,12 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Sets up gesture detection. Nothing else is done until onDraw() is called because the view dimensions will normally
-     * be unknown when this method is called.
-     */
-    private void initialize() {
-        detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (vTranslate != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
-                    flingMomentum = new PointF(velocityX * 0.5f, velocityY * 0.5f);
-                    flingFrom = new PointF(vTranslate.x, vTranslate.y);
-                    flingStart = System.currentTimeMillis();
-                    invalidate();
-                    return true;
-                }
-                return super.onFling(e1, e2, velocityX, velocityY);
-            }
-        });
-    }
-
-    /**
      * On resize, zoom out to full size again. Various behaviours are possible, override this method to use another.
      */
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         if (readySent) {
             reset(false);
-            initialize();
         }
     }
 
