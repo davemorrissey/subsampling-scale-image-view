@@ -31,7 +31,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -177,7 +176,7 @@ public class SubsamplingScaleImageView extends View {
      * Display an image from a file in internal or external storage
      * @param extFile URI of the file to display
      */
-    public void setImageFile(String extFile) throws IOException {
+    public void setImageFile(String extFile) {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
@@ -188,7 +187,7 @@ public class SubsamplingScaleImageView extends View {
      * Display an image from a file in assets.
      * @param assetName asset name.
      */
-    public void setImageAsset(String assetName) throws IOException {
+    public void setImageAsset(String assetName) {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
         task.execute();
