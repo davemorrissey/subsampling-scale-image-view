@@ -1044,10 +1044,34 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Call from subclasses to find whether the view is initialised and ready for rendering tiles.
+     * Call to find whether the view is initialised and ready for rendering tiles.
      */
-    protected boolean isImageReady() {
+    public boolean isImageReady() {
         return readySent;
+    }
+
+    /**
+     * Get source width, ignoring orientation. If {@link #getOrientation()} returns 90 or 270, you can use {@link #getSHeight()}
+     * for the apparent width.
+     */
+    public int getSWidth() {
+        return sWidth;
+    }
+
+    /**
+     * Get source height, ignoring orientation. If {@link #getOrientation()} returns 90 or 270, you can use {@link #getSWidth()}
+     * for the apparent height.
+     */
+    public int getSHeight() {
+        return sHeight;
+    }
+
+    /**
+     * Returns the actual orientation of the image relative to the source file. This will be based on the source file's
+     * EXIF orientation if you're using ORIENTATION_USE_EXIF. Values are 0, 90, 180, 270.
+     */
+    public int getOrientation() {
+        return getRequiredRotation();
     }
 
 }
