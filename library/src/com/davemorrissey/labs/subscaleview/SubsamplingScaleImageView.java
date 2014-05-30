@@ -22,7 +22,6 @@ import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
@@ -98,6 +97,7 @@ public class SubsamplingScaleImageView extends View {
 
     // Tile decoder
     private BitmapRegionDecoder decoder;
+    private final Object decoderLock = new Object();
 
     // Sample size used to display the whole image when fully zoomed out
     private int fullImageSampleSize;
@@ -218,10 +218,10 @@ public class SubsamplingScaleImageView extends View {
         flingMomentum = null;
         if (newImage) {
             if (decoder != null) {
-                synchronized (decoder) {
+                synchronized (decoderLock) {
                     decoder.recycle();
+                    decoder = null;
                 }
-                decoder = null;
             }
             sWidth = 0;
             sHeight = 0;
@@ -540,7 +540,7 @@ public class SubsamplingScaleImageView extends View {
 
         List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
         for (Tile baseTile : baseGrid) {
-            BitmapTileTask task = new BitmapTileTask(this, decoder, baseTile);
+            BitmapTileTask task = new BitmapTileTask(this, decoder, decoderLock, baseTile);
             task.execute();
         }
 
@@ -571,7 +571,7 @@ public class SubsamplingScaleImageView extends View {
                     if (RectF.intersects(sVisRect, convertRect(tile.sRect))) {
                         tile.visible = true;
                         if (!tile.loading && tile.bitmap == null && load) {
-                            BitmapTileTask task = new BitmapTileTask(this, decoder, tile);
+                            BitmapTileTask task = new BitmapTileTask(this, decoder, decoderLock, tile);
                             task.execute();
                         }
                     } else if (tile.sampleSize != fullImageSampleSize) {
@@ -784,11 +784,13 @@ public class SubsamplingScaleImageView extends View {
     private static class BitmapTileTask extends AsyncTask<Void, Void, Bitmap> {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
         private final WeakReference<BitmapRegionDecoder> decoderRef;
+        private final WeakReference<Object> decoderLockRef;
         private final WeakReference<Tile> tileRef;
 
-        public BitmapTileTask(SubsamplingScaleImageView view, BitmapRegionDecoder decoder, Tile tile) {
+        public BitmapTileTask(SubsamplingScaleImageView view, BitmapRegionDecoder decoder, Object decoderLock, Tile tile) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
             this.decoderRef = new WeakReference<BitmapRegionDecoder>(decoder);
+            this.decoderLockRef = new WeakReference<Object>(decoderLock);
             this.tileRef = new WeakReference<Tile>(tile);
             tile.loading = true;
         }
@@ -798,10 +800,11 @@ public class SubsamplingScaleImageView extends View {
             try {
                 if (decoderRef != null && tileRef != null && viewRef != null) {
                     final BitmapRegionDecoder decoder = decoderRef.get();
+                    final Object decoderLock = decoderLockRef.get();
                     final Tile tile = tileRef.get();
                     final SubsamplingScaleImageView view = viewRef.get();
-                    if (decoder != null && tile != null && view != null && !decoder.isRecycled()) {
-                        synchronized (decoder) {
+                    if (decoder != null && decoderLock != null && tile != null && view != null && !decoder.isRecycled()) {
+                        synchronized (decoderLock) {
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inSampleSize = tile.sampleSize;
                             options.inPreferredConfig = Config.RGB_565;
