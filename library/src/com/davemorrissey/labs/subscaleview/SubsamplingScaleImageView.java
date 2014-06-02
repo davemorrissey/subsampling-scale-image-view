@@ -1036,6 +1036,9 @@ public class SubsamplingScaleImageView extends View {
      * Convert source coordinate to screen coordinate.
      */
     public PointF sourceToViewCoord(float sx, float sy) {
+        if (vTranslate == null) {
+            return null;
+        }
         float vx = (sx * scale) + vTranslate.x;
         float vy = (sy * scale) + vTranslate.y;
         return new PointF(vx, vy);
