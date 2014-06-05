@@ -618,42 +618,42 @@ public class SubsamplingScaleImageView extends View {
 
         // If animating a fling, calculate the position with easing equations.
         long flingElapsed = System.currentTimeMillis() - flingStart;
-        if (flingMomentum != null && flingFrom != null && flingElapsed < 500) {
+        if (flingMomentum != null && flingFrom != null) {
+            boolean finished = flingElapsed > 500;
+            flingElapsed = Math.min(flingElapsed, 500);
             vTranslate.x = easeOutQuad(flingElapsed, flingFrom.x, flingMomentum.x/2, 500);
             vTranslate.y = easeOutQuad(flingElapsed, flingFrom.y, flingMomentum.y/2, 500);
             fitToBounds(true);
-            refreshRequiredTiles(false);
-            invalidate();
-        } else if (flingMomentum != null && flingFrom != null && flingElapsed >= 500) {
-            refreshRequiredTiles(true);
-            flingMomentum = null;
-            flingFrom = null;
-            isPanning = false;
+            refreshRequiredTiles(finished);
+            if (finished) {
+                flingMomentum = null;
+                flingFrom = null;
+                isPanning = false;
+            }
             invalidate();
         }
 
         // If animating scale, calculate current scale with easing equations
         if (scaleAnim != null) {
             long scaleElapsed = System.currentTimeMillis() - scaleAnim.time;
-            if (scaleElapsed < 500) {
-                scale = easeInOutQuad(scaleElapsed, scaleAnim.scaleStart, scaleAnim.scaleEnd - scaleAnim.scaleStart, 500);
+            boolean finished = scaleElapsed > 500;
+            scaleElapsed = Math.min(scaleElapsed, 500);
+            scale = easeInOutQuad(scaleElapsed, scaleAnim.scaleStart, scaleAnim.scaleEnd - scaleAnim.scaleStart, 500);
 
-                // Apply required animation to the focal point
-                float vFocusNowX = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.x, scaleAnim.vFocusEnd.x - scaleAnim.vFocusStart.x, 500);
-                float vFocusNowY = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.y, scaleAnim.vFocusEnd.y - scaleAnim.vFocusStart.y, 500);
-                // Find out where the focal point is at this scale and adjust its position to follow the animation path
-                PointF vFocus = sourceToViewCoord(scaleAnim.sFocus);
-                vTranslate.x -= vFocus.x - vFocusNowX;
-                vTranslate.y -= vFocus.y - vFocusNowY;
+            // Apply required animation to the focal point
+            float vFocusNowX = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.x, scaleAnim.vFocusEnd.x - scaleAnim.vFocusStart.x, 500);
+            float vFocusNowY = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.y, scaleAnim.vFocusEnd.y - scaleAnim.vFocusStart.y, 500);
+            // Find out where the focal point is at this scale and adjust its position to follow the animation path
+            PointF vFocus = sourceToViewCoord(scaleAnim.sFocus);
+            vTranslate.x -= vFocus.x - vFocusNowX;
+            vTranslate.y -= vFocus.y - vFocusNowY;
 
-                fitToBounds(false);
-                refreshRequiredTiles(false);
-                invalidate();
-            } else {
+            fitToBounds(false);
+            refreshRequiredTiles(finished);
+            if (finished) {
                 scaleAnim = null;
-                refreshRequiredTiles(true);
-                invalidate();
             }
+            invalidate();
         }
 
         // Optimum sample size for current scale
