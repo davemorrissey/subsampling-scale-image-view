@@ -86,6 +86,15 @@ public class SubsamplingScaleImageView extends View {
 
     private static final List<Integer> VALID_EASING_STYLES = Arrays.asList(EASE_IN_OUT_QUAD, EASE_OUT_QUAD);
 
+    /** Don't allow the image to be panned off screen. As much of the image as possible is always displayed, centered in the view when it is smaller. This is the best option for galleries. */
+    public static final int PAN_LIMIT_INSIDE = 1;
+    /** Allows the image to be panned until it is just off screen, but no further. The edge of the image will stop when it is flush with the screen edge. */
+    public static final int PAN_LIMIT_OUTSIDE = 2;
+    /** Allows the image to be panned until a corner reaches the center of the screen but no further. Useful when you want to pan any spot on the image to the exact center of the screen. */
+    public static final int PAN_LIMIT_CENTER = 3;
+
+    private static final List<Integer> VALID_PAN_LIMITS = Arrays.asList(PAN_LIMIT_INSIDE, PAN_LIMIT_OUTSIDE, PAN_LIMIT_CENTER);
+
     // Overlay tile boundaries and other info
     private boolean debug = false;
 
@@ -94,6 +103,9 @@ public class SubsamplingScaleImageView extends View {
 
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
+
+    // Pan limiting style
+    private int panLimit = PAN_LIMIT_INSIDE;
 
     // Gesture detection settings
     private boolean panEnabled = true;
@@ -845,6 +857,10 @@ public class SubsamplingScaleImageView extends View {
      * @param scaleAndTranslate The scale we want and the translation we're aiming for. The values are adjusted to be valid.
      */
     private void fitToBounds(boolean center, ScaleAndTranslate scaleAndTranslate) {
+        if (panLimit == PAN_LIMIT_OUTSIDE && isImageReady()) {
+            center = false;
+        }
+
         float scale = scaleAndTranslate.scale;
         PointF vTranslate = scaleAndTranslate.translate;
 
@@ -855,11 +871,29 @@ public class SubsamplingScaleImageView extends View {
         float scaleWidth = scale * sWidth();
         float scaleHeight = scale * sHeight();
 
-        vTranslate.x = Math.max(vTranslate.x, center ? getWidth() - scaleWidth : -scaleWidth);
-        vTranslate.y = Math.max(vTranslate.y, center ? getHeight() - scaleHeight : -scaleHeight);
+        if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
+            vTranslate.x = Math.max(vTranslate.x, getWidth()/2 - scaleWidth);
+            vTranslate.y = Math.max(vTranslate.y, getHeight()/2 - scaleHeight);
+        } else if (center) {
+            vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth);
+            vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight);
+        } else {
+            vTranslate.x = Math.max(vTranslate.x, -scaleWidth);
+            vTranslate.y = Math.max(vTranslate.y, -scaleHeight);
+        }
 
-        float maxTx = Math.max(0, center ? (getWidth() - scaleWidth) / 2 : getWidth());
-        float maxTy = Math.max(0, center ? (getHeight() - scaleHeight) / 2 : getHeight());
+        float maxTx;
+        float maxTy;
+        if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
+            maxTx = Math.max(0, getWidth()/2);
+            maxTy = Math.max(0, getHeight()/2);
+        } else if (center) {
+            maxTx = Math.max(0, (getWidth() - scaleWidth) / 2);
+            maxTy = Math.max(0, (getHeight() - scaleHeight) / 2);
+        } else {
+            maxTx = Math.max(0, getWidth());
+            maxTy = Math.max(0, getHeight());
+        }
 
         vTranslate.x = Math.min(vTranslate.x, maxTx);
         vTranslate.y = Math.min(vTranslate.y, maxTy);
@@ -1342,6 +1376,20 @@ public class SubsamplingScaleImageView extends View {
         } else {
             timeF--;
             return (-change/2f) * (timeF * (timeF - 2) - 1) + from;
+        }
+    }
+
+    /**
+     * Set the pan limiting style. See static fields. Normally {@link #PAN_LIMIT_INSIDE} is best, for image galleries.
+     */
+    public final void setPanLimit(int panLimit) {
+        if (!VALID_PAN_LIMITS.contains(panLimit)) {
+            throw new IllegalArgumentException("Invalid pan limit: " + panLimit);
+        }
+        this.panLimit = panLimit;
+        if (isImageReady()) {
+            fitToBounds(true);
+            invalidate();
         }
     }
 
