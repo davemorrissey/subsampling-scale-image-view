@@ -28,6 +28,7 @@ import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -161,6 +162,8 @@ public class SubsamplingScaleImageView extends View {
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
+        setMinimumDpi(160);
+        setDoubleTapZoomDpi(160);
         this.handler = new Handler(new Handler.Callback() {
             public boolean handleMessage(Message message) {
                 if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
@@ -194,6 +197,7 @@ public class SubsamplingScaleImageView extends View {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 if (zoomEnabled && readySent && vTranslate != null) {
+                    float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
                     boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                     float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
                     if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
@@ -258,7 +262,7 @@ public class SubsamplingScaleImageView extends View {
      * Sets the image orientation. It's best to call this before setting the image file or asset, because it may waste
      * loading of tiles. However, this can be freely called at any time.
      */
-    public void setOrientation(int orientation) {
+    public final void setOrientation(int orientation) {
         if (!VALID_ORIENTATIONS.contains(orientation)) {
             throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
@@ -272,7 +276,7 @@ public class SubsamplingScaleImageView extends View {
      * Display an image from a file in internal or external storage.
      * @param extFile URI of the file to display.
      */
-    public void setImageFile(String extFile) {
+    public final void setImageFile(String extFile) {
         reset(true);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
         task.execute();
@@ -286,7 +290,7 @@ public class SubsamplingScaleImageView extends View {
      * @param extFile URI of the file to display.
      * @param state State to be restored. Nullable.
      */
-    public void setImageFile(String extFile, ImageViewState state) {
+    public final void setImageFile(String extFile, ImageViewState state) {
         reset(true);
         restoreState(state);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
@@ -298,7 +302,7 @@ public class SubsamplingScaleImageView extends View {
      * Display an image from a file in assets.
      * @param assetName asset name.
      */
-    public void setImageAsset(String assetName) {
+    public final void setImageAsset(String assetName) {
         setImageAsset(assetName, null);
     }
 
@@ -309,7 +313,7 @@ public class SubsamplingScaleImageView extends View {
      * @param assetName asset name.
      * @param state State to be restored. Nullable.
      */
-    public void setImageAsset(String assetName, ImageViewState state) {
+    public final void setImageAsset(String assetName, ImageViewState state) {
         reset(true);
         restoreState(state);
         BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
@@ -1176,14 +1180,14 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Convert screen coordinate to source coordinate.
      */
-    public PointF viewToSourceCoord(PointF vxy) {
+    public final PointF viewToSourceCoord(PointF vxy) {
         return viewToSourceCoord(vxy.x, vxy.y);
     }
 
     /**
      * Convert screen coordinate to source coordinate.
      */
-    public PointF viewToSourceCoord(float vx, float vy) {
+    public final PointF viewToSourceCoord(float vx, float vy) {
         if (vTranslate == null) {
             return null;
         }
@@ -1195,14 +1199,14 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Convert source coordinate to screen coordinate.
      */
-    public PointF sourceToViewCoord(PointF sxy) {
+    public final PointF sourceToViewCoord(PointF sxy) {
         return sourceToViewCoord(sxy.x, sxy.y);
     }
 
     /**
      * Convert source coordinate to screen coordinate.
      */
-    public PointF sourceToViewCoord(float sx, float sy) {
+    public final PointF sourceToViewCoord(float sx, float sy) {
         if (vTranslate == null) {
             return null;
         }
@@ -1283,16 +1287,29 @@ public class SubsamplingScaleImageView extends View {
 
     /**
      * Set the maximum scale allowed. A value of 1 means 1:1 pixels at maximum scale. You may wish to set this according
-     * to screen density - on a retina screen, 1:1 may still be too small.
+     * to screen density - on a retina screen, 1:1 may still be too small. Consider using {@link #setMinimumDpi(int)},
+     * which is density aware.
      */
-    public void setMaxScale(float maxScale) {
+    public final void setMaxScale(float maxScale) {
         this.maxScale = maxScale;
+    }
+
+    /**
+     * This is a screen density aware alternative to {@link #setMaxScale(float)}; it allows you to express the maximum
+     * allowed scale in terms of the minimum pixel density. This avoids the problem of 1:1 scale still being
+     * too small on a high density screen. A sensible starting point is 160 - the default used by this view.
+     * @param dpi Source image pixel density at maximum zoom.
+     */
+    public final void setMinimumDpi(int dpi) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
+        setMaxScale(averageDpi/dpi);
     }
 
     /**
      * Returns the source point at the center of the view.
      */
-    public PointF getCenter() {
+    public final PointF getCenter() {
         int mX = getWidth()/2;
         int mY = getHeight()/2;
         return viewToSourceCoord(mX, mY);
@@ -1301,7 +1318,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Returns the current scale value.
      */
-    public float getScale() {
+    public final float getScale() {
         return scale;
     }
 
@@ -1311,7 +1328,7 @@ public class SubsamplingScaleImageView extends View {
      * @param scale New scale to set.
      * @param sCenter New source image coordinate to center on the screen, subject to boundaries.
      */
-    public void setScaleAndCenter(float scale, PointF sCenter) {
+    public final void setScaleAndCenter(float scale, PointF sCenter) {
         this.pendingScale = scale;
         this.sPendingCenter = sCenter;
         this.sRequestedCenter = sCenter;
@@ -1329,7 +1346,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Call to find whether the view is initialised and ready for rendering tiles.
      */
-    public boolean isImageReady() {
+    public final boolean isImageReady() {
         return readySent;
     }
 
@@ -1337,7 +1354,7 @@ public class SubsamplingScaleImageView extends View {
      * Get source width, ignoring orientation. If {@link #getOrientation()} returns 90 or 270, you can use {@link #getSHeight()}
      * for the apparent width.
      */
-    public int getSWidth() {
+    public final int getSWidth() {
         return sWidth;
     }
 
@@ -1345,7 +1362,7 @@ public class SubsamplingScaleImageView extends View {
      * Get source height, ignoring orientation. If {@link #getOrientation()} returns 90 or 270, you can use {@link #getSWidth()}
      * for the apparent height.
      */
-    public int getSHeight() {
+    public final int getSHeight() {
         return sHeight;
     }
 
@@ -1353,7 +1370,7 @@ public class SubsamplingScaleImageView extends View {
      * Returns the orientation setting. This can return {@link #ORIENTATION_USE_EXIF}, in which case it doesn't tell you
      * the applied orientation of the image. For that, use {@link #getAppliedOrientation()}.
      */
-    public int getOrientation() {
+    public final int getOrientation() {
         return orientation;
     }
 
@@ -1361,7 +1378,7 @@ public class SubsamplingScaleImageView extends View {
      * Returns the actual orientation of the image relative to the source file. This will be based on the source file's
      * EXIF orientation if you're using ORIENTATION_USE_EXIF. Values are 0, 90, 180, 270.
      */
-    public int getAppliedOrientation() {
+    public final int getAppliedOrientation() {
         return getRequiredRotation();
     }
 
@@ -1369,7 +1386,7 @@ public class SubsamplingScaleImageView extends View {
      * Get the current state of the view (scale, center, orientation) for restoration after rotate. Will return null if
      * the view is not ready.
      */
-    public ImageViewState getState() {
+    public final ImageViewState getState() {
         if (vTranslate != null && sWidth > 0 && sHeight > 0) {
             return new ImageViewState(getScale(), getCenter(), getOrientation());
         }
@@ -1379,28 +1396,28 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Returns true if zoom gesture detection is enabled.
      */
-    public boolean isZoomEnabled() {
+    public final boolean isZoomEnabled() {
         return zoomEnabled;
     }
 
     /**
      * Enable or disable zoom gesture detection. Disabling zoom locks the the current scale.
      */
-    public void setZoomEnabled(boolean zoomEnabled) {
+    public final void setZoomEnabled(boolean zoomEnabled) {
         this.zoomEnabled = zoomEnabled;
     }
 
     /**
      * Returns true if pan gesture detection is enabled.
      */
-    public boolean isPanEnabled() {
+    public final boolean isPanEnabled() {
         return panEnabled;
     }
 
     /**
      * Enable or disable pan gesture detection. Disabling pan causes the image to be centered.
      */
-    public void setPanEnabled(boolean panEnabled) {
+    public final void setPanEnabled(boolean panEnabled) {
         this.panEnabled = panEnabled;
         if (!panEnabled && vTranslate != null) {
             vTranslate.x = (getWidth()/2) - (scale * (sWidth()/2));
@@ -1416,15 +1433,27 @@ public class SubsamplingScaleImageView extends View {
      * greater than the max zoom.
      * @param doubleTapZoomScale New value for double tap gesture zoom scale.
      */
-    public void setDoubleTapZoomScale(float doubleTapZoomScale) {
+    public final void setDoubleTapZoomScale(float doubleTapZoomScale) {
         this.doubleTapZoomScale = doubleTapZoomScale;
+    }
+
+    /**
+     * A density aware alternative to {@link #setDoubleTapZoomScale(float)}; this allows you to express the scale the
+     * image will zoom in to when double tapped in terms of the image pixel density. Values lower than the max scale will
+     * be ignored. A sensible starting point is 160 - the default used by this view.
+     * @param dpi New value for double tap gesture zoom scale.
+     */
+    public final void setDoubleTapZoomDpi(int dpi) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
+        setDoubleTapZoomScale(averageDpi/dpi);
     }
 
     /**
      * Set the type of zoom animation to be used for double taps. See static fields.
      * @param doubleTapZoomStyle New value for zoom style.
      */
-    public void setDoubleTapZoomStyle(int doubleTapZoomStyle) {
+    public final void setDoubleTapZoomStyle(int doubleTapZoomStyle) {
         if (!VALID_ZOOM_STYLES.contains(doubleTapZoomStyle)) {
             throw new IllegalArgumentException("Invalid zoom style: " + doubleTapZoomStyle);
         }
@@ -1434,7 +1463,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Enables visual debugging, showing tile boundaries and sizes.
      */
-    public void setDebug(boolean debug) {
+    public final void setDebug(boolean debug) {
         this.debug = debug;
     }
 }
