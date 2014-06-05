@@ -42,7 +42,6 @@ pinch to zoom is required to view the high resolution detail.
 #### Coming soon...
 * Gradle library structure
 * Better support for very tall or wide images
-* Double tap to zoom
 * Demonstration app
 
 #### Limitations
