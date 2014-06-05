@@ -135,6 +135,10 @@ public class SubsamplingScaleImageView extends View {
     private Handler handler;
     private static final int MESSAGE_LONG_CLICK = 1;
 
+    // Paint objects created once and reused for efficiency
+    private Paint bitmapPaint;
+    private Paint debugPaint;
+
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
         this.handler = new Handler(new Handler.Callback() {
@@ -511,17 +515,7 @@ public class SubsamplingScaleImageView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        Paint bitmapPaint = new Paint();
-
-        Paint textPaint = new Paint();
-        textPaint.setTextSize(18);
-        textPaint.setColor(Color.MAGENTA);
-
-        Paint linePaint = new Paint();
-        linePaint.setStrokeWidth(2);
-        linePaint.setColor(Color.MAGENTA);
-        linePaint.setStyle(Style.STROKE);
+        createPaints();
 
         // If image or view dimensions are not known yet, abort.
         if (sWidth == 0 || sHeight == 0 || decoder == null || getWidth() == 0 || getHeight() == 0) {
@@ -589,9 +583,6 @@ public class SubsamplingScaleImageView extends View {
         }
 
         // Render all loaded tiles. LinkedHashMap used for bottom up rendering - lower res tiles underneath.
-        bitmapPaint.setAntiAlias(true);
-        bitmapPaint.setFilterBitmap(true);
-        bitmapPaint.setDither(true);
         for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
             if (tileMapEntry.getKey() == sampleSize || hasMissingTiles) {
                 for (Tile tile : tileMapEntry.getValue()) {
@@ -599,23 +590,41 @@ public class SubsamplingScaleImageView extends View {
                     if (!tile.loading && tile.bitmap != null) {
                         canvas.drawBitmap(tile.bitmap, null, vRect, bitmapPaint);
                         if (debug) {
-                            canvas.drawRect(vRect, linePaint);
+                            canvas.drawRect(vRect, debugPaint);
                         }
                     } else if (tile.loading && debug) {
-                        canvas.drawText("LOADING", vRect.left + 5, vRect.top + 35, textPaint);
+                        canvas.drawText("LOADING", vRect.left + 5, vRect.top + 35, debugPaint);
                     }
                     if (tile.visible && debug) {
-                        canvas.drawText("ISS " + tile.sampleSize + " RECT " + tile.sRect.top + "," + tile.sRect.left + "," + tile.sRect.bottom + "," + tile.sRect.right, vRect.left + 5, vRect.top + 15, textPaint);
+                        canvas.drawText("ISS " + tile.sampleSize + " RECT " + tile.sRect.top + "," + tile.sRect.left + "," + tile.sRect.bottom + "," + tile.sRect.right, vRect.left + 5, vRect.top + 15, debugPaint);
                     }
                 }
             }
         }
 
         if (debug) {
-            canvas.drawText("Scale: " + String.format("%.2f", scale), 5, 15, textPaint);
-            canvas.drawText("Translate: " + String.format("%.2f", vTranslate.x) + ":" + String.format("%.2f", vTranslate.y), 5, 35, textPaint);
+            canvas.drawText("Scale: " + String.format("%.2f", scale), 5, 15, debugPaint);
+            canvas.drawText("Translate: " + String.format("%.2f", vTranslate.x) + ":" + String.format("%.2f", vTranslate.y), 5, 35, debugPaint);
             PointF center = getCenter();
-            canvas.drawText("Source center: " + String.format("%.2f", center.x) + ":" + String.format("%.2f", center.y), 5, 55, textPaint);
+            canvas.drawText("Source center: " + String.format("%.2f", center.x) + ":" + String.format("%.2f", center.y), 5, 55, debugPaint);
+        }
+    }
+
+    /**
+     * Creates Paint objects once when first needed.
+     */
+    private void createPaints() {
+        if (bitmapPaint == null) {
+            bitmapPaint = new Paint();
+            bitmapPaint.setAntiAlias(true);
+            bitmapPaint.setFilterBitmap(true);
+            bitmapPaint.setDither(true);
+        }
+        if (debugPaint == null && debug) {
+            debugPaint = new Paint();
+            debugPaint.setTextSize(18);
+            debugPaint.setColor(Color.MAGENTA);
+            debugPaint.setStyle(Style.STROKE);
         }
     }
 
