@@ -36,7 +36,6 @@ import android.view.View;
 import com.davemorrissey.labs.subscaleview.R.styleable;
 
 import java.lang.ref.WeakReference;
-import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -57,13 +56,27 @@ public class SubsamplingScaleImageView extends View {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
 
+    /** Attempt to use EXIF information on the image to rotate it. Works for external files only. */
     public static final int ORIENTATION_USE_EXIF = -1;
+    /** Display the image file in its native orientation. */
     public static final int ORIENTATION_0 = 0;
+    /** Rotate the image 90 degrees clockwise. */
     public static final int ORIENTATION_90 = 90;
+    /** Rotate the image 180 degrees. */
     public static final int ORIENTATION_180 = 180;
+    /** Rotate the image 270 degrees clockwise. */
     public static final int ORIENTATION_270 = 270;
 
     private static final List<Integer> VALID_ORIENTATIONS = Arrays.asList(ORIENTATION_0, ORIENTATION_90, ORIENTATION_180, ORIENTATION_270, ORIENTATION_USE_EXIF);
+
+    /** During zoom animation, keep the point of the image that was tapped in the same place, and scale the image around it. */
+    public static final int ZOOM_FOCUS_FIXED = 1;
+    /** During zoom animation, move the point of the image that was tapped to the center of the screen. */
+    public static final int ZOOM_FOCUS_CENTER = 2;
+    /** Zoom in to and center the tapped point immediately without animating. */
+    public static final int ZOOM_FOCUS_CENTER_IMMEDIATE = 3;
+
+    private static final List<Integer> VALID_ZOOM_STYLES = Arrays.asList(ZOOM_FOCUS_FIXED, ZOOM_FOCUS_CENTER, ZOOM_FOCUS_CENTER_IMMEDIATE);
 
     // Overlay tile boundaries and other info
     private boolean debug = false;
@@ -77,6 +90,10 @@ public class SubsamplingScaleImageView extends View {
     // Gesture detection settings
     private boolean panEnabled = true;
     private boolean zoomEnabled = true;
+
+    // Double tap zoom behaviour
+    private float doubleTapZoomScale = 1F;
+    private int doubleTapZoomStyle = ZOOM_FOCUS_FIXED;
 
     // Current scale and scale at start of zoom
     private float scale;
@@ -125,6 +142,9 @@ public class SubsamplingScaleImageView extends View {
     private PointF flingFrom;
     private PointF flingMomentum;
 
+    // Scale animation tracking
+    private ScaleAnim scaleAnim;
+
     // Whether a ready notification has been sent to subclasses
     private boolean readySent = false;
 
@@ -164,8 +184,55 @@ public class SubsamplingScaleImageView extends View {
                 }
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                performClick();
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (zoomEnabled && readySent && vTranslate != null) {
+                    boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
+                    float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+                    if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
+                        setScaleAndCenter(targetScale, viewToSourceCoord(e.getX(), e.getY()));
+                    } else {
+                        scaleAnim = new ScaleAnim();
+                        scaleAnim.scaleStart = scale;
+                        scaleAnim.scaleEnd = targetScale;
+                        scaleAnim.time = System.currentTimeMillis();
+                        scaleAnim.vFocusStart = new PointF(e.getX(), e.getY());
+                        scaleAnim.sFocus = viewToSourceCoord(scaleAnim.vFocusStart);
+                        if (zoomIn && doubleTapZoomStyle == ZOOM_FOCUS_CENTER) {
+                            scaleAnim.vFocusEnd = new PointF(
+                                    getWidth()/2,
+                                    getHeight()/2
+                            );
+                        } else {
+                            // Calculate where translation will be at the end of the anim
+                            float vTranslateXEnd = e.getX() - (targetScale * scaleAnim.sFocus.x);
+                            float vTranslateYEnd = e.getY() - (targetScale * scaleAnim.sFocus.y);
+                            ScaleAndTranslate satEnd = new ScaleAndTranslate(targetScale, new PointF(vTranslateXEnd, vTranslateYEnd));
+                            // Fit the end translation into bounds
+                            fitToBounds(true, satEnd);
+                            // Adjust the position of the focus point at end so image will be in bounds
+                            scaleAnim.vFocusEnd = new PointF(
+                                    e.getX() + (satEnd.translate.x - vTranslateXEnd),
+                                    e.getY() + (satEnd.translate.y - vTranslateYEnd)
+                            );
+                        }
+                    }
+
+                    invalidate();
+                    return true;
+                }
+                return super.onDoubleTapEvent(e);
+            }
         });
-        // Handle XML attribute asset name.
+
+        // Handle XML attributes
         if (attr != null) {
             TypedArray typedAttr = getContext().obtainStyledAttributes(attr, styleable.SubsamplingScaleImageView);
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_assetName)) {
@@ -270,6 +337,7 @@ public class SubsamplingScaleImageView extends View {
         flingStart = 0;
         flingFrom = null;
         flingMomentum = null;
+        scaleAnim = null;
         if (newImage) {
             if (decoder != null) {
                 synchronized (decoderLock) {
@@ -292,13 +360,6 @@ public class SubsamplingScaleImageView extends View {
             }
             tileMap = null;
         }
-    }
-
-    /**
-     * Set the maximum scale allowed
-     */
-    public void setMaxScale(float maxScale) {
-        this.maxScale = maxScale;
     }
 
     /**
@@ -363,6 +424,7 @@ public class SubsamplingScaleImageView extends View {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_1_DOWN:
             case MotionEvent.ACTION_POINTER_2_DOWN:
+                scaleAnim = null;
                 getParent().requestDisallowInterceptTouchEvent(true);
                 maxTouchCount = Math.max(maxTouchCount, touchCount);
                 if (touchCount >= 2) {
@@ -422,7 +484,7 @@ public class SubsamplingScaleImageView extends View {
                                 vTranslate.y = (getHeight()/2) - (scale * (sHeight()/2));
                             }
 
-                            fitToBounds();
+                            fitToBounds(true);
                             refreshRequiredTiles(false);
                         }
                     } else if (!isZooming) {
@@ -437,7 +499,7 @@ public class SubsamplingScaleImageView extends View {
 
                             float lastX = vTranslate.x;
                             float lastY = vTranslate.y;
-                            fitToBounds();
+                            fitToBounds(true);
                             if (lastX == vTranslate.x || (lastY == vTranslate.y && dy > 10) || isPanning) {
                                 isPanning = true;
                             } else if (dx > 5) {
@@ -490,8 +552,6 @@ public class SubsamplingScaleImageView extends View {
                     // Trigger load of tiles now required
                     refreshRequiredTiles(true);
                     return true;
-                } else if (maxTouchCount == 1) {
-                    performClick();
                 }
                 if (touchCount == 1) {
                     isZooming = false;
@@ -535,11 +595,12 @@ public class SubsamplingScaleImageView extends View {
             vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
             sPendingCenter = null;
             pendingScale = null;
+            fitToBounds(true);
             refreshRequiredTiles(true);
         }
 
         // On first display of base image set up position, and in other cases make sure scale is correct.
-        fitToBounds();
+        fitToBounds(false);
 
         // Everything is set up and coordinates are valid. Inform subclasses.
         if (!readySent) {
@@ -556,7 +617,7 @@ public class SubsamplingScaleImageView extends View {
         if (flingMomentum != null && flingFrom != null && flingElapsed < 500) {
             vTranslate.x = easeOutQuad(flingElapsed, flingFrom.x, flingMomentum.x/2, 500);
             vTranslate.y = easeOutQuad(flingElapsed, flingFrom.y, flingMomentum.y/2, 500);
-            fitToBounds();
+            fitToBounds(true);
             refreshRequiredTiles(false);
             invalidate();
         } else if (flingMomentum != null && flingFrom != null && flingElapsed >= 500) {
@@ -565,6 +626,30 @@ public class SubsamplingScaleImageView extends View {
             flingFrom = null;
             isPanning = false;
             invalidate();
+        }
+
+        // If animating scale, calculate current scale with easing equations
+        if (scaleAnim != null) {
+            long scaleElapsed = System.currentTimeMillis() - scaleAnim.time;
+            if (scaleElapsed < 500) {
+                scale = easeInOutQuad(scaleElapsed, scaleAnim.scaleStart, scaleAnim.scaleEnd - scaleAnim.scaleStart, 500);
+
+                // Apply required animation to the focal point
+                float vFocusNowX = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.x, scaleAnim.vFocusEnd.x - scaleAnim.vFocusStart.x, 500);
+                float vFocusNowY = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.y, scaleAnim.vFocusEnd.y - scaleAnim.vFocusStart.y, 500);
+                // Find out where the focal point is at this scale and adjust its position to follow the animation path
+                PointF vFocus = sourceToViewCoord(scaleAnim.sFocus);
+                vTranslate.x -= vFocus.x - vFocusNowX;
+                vTranslate.y -= vFocus.y - vFocusNowY;
+
+                fitToBounds(false);
+                refreshRequiredTiles(false);
+                invalidate();
+            } else {
+                scaleAnim = null;
+                refreshRequiredTiles(true);
+                invalidate();
+            }
         }
 
         // Optimum sample size for current scale
@@ -607,6 +692,12 @@ public class SubsamplingScaleImageView extends View {
             canvas.drawText("Translate: " + String.format("%.2f", vTranslate.x) + ":" + String.format("%.2f", vTranslate.y), 5, 35, debugPaint);
             PointF center = getCenter();
             canvas.drawText("Source center: " + String.format("%.2f", center.x) + ":" + String.format("%.2f", center.y), 5, 55, debugPaint);
+
+            if (scaleAnim != null) {
+                PointF vCenter = sourceToViewCoord(scaleAnim.sFocus);
+                canvas.drawCircle(vCenter.x, vCenter.y, 20, debugPaint);
+                canvas.drawCircle(getWidth()/2, getHeight()/2, 30, debugPaint);
+            }
         }
     }
 
@@ -634,7 +725,7 @@ public class SubsamplingScaleImageView extends View {
      */
     private synchronized void initialiseBaseLayer(Point maxTileDimensions) {
 
-        fitToBounds();
+        fitToBounds(true);
 
         // Load double resolution - next level will be split into four tiles and at the center all four are required,
         // so don't bother with tiling until the next level 16 tiles are needed.
@@ -728,13 +819,15 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Adjusts scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
-     * is set to one dimension fills the view and the image is centered on the other dimension.
+     * Adjusts hypothetical future scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
+     * is set so one dimension fills the view and the image is centered on the other dimension. Used to calculate what the target of an
+     * animation should be.
+     * @param center Whether the image should be centered in the dimension it's too small to fill. While animating this can be false to avoid changes in direction as bounds are reached.
+     * @param scaleAndTranslate The scale we want and the translation we're aiming for. The values are adjusted to be valid.
      */
-    private void fitToBounds() {
-        if (vTranslate == null) {
-            vTranslate = new PointF(0, 0);
-        }
+    private void fitToBounds(boolean center, ScaleAndTranslate scaleAndTranslate) {
+        float scale = scaleAndTranslate.scale;
+        PointF vTranslate = scaleAndTranslate.translate;
 
         float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
         scale = Math.max(minScale, scale);
@@ -743,14 +836,30 @@ public class SubsamplingScaleImageView extends View {
         float scaleWidth = scale * sWidth();
         float scaleHeight = scale * sHeight();
 
-        vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth);
-        vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight);
+        vTranslate.x = Math.max(vTranslate.x, center ? getWidth() - scaleWidth : -scaleWidth);
+        vTranslate.y = Math.max(vTranslate.y, center ? getHeight() - scaleHeight : -scaleHeight);
 
-        float maxTx = Math.max(0, (getWidth() - scaleWidth) / 2);
-        float maxTy = Math.max(0, (getHeight() - scaleHeight) / 2);
+        float maxTx = Math.max(0, center ? (getWidth() - scaleWidth) / 2 : getWidth());
+        float maxTy = Math.max(0, center ? (getHeight() - scaleHeight) / 2 : getHeight());
 
         vTranslate.x = Math.min(vTranslate.x, maxTx);
         vTranslate.y = Math.min(vTranslate.y, maxTy);
+
+        scaleAndTranslate.scale = scale;
+    }
+
+    /**
+     * Adjusts current scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
+     * is set so one dimension fills the view and the image is centered on the other dimension.
+     * @param center Whether the image should be centered in the dimension it's too small to fill. While animating this can be false to avoid changes in direction as bounds are reached.
+     */
+    private void fitToBounds(boolean center) {
+        if (vTranslate == null) {
+            vTranslate = new PointF(0, 0);
+        }
+        ScaleAndTranslate input = new ScaleAndTranslate(scale, vTranslate);
+        fitToBounds(center, input);
+        scale = input.scale;
     }
 
     /**
@@ -956,6 +1065,26 @@ public class SubsamplingScaleImageView extends View {
 
     }
 
+    private static class ScaleAnim {
+
+        private float scaleStart; // Scale at start of anim
+        private float scaleEnd; // Scale at end of anim (target)
+        private PointF sFocus; // Source point that was double tapped
+        private PointF vFocusStart; // View point that was double tapped
+        private PointF vFocusEnd; // Where the view focal point should be moved to during the anim
+        private long time; // Start time
+
+    }
+
+    private static class ScaleAndTranslate {
+        private ScaleAndTranslate(float scale, PointF translate) {
+            this.scale = scale;
+            this.translate = translate;
+        }
+        private float scale;
+        private PointF translate;
+    }
+
     /**
      * Set scale, center and orientation from saved state.
      */
@@ -1135,6 +1264,32 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Quadratic easing for scale and center animations. With thanks to Robert Penner - http://gizma.com/easing/
+     * @param time Elapsed time
+     * @param from Start value
+     * @param change Target value
+     * @param duration Anm duration
+     * @return Current value
+     */
+    private float easeInOutQuad(long time, float from, float change, long duration) {
+        float timeF = time/(duration/2f);
+        if (timeF < 1) {
+            return (change/2f * timeF * timeF) + from;
+        } else {
+            timeF--;
+            return (-change/2f) * (timeF * (timeF - 2) - 1) + from;
+        }
+    }
+
+    /**
+     * Set the maximum scale allowed. A value of 1 means 1:1 pixels at maximum scale. You may wish to set this according
+     * to screen density - on a retina screen, 1:1 may still be too small.
+     */
+    public void setMaxScale(float maxScale) {
+        this.maxScale = maxScale;
+    }
+
+    /**
      * Returns the source point at the center of the view.
      */
     public PointF getCenter() {
@@ -1253,6 +1408,27 @@ public class SubsamplingScaleImageView extends View {
             refreshRequiredTiles(true);
             invalidate();
         }
+    }
+
+    /**
+     * Set the scale the image will zoom in to when double tapped. This also the scale point where a double tap is interpreted
+     * as a zoom out gesture - if the scale is greater than 90% of this value, a double tap zooms out. Avoid using values
+     * greater than the max zoom.
+     * @param doubleTapZoomScale New value for double tap gesture zoom scale.
+     */
+    public void setDoubleTapZoomScale(float doubleTapZoomScale) {
+        this.doubleTapZoomScale = doubleTapZoomScale;
+    }
+
+    /**
+     * Set the type of zoom animation to be used for double taps. See static fields.
+     * @param doubleTapZoomStyle New value for zoom style.
+     */
+    public void setDoubleTapZoomStyle(int doubleTapZoomStyle) {
+        if (!VALID_ZOOM_STYLES.contains(doubleTapZoomStyle)) {
+            throw new IllegalArgumentException("Invalid zoom style: " + doubleTapZoomStyle);
+        }
+        this.doubleTapZoomStyle = doubleTapZoomStyle;
     }
 
     /**

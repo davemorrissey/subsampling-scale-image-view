@@ -26,7 +26,7 @@ import android.support.v4.view.ViewPager;
 
 public class SampleActivity extends FragmentActivity {
 
-    private static final String[] IMAGES = { "DSC04285.JPG", "DSC03250.JPG" };
+    private static final String[] IMAGES = { "card1.png", "card2.png", "card3.png", "DSC04285.JPG", "DSC03250.JPG" };
 
     private ViewPager page;
 

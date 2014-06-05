@@ -25,6 +25,7 @@ pinch to zoom is required to view the high resolution detail.
 * Pan while zooming
 * Seamless switch between pan and zoom
 * Fling momentum after panning
+* Double tap to zoom in and out
 * Options to disable pan and/or zoom gestures
 
 #### Overridable event detection
