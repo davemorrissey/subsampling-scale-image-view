@@ -49,6 +49,13 @@ pinch to zoom is required to view the high resolution detail.
 * This view does not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
 * Images stored in assets cannot be rotated based on EXIF, you'll need to do it manually. You probably know the orientation of your own assets :-)
 
+## Quality notes
+
+Images are decoded as dithered RGB_565 bitmaps by default, because this requires half as much memory as ARGB_8888. For most
+JPGs you won't notice the difference in quality. If you are displaying large PNGs with alpha channels, Android will probably
+decode them as ARGB_8888, and this may cause `OutOfMemoryError`s. **If possible, remove the alpha channel from PNGs larger than about 2,000x2,000.**
+This allows them to be decoded as RGB_565.
+
 ## Basic setup
 
 Checkout the project and import the library project as a module in your app. Alternatively you can just copy the classes in `com.davemorrissey.labs.subscaleview` to your project.

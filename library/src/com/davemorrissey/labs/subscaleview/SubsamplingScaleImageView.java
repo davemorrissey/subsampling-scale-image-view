@@ -53,6 +53,7 @@ import java.util.*;
  * v prefixes - coordinates, translations and distances measured in screen (view) pixels
  * s prefixes - coordinates, translations and distances measured in source image pixels (scaled)
  */
+@SuppressWarnings("unused")
 public class SubsamplingScaleImageView extends View {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
@@ -374,8 +375,10 @@ public class SubsamplingScaleImageView extends View {
         if (tileMap != null) {
             for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
                 for (Tile tile : tileMapEntry.getValue()) {
+                    tile.visible = false;
                     if (tile.bitmap != null) {
                         tile.bitmap.recycle();
+                        tile.bitmap = null;
                     }
                 }
             }
@@ -939,6 +942,7 @@ public class SubsamplingScaleImageView extends View {
                 for (int y = 0; y < tilesPerSide; y++) {
                     Tile tile = new Tile();
                     tile.sampleSize = sampleSize;
+                    tile.visible = sampleSize == fullImageSampleSize;
                     tile.sRect = new Rect(
                             x * sTileWidth,
                             y * sTileHeight,
@@ -1077,6 +1081,7 @@ public class SubsamplingScaleImageView extends View {
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inSampleSize = tile.sampleSize;
                             options.inPreferredConfig = Config.RGB_565;
+                            options.inDither = true;
                             Bitmap bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
                             int rotation = view.getRequiredRotation();
                             if (rotation != 0) {
@@ -1086,6 +1091,8 @@ public class SubsamplingScaleImageView extends View {
                             }
                             return bitmap;
                         }
+                    } else if (tile != null) {
+                        tile.loading = false;
                     }
                 }
             } catch (Exception e) {
