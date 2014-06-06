@@ -135,3 +135,9 @@ If you want the current scale, center and orientation to be preserved when the s
 ## Extending functionality
 
 Take a look at the sample app for a simple implementation showing the view in a `ViewPager` with an `OnClickListener` and an `OnLongClickListener`. I'll add more examples to this soon.
+
+## About
+
+Copyright 2014 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project to show your gratitude.
+
+This project started life as a way of showing very large images (e.g. a large building floor plan) with gestures to pan and zoom, with support for extensions that showed overlays (location pins, annotations) aligned with the image. It's grown massively, but for the moment I am keeping everything in one class to prevent subclasses and extensions breaking the assumptions (or violating invariants) on which the class depends.
