@@ -40,7 +40,6 @@ pinch to zoom is required to view the high resolution detail.
 * Handles view resizing and `wrap_content` layout
 
 #### Coming soon...
-* Gradle library structure
 * Better support for very tall or wide images
 * Demonstration app
 
