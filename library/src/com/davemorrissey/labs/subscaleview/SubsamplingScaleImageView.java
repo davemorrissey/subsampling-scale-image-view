@@ -1419,6 +1419,16 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Fully zoom out and return the image to the middle of the screen. This might be useful if you have a view pager
+     * and want images to be reset when the user has moved to another page.
+     */
+    public final void resetScaleAndCenter() {
+        this.pendingScale = limitedScale(0);
+        this.sPendingCenter = new PointF(0, 0);
+        invalidate();
+    }
+
+    /**
      * Subclasses can override this method to be informed when the view is set up and ready for rendering, so they can
      * skip their own rendering until the base layer (and its scale and translate) are known.
      */

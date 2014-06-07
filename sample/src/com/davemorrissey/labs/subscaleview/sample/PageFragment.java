@@ -65,6 +65,7 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
         rootView.findViewById(id.rotate).setOnClickListener(this);
         rootView.findViewById(id.scale).setOnClickListener(this);
         rootView.findViewById(id.center).setOnClickListener(this);
+        rootView.findViewById(id.reset).setOnClickListener(this);
         if (asset != null) {
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
             imageView.setImageAsset(asset, imageViewState);
@@ -100,6 +101,9 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
                 int sy = random.nextInt(imageView.getSHeight());
                 imageView.animateCenter(new PointF(sx, sy)).withDuration(1500).start();
             }
+        } else if (view.getId() == id.reset && rootView != null) {
+            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+            imageView.resetScaleAndCenter();
         } else if (view.getId() == id.imageView) {
             Toast.makeText(getActivity(), "Clicked", Toast.LENGTH_SHORT).show();
         }
