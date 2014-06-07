@@ -469,7 +469,13 @@ public class SubsamplingScaleImageView extends View {
 
                             scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
 
-                            if (panEnabled) {
+                            if (scale <= minScale()) {
+                                // Minimum scale reached so don't pan. Adjust start settings so any expand will zoom in.
+                                vDistStart = vDistEnd;
+                                scaleStart = minScale();
+                                vCenterStart = vCenterEnd;
+                                vTranslateStart = vTranslate;
+                            } else if (panEnabled) {
                                 // Translate to place the source image coordinate that was at the center of the pinch at the start
                                 // at the center of the pinch now, to give simultaneous pan + zoom.
                                 float vLeftStart = vCenterStart.x - vTranslateStart.x;
@@ -1294,11 +1300,17 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Returns the minimum allowed scale.
+     */
+    private float minScale() {
+        return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+    }
+
+    /**
      * Adjust a requested scale to be within the allowed limits.
      */
     private float limitedScale(float targetScale) {
-        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
-        targetScale = Math.max(minScale, targetScale);
+        targetScale = Math.max(minScale(), targetScale);
         targetScale = Math.min(maxScale, targetScale);
         return targetScale;
     }
@@ -1412,6 +1424,7 @@ public class SubsamplingScaleImageView extends View {
      * @param sCenter New source image coordinate to center on the screen, subject to boundaries.
      */
     public final void setScaleAndCenter(float scale, PointF sCenter) {
+        this.anim = null;
         this.pendingScale = scale;
         this.sPendingCenter = sCenter;
         this.sRequestedCenter = sCenter;
@@ -1423,8 +1436,13 @@ public class SubsamplingScaleImageView extends View {
      * and want images to be reset when the user has moved to another page.
      */
     public final void resetScaleAndCenter() {
+        this.anim = null;
         this.pendingScale = limitedScale(0);
-        this.sPendingCenter = new PointF(0, 0);
+        if (isImageReady()) {
+            this.sPendingCenter = new PointF(sWidth()/2, sHeight()/2);
+        } else {
+            this.sPendingCenter = new PointF(0, 0);
+        }
         invalidate();
     }
 
