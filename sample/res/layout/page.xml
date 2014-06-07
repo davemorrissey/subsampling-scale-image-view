@@ -18,4 +18,20 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"/>
 
+    <Button android:id="@+id/scale"
+            android:text="Scale"
+            android:layout_toLeftOf="@id/rotate"
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"/>
+
+    <Button android:id="@+id/center"
+            android:text="Center"
+            android:layout_toLeftOf="@id/scale"
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"/>
+
 </RelativeLayout>

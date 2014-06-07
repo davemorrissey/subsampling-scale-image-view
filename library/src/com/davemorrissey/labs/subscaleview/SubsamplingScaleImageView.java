@@ -220,33 +220,13 @@ public class SubsamplingScaleImageView extends View {
                     float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
                     boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                     float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+                    PointF targetSCenter = viewToSourceCoord(new PointF(e.getX(), e.getY()));
                     if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
-                        setScaleAndCenter(targetScale, viewToSourceCoord(e.getX(), e.getY()));
-                    } else {
-                        scaleAnim = new ScaleAnim();
-                        scaleAnim.scaleStart = scale;
-                        scaleAnim.scaleEnd = targetScale;
-                        scaleAnim.time = System.currentTimeMillis();
-                        scaleAnim.vFocusStart = new PointF(e.getX(), e.getY());
-                        scaleAnim.sFocus = viewToSourceCoord(scaleAnim.vFocusStart);
-                        if (zoomIn && doubleTapZoomStyle == ZOOM_FOCUS_CENTER) {
-                            scaleAnim.vFocusEnd = new PointF(
-                                    getWidth()/2,
-                                    getHeight()/2
-                            );
-                        } else {
-                            // Calculate where translation will be at the end of the anim
-                            float vTranslateXEnd = e.getX() - (targetScale * scaleAnim.sFocus.x);
-                            float vTranslateYEnd = e.getY() - (targetScale * scaleAnim.sFocus.y);
-                            ScaleAndTranslate satEnd = new ScaleAndTranslate(targetScale, new PointF(vTranslateXEnd, vTranslateYEnd));
-                            // Fit the end translation into bounds
-                            fitToBounds(true, satEnd);
-                            // Adjust the position of the focus point at end so image will be in bounds
-                            scaleAnim.vFocusEnd = new PointF(
-                                    e.getX() + (satEnd.translate.x - vTranslateXEnd),
-                                    e.getY() + (satEnd.translate.y - vTranslateYEnd)
-                            );
-                        }
+                        setScaleAndCenter(targetScale, targetSCenter);
+                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn) {
+                        new ScaleAnimationBuilder(targetScale, targetSCenter).start();
+                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
+                        new ScaleAnimationBuilder(targetScale, targetSCenter, new PointF(e.getX(), e.getY())).start();
                     }
 
                     invalidate();
@@ -642,18 +622,18 @@ public class SubsamplingScaleImageView extends View {
             }).start();
         }
 
-        // If animating scale, calculate current scale with easing equations
+        // If animating scale, calculate current scale and center with easing equations
         if (scaleAnim != null) {
             long scaleElapsed = System.currentTimeMillis() - scaleAnim.time;
-            boolean finished = scaleElapsed > 500;
-            scaleElapsed = Math.min(scaleElapsed, 500);
-            scale = easeInOutQuad(scaleElapsed, scaleAnim.scaleStart, scaleAnim.scaleEnd - scaleAnim.scaleStart, 500);
+            boolean finished = scaleElapsed > scaleAnim.duration;
+            scaleElapsed = Math.min(scaleElapsed, scaleAnim.duration);
+            scale = ease(scaleAnim.easing, scaleElapsed, scaleAnim.scaleStart, scaleAnim.scaleEnd - scaleAnim.scaleStart, scaleAnim.duration);
 
             // Apply required animation to the focal point
-            float vFocusNowX = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.x, scaleAnim.vFocusEnd.x - scaleAnim.vFocusStart.x, 500);
-            float vFocusNowY = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.y, scaleAnim.vFocusEnd.y - scaleAnim.vFocusStart.y, 500);
+            float vFocusNowX = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.x, scaleAnim.vFocusEnd.x - scaleAnim.vFocusStart.x, scaleAnim.duration);
+            float vFocusNowY = easeInOutQuad(scaleElapsed, scaleAnim.vFocusStart.y, scaleAnim.vFocusEnd.y - scaleAnim.vFocusStart.y, scaleAnim.duration);
             // Find out where the focal point is at this scale and adjust its position to follow the animation path
-            PointF vFocus = sourceToViewCoord(scaleAnim.sFocus);
+            PointF vFocus = sourceToViewCoord(scaleAnim.sCenterEnd);
             vTranslate.x -= vFocus.x - vFocusNowX;
             vTranslate.y -= vFocus.y - vFocusNowY;
 
@@ -723,8 +703,12 @@ public class SubsamplingScaleImageView extends View {
             canvas.drawText("Source center: " + String.format("%.2f", center.x) + ":" + String.format("%.2f", center.y), 5, 55, debugPaint);
 
             if (scaleAnim != null) {
-                PointF vCenter = sourceToViewCoord(scaleAnim.sFocus);
-                canvas.drawCircle(vCenter.x, vCenter.y, 20, debugPaint);
+                PointF vCenterStart = sourceToViewCoord(scaleAnim.sCenterStart);
+                PointF vCenterEndRequested = sourceToViewCoord(scaleAnim.sCenterEndRequested);
+                PointF vCenterEnd = sourceToViewCoord(scaleAnim.sCenterEnd);
+                canvas.drawCircle(vCenterStart.x, vCenterStart.y, 10, debugPaint);
+                canvas.drawCircle(vCenterEndRequested.x, vCenterEndRequested.y, 20, debugPaint);
+                canvas.drawCircle(vCenterEnd.x, vCenterEnd.y, 25, debugPaint);
                 canvas.drawCircle(getWidth()/2, getHeight()/2, 30, debugPaint);
             }
             if (translateAnim != null && translateAnim.sCenter != null) {
@@ -864,13 +848,8 @@ public class SubsamplingScaleImageView extends View {
             center = false;
         }
 
-        float scale = scaleAndTranslate.scale;
         PointF vTranslate = scaleAndTranslate.translate;
-
-        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
-        scale = Math.max(minScale, scale);
-        scale = Math.min(maxScale, scale);
-
+        float scale = limitedScale(scaleAndTranslate.scale);
         float scaleWidth = scale * sWidth();
         float scaleHeight = scale * sHeight();
 
@@ -1129,10 +1108,16 @@ public class SubsamplingScaleImageView extends View {
 
         private float scaleStart; // Scale at start of anim
         private float scaleEnd; // Scale at end of anim (target)
-        private PointF sFocus; // Source point that was double tapped
+        private PointF sCenterStart; // Source center point at start
+        private PointF sCenterEnd; // Source center point at end, adjusted for pan limits
+        private PointF sCenterEndRequested; // Source center point that was requested, without adjustment
         private PointF vFocusStart; // View point that was double tapped
         private PointF vFocusEnd; // Where the view focal point should be moved to during the anim
-        private long time; // Start time
+        private long duration = 500; // How long the anim takes
+        private boolean interruptible = true; // Whether the anim can be interrupted by a touch
+        private int easing = EASE_IN_OUT_QUAD; // Easing style
+        private long time = System.currentTimeMillis(); // Start time
+        private boolean fitToBounds = false; // Animate in bounds - used for fling
 
     }
 
@@ -1333,6 +1318,28 @@ public class SubsamplingScaleImageView extends View {
         ScaleAndTranslate sat = new ScaleAndTranslate(scale, vTranslate);
         fitToBounds(true, sat);
         return vTranslate;
+    }
+
+    /**
+     * Given a requested source center and scale, calculate what the actual center will have to be to keep the image in
+     * pan limits, keeping the requested center as near to the middle of the screen as allowed.
+     */
+    private PointF limitedSCenter(PointF sCenter, float scale) {
+        PointF vTranslate = vTranslateForSCenter(sCenter, scale);
+        int mY = getHeight()/2;
+        float sx = ((getWidth()/2) - vTranslate.x)/scale;
+        float sy = ((getHeight()/2) - vTranslate.y)/scale;
+        return new PointF(sx, sy);
+    }
+
+    /**
+     * Adjust a requested scale to be within the allowed limits.
+     */
+    private float limitedScale(float targetScale) {
+        float minScale = Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+        targetScale = Math.max(minScale, targetScale);
+        targetScale = Math.min(maxScale, targetScale);
+        return targetScale;
     }
 
     /**
@@ -1598,6 +1605,32 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
+     * beyond the panning limits, the image is automatically panned during the animation.
+     * @param scale Target scale.
+     * @return {@link ScaleAnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.ScaleAnimationBuilder#start()} to start the anim.
+     */
+    public ScaleAnimationBuilder animateScale(float scale) {
+        if (!isImageReady()) {
+            return null;
+        }
+        return new ScaleAnimationBuilder(scale);
+    }
+
+    /**
+     * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
+     * beyond the panning limits, the image is automatically panned during the animation.
+     * @param scale Target scale.
+     * @return {@link ScaleAnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.ScaleAnimationBuilder#start()} to start the anim.
+     */
+    public ScaleAnimationBuilder animateScaleAndCenter(float scale, PointF sCenter) {
+        if (!isImageReady()) {
+            return null;
+        }
+        return new ScaleAnimationBuilder(scale, sCenter);
+    }
+
+    /**
      * Builder class used to set additional options for a pan animation. Create an instance using {@link #animateCenter(android.graphics.PointF)},
      * then set your options and call {@link #start()}.
      */
@@ -1613,7 +1646,7 @@ public class SubsamplingScaleImageView extends View {
         }
 
         /**
-         * Desired duration of the anim in milliseconds.
+         * Desired duration of the anim in milliseconds. Default is 500.
          * @param duration duration in milliseconds.
          * @return this builder for method chaining.
          */
@@ -1623,7 +1656,7 @@ public class SubsamplingScaleImageView extends View {
         }
 
         /**
-         * Whether the animation can be interrupted with a touch.
+         * Whether the animation can be interrupted with a touch. Default is true.
          * @param interruptible interruptible flag.
          * @return this builder for method chaining.
          */
@@ -1632,6 +1665,11 @@ public class SubsamplingScaleImageView extends View {
             return this;
         }
 
+        /**
+         * Set the easing style. See static fields. Default is {@link #EASE_IN_OUT_QUAD}.
+         * @param easing easing style.
+         * @return this builder for method chaining.
+         */
         public CenterAnimationBuilder withEasing(int easing) {
             if (!VALID_EASING_STYLES.contains(easing)) {
                 throw new IllegalArgumentException("Unknown easing type: " + easing);
@@ -1652,6 +1690,112 @@ public class SubsamplingScaleImageView extends View {
             translateAnim.interruptible = interruptible;
             translateAnim.easing = easing;
             translateAnim.time = System.currentTimeMillis();
+            invalidate();
+        }
+
+    }
+
+    /**
+     * Builder class used to set additional options for a scale animation. Create an instance using {@link #animateScale(float)},
+     * then set your options and call {@link #start()}.
+     */
+    public final class ScaleAnimationBuilder {
+
+        private final float targetScale;
+        private final PointF targetSCenter;
+        private final PointF vFocus;
+        private long duration = 500;
+        private int easing = EASE_IN_OUT_QUAD;
+        private boolean interruptible = true;
+
+        private ScaleAnimationBuilder(float scale) {
+            this.targetScale = scale;
+            this.targetSCenter = getCenter();
+            this.vFocus = null;
+        }
+
+        private ScaleAnimationBuilder(float scale, PointF sCenter) {
+            this.targetScale = scale;
+            this.targetSCenter = sCenter;
+            this.vFocus = null;
+        }
+
+        private ScaleAnimationBuilder(float scale, PointF sCenter, PointF vFocus) {
+            this.targetScale = scale;
+            this.targetSCenter = sCenter;
+            this.vFocus = vFocus;
+        }
+
+        /**
+         * Desired duration of the anim in milliseconds. Default is 500.
+         * @param duration duration in milliseconds.
+         * @return this builder for method chaining.
+         */
+        public ScaleAnimationBuilder withDuration(long duration) {
+            this.duration = duration;
+            return this;
+        }
+
+        /**
+         * Whether the animation can be interrupted with a touch. Default is true.
+         * @param interruptible interruptible flag.
+         * @return this builder for method chaining.
+         */
+        public ScaleAnimationBuilder withInterruptible(boolean interruptible) {
+            this.interruptible = interruptible;
+            return this;
+        }
+
+        /**
+         * Set the easing style. See static fields. {@link #EASE_IN_OUT_QUAD} is recommended, and the default.
+         * @param easing easing style.
+         * @return this builder for method chaining.
+         */
+        public ScaleAnimationBuilder withEasing(int easing) {
+            if (!VALID_EASING_STYLES.contains(easing)) {
+                throw new IllegalArgumentException("Unknown easing type: " + easing);
+            }
+            this.easing = easing;
+            return this;
+        }
+
+        /**
+         * Starts the animation.
+         */
+        public void start() {
+            float targetScale = limitedScale(this.targetScale);
+            PointF targetSCenter = limitedSCenter(this.targetSCenter, targetScale);
+            scaleAnim = new ScaleAnim();
+            scaleAnim.scaleStart = scale;
+            scaleAnim.scaleEnd = targetScale;
+            scaleAnim.time = System.currentTimeMillis();
+            scaleAnim.sCenterEndRequested = targetSCenter;
+            scaleAnim.sCenterStart = getCenter();
+            scaleAnim.sCenterEnd = targetSCenter;
+            scaleAnim.vFocusStart = sourceToViewCoord(targetSCenter);
+            scaleAnim.vFocusEnd = new PointF(
+                getWidth()/2,
+                getHeight()/2
+            );
+            scaleAnim.duration = duration;
+            scaleAnim.interruptible = interruptible;
+            scaleAnim.easing = easing;
+            scaleAnim.time = System.currentTimeMillis();
+
+            if (vFocus != null) {
+                // Calculate where translation will be at the end of the anim
+                float vTranslateXEnd = vFocus.x - (targetScale * scaleAnim.sCenterStart.x);
+                float vTranslateYEnd = vFocus.y - (targetScale * scaleAnim.sCenterStart.y);
+                ScaleAndTranslate satEnd = new ScaleAndTranslate(targetScale, new PointF(vTranslateXEnd, vTranslateYEnd));
+                // Fit the end translation into bounds
+                fitToBounds(true, satEnd);
+                // Adjust the position of the focus point at end so image will be in bounds
+                scaleAnim.vFocusEnd = new PointF(
+                        vFocus.x + (satEnd.translate.x - vTranslateXEnd),
+                        vFocus.y + (satEnd.translate.y - vTranslateYEnd)
+                );
+            }
+
             invalidate();
         }
 

@@ -16,6 +16,7 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview.sample;
 
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -27,6 +28,8 @@ import android.widget.Toast;
 import com.davemorrissey.labs.subscaleview.ImageViewState;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
+
+import java.util.Random;
 
 public class PageFragment extends Fragment implements OnClickListener, OnLongClickListener {
 
@@ -60,9 +63,13 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
         }
 
         rootView.findViewById(id.rotate).setOnClickListener(this);
+        rootView.findViewById(id.scale).setOnClickListener(this);
+        rootView.findViewById(id.center).setOnClickListener(this);
         if (asset != null) {
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
             imageView.setImageAsset(asset, imageViewState);
+            imageView.setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER);
+            imageView.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE);
             imageView.setOnClickListener(this);
             imageView.setOnLongClickListener(this);
         }
@@ -77,6 +84,18 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
             orientation = (orientation + 90) % 360;
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
             imageView.setOrientation(orientation);
+        } else if (view.getId() == id.scale && rootView != null) {
+            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+            Random random = new Random();
+            int sx = random.nextInt(imageView.getSWidth());
+            int sy = random.nextInt(imageView.getSHeight());
+            imageView.animateScaleAndCenter(random.nextFloat() * 2, new PointF(sx, sy)).withDuration(1500).start();
+        } else if (view.getId() == id.center && rootView != null) {
+            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+            Random random = new Random();
+            int sx = random.nextInt(imageView.getSWidth());
+            int sy = random.nextInt(imageView.getSHeight());
+            imageView.animateCenter(new PointF(sx, sy)).withDuration(1500).start();
         } else if (view.getId() == id.imageView) {
             Toast.makeText(getActivity(), "Clicked", Toast.LENGTH_SHORT).show();
         }
