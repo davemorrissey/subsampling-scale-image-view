@@ -87,15 +87,19 @@ public class PageFragment extends Fragment implements OnClickListener, OnLongCli
         } else if (view.getId() == id.scale && rootView != null) {
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
             Random random = new Random();
-            int sx = random.nextInt(imageView.getSWidth());
-            int sy = random.nextInt(imageView.getSHeight());
-            imageView.animateScaleAndCenter(random.nextFloat() * 2, new PointF(sx, sy)).withDuration(1500).start();
+            if (imageView.isImageReady()) {
+                int sx = random.nextInt(imageView.getSWidth());
+                int sy = random.nextInt(imageView.getSHeight());
+                imageView.animateScaleAndCenter(random.nextFloat() * 2, new PointF(sx, sy)).withDuration(1500).start();
+            }
         } else if (view.getId() == id.center && rootView != null) {
             SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
             Random random = new Random();
-            int sx = random.nextInt(imageView.getSWidth());
-            int sy = random.nextInt(imageView.getSHeight());
-            imageView.animateCenter(new PointF(sx, sy)).withDuration(1500).start();
+            if (imageView.isImageReady()) {
+                int sx = random.nextInt(imageView.getSWidth());
+                int sy = random.nextInt(imageView.getSHeight());
+                imageView.animateCenter(new PointF(sx, sy)).withDuration(1500).start();
+            }
         } else if (view.getId() == id.imageView) {
             Toast.makeText(getActivity(), "Clicked", Toast.LENGTH_SHORT).show();
         }
