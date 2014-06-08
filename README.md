@@ -28,6 +28,11 @@ pinch to zoom is required to view the high resolution detail.
 * Double tap to zoom in and out
 * Options to disable pan and/or zoom gestures
 
+#### Animation
+* Public methods for animating the scale and center
+* Customisable duration and easing
+* Optional uninterruptible animations
+
 #### Overridable event detection
 * Supports `OnClickListener` and `OnLongClickListener`
 * Supports interception of events using `GestureDetector` and `OnTouchListener`
