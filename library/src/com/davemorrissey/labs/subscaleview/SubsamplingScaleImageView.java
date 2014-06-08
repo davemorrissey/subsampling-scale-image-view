@@ -105,6 +105,9 @@ public class SubsamplingScaleImageView extends View {
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
 
+    // Density to reach before loading higher resolution tiles
+    private int minimumTileDpi = -1;
+
     // Pan limiting style
     private int panLimit = PAN_LIMIT_INSIDE;
 
@@ -647,7 +650,7 @@ public class SubsamplingScaleImageView extends View {
         }
 
         // Optimum sample size for current scale
-        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (sWidth() * scale), (int) (sHeight() * scale)));
+        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize());
 
         // First check for missing tiles - if there are any we need the base layer underneath to avoid gaps
         boolean hasMissingTiles = false;
@@ -727,7 +730,7 @@ public class SubsamplingScaleImageView extends View {
 
         // Load double resolution - next level will be split into four tiles and at the center all four are required,
         // so don't bother with tiling until the next level 16 tiles are needed.
-        fullImageSampleSize = calculateInSampleSize((int) (sWidth() * scale), (int) (sHeight() * scale));
+        fullImageSampleSize = calculateInSampleSize();
         if (fullImageSampleSize > 1) {
             fullImageSampleSize /= 2;
         }
@@ -748,7 +751,7 @@ public class SubsamplingScaleImageView extends View {
      * @param load Whether to load the new tiles needed. Use false while scrolling/panning for performance.
      */
     private void refreshRequiredTiles(boolean load) {
-        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize((int) (scale * sWidth()), (int) (scale * sHeight())));
+        int sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize());
         RectF vVisRect = new RectF(0, 0, getWidth(), getHeight());
         RectF sVisRect = viewToSourceRect(vVisRect);
 
@@ -788,7 +791,17 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Calculates sample size to fit the source image in given bounds.
      */
-    private int calculateInSampleSize(int reqWidth, int reqHeight) {
+    private int calculateInSampleSize() {
+        float adjustedScale = scale;
+        if (minimumTileDpi > 0) {
+            DisplayMetrics metrics = getResources().getDisplayMetrics();
+            float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
+            adjustedScale = (minimumTileDpi/averageDpi) * scale;
+        }
+
+        int reqWidth = (int)(sWidth() * adjustedScale);
+        int reqHeight = (int)(sHeight() * adjustedScale);
+
         // Raw height and width of image
         int inSampleSize = 1;
         if (reqWidth == 0 || reqHeight == 0) {
@@ -1097,7 +1110,6 @@ public class SubsamplingScaleImageView extends View {
         private boolean interruptible = true; // Whether the anim can be interrupted by a touch
         private int easing = EASE_IN_OUT_QUAD; // Easing style
         private long time = System.currentTimeMillis(); // Start time
-        private boolean fitToBounds = false; // Animate in bounds - used for fling
 
     }
 
@@ -1399,6 +1411,21 @@ public class SubsamplingScaleImageView extends View {
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
         setMaxScale(averageDpi/dpi);
+    }
+
+    /**
+     * By default, image tiles are at least as high resolution as the screen. For a retina screen this may not be
+     * necessary, and may increase the likelihood of an OutOfMemoryError. This method sets a DPI at which higher
+     * resolution tiles should be loaded. Using a lower number will on average use less memory but result in a lower
+     * quality image. 160-240dpi will usually be enough.
+     * @param minimumTileDpi Tile loading threshold.
+     */
+    public void setMinimumTileDpi(int minimumTileDpi) {
+        this.minimumTileDpi = minimumTileDpi;
+        if (isImageReady()) {
+            reset(false);
+            invalidate();
+        }
     }
 
     /**
