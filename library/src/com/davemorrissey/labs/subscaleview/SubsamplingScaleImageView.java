@@ -896,22 +896,26 @@ public class SubsamplingScaleImageView extends View {
     private void initialiseTileMap(Point maxTileDimensions) {
         this.tileMap = new LinkedHashMap<Integer, List<Tile>>();
         int sampleSize = fullImageSampleSize;
-        int tilesPerSide = 1;
+        int xTiles = 1;
+        int yTiles = 1;
         while (true) {
-            int sTileWidth = sWidth()/tilesPerSide;
-            int sTileHeight = sHeight()/tilesPerSide;
+            int sTileWidth = sWidth()/xTiles;
+            int sTileHeight = sHeight()/yTiles;
             int subTileWidth = sTileWidth/sampleSize;
             int subTileHeight = sTileHeight/sampleSize;
-            while (subTileWidth > maxTileDimensions.x || subTileHeight > maxTileDimensions.y) {
-                tilesPerSide *= 2;
-                sTileWidth = sWidth()/tilesPerSide;
-                sTileHeight = sHeight()/tilesPerSide;
+            while (subTileWidth > maxTileDimensions.x || (subTileWidth > getWidth() * 1.25 && sampleSize < fullImageSampleSize)) {
+                xTiles += 1;
+                sTileWidth = sWidth()/xTiles;
                 subTileWidth = sTileWidth/sampleSize;
+            }
+            while (subTileHeight > maxTileDimensions.y || (subTileHeight > getHeight() * 1.25 && sampleSize < fullImageSampleSize)) {
+                yTiles += 1;
+                sTileHeight = sHeight()/yTiles;
                 subTileHeight = sTileHeight/sampleSize;
             }
-            List<Tile> tileGrid = new ArrayList<Tile>(tilesPerSide * tilesPerSide);
-            for (int x = 0; x < tilesPerSide; x++) {
-                for (int y = 0; y < tilesPerSide; y++) {
+            List<Tile> tileGrid = new ArrayList<Tile>(xTiles * yTiles);
+            for (int x = 0; x < xTiles; x++) {
+                for (int y = 0; y < yTiles; y++) {
                     Tile tile = new Tile();
                     tile.sampleSize = sampleSize;
                     tile.visible = sampleSize == fullImageSampleSize;
@@ -925,7 +929,6 @@ public class SubsamplingScaleImageView extends View {
                 }
             }
             tileMap.put(sampleSize, tileGrid);
-            tilesPerSide = (tilesPerSide == 1) ? 4 : tilesPerSide * 2;
             if (sampleSize == 1) {
                 break;
             } else {
