@@ -29,7 +29,7 @@ import com.davemorrissey.labs.subscaleview.sample.R.layout;
 
 public class ViewPagerActivity extends FragmentActivity {
 
-    private static final String[] IMAGES = { "DSC04285.JPG", "DSC03250.JPG" };
+    private static final String[] IMAGES = { "ness.jpg", "squirrel.jpg" };
 
     private ViewPager page;
 
