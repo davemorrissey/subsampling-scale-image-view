@@ -364,12 +364,12 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * On resize, zoom out to full size again. Various behaviours are possible, override this method to use another.
+     * On resize, preserve center and scale. Various behaviours are possible, override this method to use another.
      */
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         if (readySent) {
-            reset(false);
+            setScaleAndCenter(getScale(), getCenter());
         }
     }
 
@@ -1405,6 +1405,13 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Returns the maximum allowed scale.
+     */
+    public float getMaxScale() {
+        return maxScale;
+    }
+
+    /**
      * This is a screen density aware alternative to {@link #setMaxScale(float)}; it allows you to express the maximum
      * allowed scale in terms of the minimum pixel density. This avoids the problem of 1:1 scale still being
      * too small on a high density screen. A sensible starting point is 160 - the default used by this view.
@@ -1417,6 +1424,13 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Returns the minimum allowed scale.
+     */
+    public final float getMinScale() {
+        return minScale();
+    }
+
+    /**
      * By default, image tiles are at least as high resolution as the screen. For a retina screen this may not be
      * necessary, and may increase the likelihood of an OutOfMemoryError. This method sets a DPI at which higher
      * resolution tiles should be loaded. Using a lower number will on average use less memory but result in a lower
@@ -1424,7 +1438,9 @@ public class SubsamplingScaleImageView extends View {
      * @param minimumTileDpi Tile loading threshold.
      */
     public void setMinimumTileDpi(int minimumTileDpi) {
-        this.minimumTileDpi = minimumTileDpi;
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
+        this.minimumTileDpi = (int)Math.min(averageDpi, minimumTileDpi);
         if (isImageReady()) {
             reset(false);
             invalidate();
@@ -1488,7 +1504,7 @@ public class SubsamplingScaleImageView extends View {
      * Call to find whether the view is initialised and ready for rendering tiles.
      */
     public final boolean isImageReady() {
-        return readySent;
+        return readySent && vTranslate != null && tileMap != null && sWidth > 0 && sHeight > 0;
     }
 
     /**
@@ -1563,8 +1579,10 @@ public class SubsamplingScaleImageView extends View {
         if (!panEnabled && vTranslate != null) {
             vTranslate.x = (getWidth()/2) - (scale * (sWidth()/2));
             vTranslate.y = (getHeight()/2) - (scale * (sHeight()/2));
-            refreshRequiredTiles(true);
-            invalidate();
+            if (isImageReady()) {
+                refreshRequiredTiles(true);
+                invalidate();
+            }
         }
     }
 
