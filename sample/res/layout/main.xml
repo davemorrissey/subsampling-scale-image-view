@@ -1,14 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent">
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content">
 
-    <android.support.v4.view.ViewPager
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/pager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:orientation="vertical">
 
-</RelativeLayout>
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
 
+            <TextView
+                    android:id="@+id/basicFeatures"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Basic features"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/imageDisplay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Image display"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/eventHandling"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Event handling"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/advancedEventHandling"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Advanced event handling"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/viewPagerGalleries"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="View pager galleries"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/animation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Animation"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/extension"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Extension"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+
+            <TextView
+                    android:id="@+id/configuration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/buttonstate_transparent"
+                    android:gravity="center_horizontal"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:text="Configuration"/>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="#333333"/>
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/self"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/buttonstate_transparent"
+                android:padding="10dp"
+                android:orientation="vertical">
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/daffy"/>
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center_horizontal"
+                    android:textSize="13sp"
+                    android:textColor="#777777"
+                    android:text="by Dave Morrissey"/>
+
+        </LinearLayout>
+
+        <Button
+                android:id="@+id/github"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_gravity="center_horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:textSize="16sp"
+                android:text="View on GitHub"/>
+
+    </LinearLayout>
+</ScrollView>

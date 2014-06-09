@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="demoTheme" parent="@android:style/Theme.Holo">
+        <item name="android:actionBarStyle">@style/demoActionBar</item>
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+
+    <style name="demoActionBar" parent="@android:style/Widget.Holo.ActionBar">
+        <item name="android:background">@color/actionBarBackground</item>
+    </style>
+
+</resources>

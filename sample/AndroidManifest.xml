@@ -5,12 +5,20 @@
           android:versionName="1.0"
           android:hardwareAccelerated="true">
 <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="14"/>
-<application android:label="Scale View Demo">
-    <activity android:name=".SampleActivity" android:label="Scale View Demo" android:theme="@android:style/Theme.NoTitleBar">
+<application android:label="Scale Image View Demo" android:theme="@style/demoTheme" android:icon="@drawable/launcher">
+    <activity android:name=".MainActivity" android:label="Scale View Demo">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>
             <category android:name="android.intent.category.LAUNCHER"/>
         </intent-filter>
     </activity>
+    <activity android:name=".basicfeatures.BasicFeaturesActivity"/>
+    <activity android:name=".imagedisplay.ImageDisplayActivity"/>
+    <activity android:name=".eventhandling.EventHandlingActivity"/>
+    <activity android:name=".eventhandlingadvanced.AdvancedEventHandlingActivity"/>
+    <activity android:name=".viewpager.ViewPagerActivity"/>
+    <activity android:name=".animation.AnimationActivity"/>
+    <activity android:name=".extension.ExtensionActivity"/>
+    <activity android:name=".configuration.ConfigurationActivity"/>
 </application>
 </manifest>

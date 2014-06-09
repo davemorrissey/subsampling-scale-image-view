@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <RelativeLayout
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="#333">
+
+        <TextView
+                android:id="@+id/note"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:padding="10dp"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:text="This gallery has two images in a ViewPager. Swipe to move to the next image. If you're zoomed in on an image, you need to pan to the right of it, then swipe again to activate the pager."/>
+
+    </RelativeLayout>
+
+    <android.support.v4.view.ViewPager
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pager"
+            android:layout_above="@id/text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+</RelativeLayout>
+
