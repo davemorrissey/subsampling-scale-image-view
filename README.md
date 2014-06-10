@@ -1,6 +1,10 @@
 Subsampling Zoom Image View
 ===========================
 
+#### Download the sample app
+
+[![Get it on Google Play](https://developer.android.com/images/brand/en_generic_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
+
 A custom ImageView for Android with pinch to zoom and subsampled tiles to support large images. While zooming in, the
 low resolution, full size base layer is overlaid with smaller tiles at least as high resolution as the screen, and
 tiles are loaded and discarded during panning to avoid holding too much bitmap data in memory.
@@ -43,9 +47,6 @@ pinch to zoom is required to view the high resolution detail.
 * Easily restore scale, center and orientation after screen rotation
 * Can be extended to add overlay graphics that move and scale with the image
 * Handles view resizing and `wrap_content` layout
-
-#### Coming soon...
-* Demonstration app
 
 #### Limitations
 * Requires SDK 10 (Gingerbread).
