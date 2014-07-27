@@ -44,11 +44,7 @@ import java.util.*;
  * a set of image tiles subsampled at higher resolution are loaded and displayed over the base layer. During pinch and
  * zoom, tiles off screen or higher/lower resolution than required are discarded from memory.
  *
- * Tiles over 2048px are not used due to hardware rendering limitations.
- *
- * This view will not work very well with images that are far larger in one dimension than the other because the tile grid
- * for each subsampling level has the same number of rows as columns, so each tile has the same width:height ratio as
- * the source image. This could result in image data totalling several times the screen area being loaded.
+ * Tiles are no larger than the max supported bitmap size, so with large images tiling may be used even when zoomed out.
  *
  * v prefixes - coordinates, translations and distances measured in screen (view) pixels
  * s prefixes - coordinates, translations and distances measured in source image pixels (scaled)
