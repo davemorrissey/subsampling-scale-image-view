@@ -1,7 +1,7 @@
 Subsampling Zoom Image View
 ===========================
 
-**This library includes two classes, **`ScaleImageView`** and **`SubsamplingScaleImageView`**. **`SubsamplingScaleImageView`** is best for large images but doesn't support display of **`Bitmap`** objects or resources, and **`ScaleImageView`** supports **`Bitmap`** objects but not subsampling or large images. To decide which is best for you, see below.**
+This library includes two classes, `ScaleImageView` and `SubsamplingScaleImageView`. `SubsamplingScaleImageView` is best for large images but doesn't support display of `Bitmap` objects or resources, and `ScaleImageView` supports `Bitmap` objects but not subsampling or large images. To decide which is best for you, see below.
 
 #### Download the sample app
 
