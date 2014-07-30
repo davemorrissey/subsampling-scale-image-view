@@ -1,27 +1,35 @@
 Subsampling Zoom Image View
 ===========================
 
+**This library includes two classes, **`ScaleImageView`** and **`SubsamplingScaleImageView`**. **`SubsamplingScaleImageView`** is best for large images but doesn't support display of **`Bitmap`** objects or resources, and **`ScaleImageView`** supports **`Bitmap`** objects but not subsampling or large images. To decide which is best for you, see below.**
+
 #### Download the sample app
 
 [![Get it on Google Play](https://developer.android.com/images/brand/en_generic_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
 
-A custom ImageView for Android with pinch to zoom and subsampled tiles to support large images. While zooming in, the
-low resolution, full size base layer is overlaid with smaller tiles at least as high resolution as the screen, and
-tiles are loaded and discarded during panning to avoid holding too much bitmap data in memory.
 
-Ideal for use in image gallery apps where the size of the images may be large enough to require subsampling, and where
+Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.
+
+`SubsamplingScaleImageView` uses subsampling and tiles to support large images. While zooming in, the
+low resolution, full size base layer is overlaid with smaller tiles at least as high resolution as the screen, and
+tiles are loaded and discarded during panning to avoid holding too much bitmap data in memory. This is ideal for use in image gallery apps where the size of the images may be large enough to require subsampling, and where
 pinch to zoom is required to view the high resolution detail.
 
-*This view doesn't extend `ImageView` and isn't intended as a general replacement for it. It's specialized for the display of much larger images than `ImageView` can display, so it's perfect for image galleries and displaying images from the camera.*
+*These views don't extend `ImageView` and aren't intended as a general purpose replacement for it. They're specialised for the display of photos and other large images, not the display of 9-patches, shapes and the other types of drawable that ImageView supports.*
 
 #### Image display
-* Display huge images, larger than can be loaded into memory
-* Show high resolution detail on zooming in
-* Tested up to 20,000x13,000px, though larger images are slower
+
 * Display images from assets or the file system
 * Automatically rotate images from the file system (e.g. the camera or gallery) according to EXIF
 * Manually rotate images in 90° increments
 * Swap images at runtime
+
+*`SubsamplingScaleImageView` only:*
+
+* Display huge images, larger than can be loaded into memory
+* Show high resolution detail on zooming in
+* Tested up to 20,000x13,000px, though larger images are slower
+
 
 #### Gesture detection
 * One finger pan
@@ -49,10 +57,27 @@ pinch to zoom is required to view the high resolution detail.
 * Handles view resizing and `wrap_content` layout
 
 #### Limitations
-* Requires SDK 10 (Gingerbread).
-* No support for decoding an image from resources - the image file needs to be in assets or external storage.
-* This view does not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
+* `SubsamplingScaleImageView` requires SDK 10 (Gingerbread).
+* `SubsamplingScaleImageView` cannot decode an image from resources or display a `Bitmap` object - the image file needs to be in assets or external storage.
+* These views do not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
 * Images stored in assets cannot be rotated based on EXIF, you'll need to do it manually. You probably know the orientation of your own assets :-)
+
+## Which view is best?
+
+Use `SubsamplingScaleImageView` if:
+
+* You want to zoom into very large images without losing detail.
+* You need to display images of unknown size e.g. from the camera or gallery.
+* You don't know if the images may be too large to fit in memory on some devices.
+* You need to display images larger than 2048px.
+* You don't need to support devices older than SDK 10.
+
+Use `ScaleImageView` if:
+
+* You know the size of the images you're displaying.
+* You know the images are small enough to fit in memory on all your target devices.
+* Your images are no larger than 2048px, or you are able to scale them down.
+* You need to support devices older than SDK 10.
 
 ## Quality notes
 
@@ -139,7 +164,7 @@ If you want the current scale, center and orientation to be preserved when the s
 
 ## Extending functionality
 
-Take a look at the sample app for a simple implementation showing the view in a `ViewPager` with an `OnClickListener` and an `OnLongClickListener`. I'll add more examples to this soon.
+Take a look at the sample app for examples of classes that overlay graphics on top of the image so that they move and scale with it. `FreehandView` adds event detection, capturing only the touch events it needs so pan and zoom still work normally.
 
 ## About
 
