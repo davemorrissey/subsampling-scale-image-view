@@ -166,6 +166,7 @@ public class ScaleImageView extends View {
         super(context, attr);
         setMinimumDpi(160);
         setDoubleTapZoomDpi(160);
+        setGestureDetector(context);
         this.handler = new Handler(new Handler.Callback() {
             public boolean handleMessage(Message message) {
                 if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
@@ -177,47 +178,6 @@ public class ScaleImageView extends View {
                 return true;
             }
         });
-        this.detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (panEnabled && readySent && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
-                    PointF vTranslateEnd = new PointF(vTranslate.x + (velocityX * 0.25f), vTranslate.y + (velocityY * 0.25f));
-                    float sCenterXEnd = ((getWidth()/2) - vTranslateEnd.x)/scale;
-                    float sCenterYEnd = ((getHeight()/2) - vTranslateEnd.y)/scale;
-                    new AnimationBuilder(new PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withPanLimited(false).start();
-                    return true;
-                }
-                return super.onFling(e1, e2, velocityX, velocityY);
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                performClick();
-                return true;
-            }
-
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                if (zoomEnabled && readySent && vTranslate != null) {
-                    float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
-                    boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
-                    float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
-                    PointF targetSCenter = viewToSourceCoord(new PointF(e.getX(), e.getY()));
-                    if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
-                        setScaleAndCenter(targetScale, targetSCenter);
-                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn) {
-                        new AnimationBuilder(targetScale, targetSCenter).withInterruptible(false).start();
-                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
-                        new AnimationBuilder(targetScale, targetSCenter, new PointF(e.getX(), e.getY())).withInterruptible(false).start();
-                    }
-
-                    invalidate();
-                    return true;
-                }
-                return super.onDoubleTapEvent(e);
-            }
-        });
-
         // Handle XML attributes
         if (attr != null) {
             TypedArray typedAttr = getContext().obtainStyledAttributes(attr, styleable.SubsamplingScaleImageView);
@@ -373,6 +333,53 @@ public class ScaleImageView extends View {
             readySent = false;
         }
         forceCenterOnNextDraw();
+    }
+
+    private void setGestureDetector(final Context context) {
+        this.detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (panEnabled && readySent && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
+                    PointF vTranslateEnd = new PointF(vTranslate.x + (velocityX * 0.25f), vTranslate.y + (velocityY * 0.25f));
+                    float sCenterXEnd = ((getWidth()/2) - vTranslateEnd.x)/scale;
+                    float sCenterYEnd = ((getHeight()/2) - vTranslateEnd.y)/scale;
+                    new AnimationBuilder(new PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withPanLimited(false).start();
+                    return true;
+                }
+                return super.onFling(e1, e2, velocityX, velocityY);
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                performClick();
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (zoomEnabled && readySent && vTranslate != null) {
+                    float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
+                    boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
+                    float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+                    PointF targetSCenter = viewToSourceCoord(new PointF(e.getX(), e.getY()));
+                    if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
+                        setScaleAndCenter(targetScale, targetSCenter);
+                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn) {
+                        new AnimationBuilder(targetScale, targetSCenter).withInterruptible(false).start();
+                    } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
+                        new AnimationBuilder(targetScale, targetSCenter, new PointF(e.getX(), e.getY())).withInterruptible(false).start();
+                    }
+
+                    // Hacky solution for #15 - after a double tap the GestureDetector gets in a state where the next
+                    // fling is ignored, so here we replace it with a new one.
+                    setGestureDetector(context);
+
+                    invalidate();
+                    return true;
+                }
+                return super.onDoubleTapEvent(e);
+            }
+        });
     }
 
     /**
