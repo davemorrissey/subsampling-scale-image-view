@@ -90,6 +90,13 @@ public class ScaleImageView extends View {
 
     private static final List<Integer> VALID_PAN_LIMITS = Arrays.asList(PAN_LIMIT_INSIDE, PAN_LIMIT_OUTSIDE, PAN_LIMIT_CENTER);
 
+    /** Scale the image so that both dimensions of the image will be equal to or less than the corresponding dimension of the view. The image is then centered in the view. This is the default behaviour and best for galleries. */
+    public static final int SCALE_TYPE_CENTER_INSIDE = 1;
+    /** Scale the image uniformly so that both dimensions of the image will be equal to or larger than the corresponding dimension of the view. The image is then centered in the view. */
+    public static final int SCALE_TYPE_CENTER_CROP = 2;
+
+    private static final List<Integer> VALID_SCALE_TYPES = Arrays.asList(SCALE_TYPE_CENTER_CROP, SCALE_TYPE_CENTER_INSIDE);
+
     // The bitmap to be displayed
     private Bitmap bitmap;
 
@@ -104,6 +111,9 @@ public class ScaleImageView extends View {
 
     // Pan limiting style
     private int panLimit = PAN_LIMIT_INSIDE;
+
+    // Minimum scale type
+    private int minimumScaleType = SCALE_TYPE_CENTER_INSIDE;
 
     // Gesture detection settings
     private boolean panEnabled = true;
@@ -765,12 +775,17 @@ public class ScaleImageView extends View {
      * @param center Whether the image should be centered in the dimension it's too small to fill. While animating this can be false to avoid changes in direction as bounds are reached.
      */
     private void fitToBounds(boolean center) {
+        boolean init = false;
         if (vTranslate == null) {
+            init = true;
             vTranslate = new PointF(0, 0);
         }
         ScaleAndTranslate input = new ScaleAndTranslate(scale, vTranslate);
         fitToBounds(center, input);
         scale = input.scale;
+        if (init) {
+            vTranslate = vTranslateForSCenter(new PointF(sWidth()/2, sHeight()/2), scale);
+        }
     }
 
     /**
@@ -1034,7 +1049,11 @@ public class ScaleImageView extends View {
      * Returns the minimum allowed scale.
      */
     private float minScale() {
-        return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+        if (minimumScaleType == SCALE_TYPE_CENTER_INSIDE) {
+            return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+        } else {
+            return Math.max(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+        }
     }
 
     /**
@@ -1105,6 +1124,20 @@ public class ScaleImageView extends View {
             throw new IllegalArgumentException("Invalid pan limit: " + panLimit);
         }
         this.panLimit = panLimit;
+        if (isImageReady()) {
+            fitToBounds(true);
+            invalidate();
+        }
+    }
+
+    /**
+     * Set the minimum scale type. See static fields. Normally {@link #SCALE_TYPE_CENTER_INSIDE} is best, for image galleries.
+     */
+    public final void setMinimumScaleType(int scaleType) {
+        if (!VALID_SCALE_TYPES.contains(scaleType)) {
+            throw new IllegalArgumentException("Invalid scale type: " + scaleType);
+        }
+        this.minimumScaleType = scaleType;
         if (isImageReady()) {
             fitToBounds(true);
             invalidate();
