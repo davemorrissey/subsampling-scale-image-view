@@ -21,6 +21,7 @@ limitations under the License.
         <attr name="assetName" format="string"/>
         <attr name="panEnabled" format="boolean"/>
         <attr name="zoomEnabled" format="boolean"/>
+        <attr name="tileBackgroundColor" format="color"/>
     </declare-styleable>
 
 </resources>

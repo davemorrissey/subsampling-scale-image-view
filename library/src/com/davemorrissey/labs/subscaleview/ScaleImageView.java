@@ -171,6 +171,7 @@ public class ScaleImageView extends View {
     // Paint objects created once and reused for efficiency
     private Paint bitmapPaint;
     private Paint debugPaint;
+    private Paint tileBgPaint;
 
     public ScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -208,6 +209,9 @@ public class ScaleImageView extends View {
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_zoomEnabled)) {
                 setZoomEnabled(typedAttr.getBoolean(styleable.SubsamplingScaleImageView_zoomEnabled, true));
+            }
+            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_tileBackgroundColor)) {
+                setTileBackgroundColor(typedAttr.getColor(styleable.SubsamplingScaleImageView_tileBackgroundColor, Color.argb(0, 0, 0, 0)));
             }
         }
     }
@@ -669,8 +673,6 @@ public class ScaleImageView extends View {
         }
 
         // Render the bitmap.
-        RectF sRect = new RectF(0f, 0f, sWidth, sHeight);
-        RectF vRect = sourceToViewRect(sRect);
 
         Matrix matrix = new Matrix();
         matrix.postScale(scale, scale);
@@ -683,6 +685,12 @@ public class ScaleImageView extends View {
             matrix.postTranslate(scale * sHeight, 0);
         } else if (getOrientation() == ORIENTATION_270) {
             matrix.postTranslate(0, scale * sWidth);
+        }
+
+        if (tileBgPaint != null) {
+            RectF sRect = new RectF(0f, 0f, sWidth, sHeight);
+            matrix.mapRect(sRect);
+            canvas.drawRect(sRect, tileBgPaint);
         }
         canvas.drawBitmap(bitmap, matrix, bitmapPaint);
 
@@ -1315,6 +1323,21 @@ public class ScaleImageView extends View {
                 invalidate();
             }
         }
+    }
+
+    /**
+     * Set a solid color to render behind tiles, useful for displaying transparent PNGs.
+     * @param tileBgColor Background color for tiles.
+     */
+    public final void setTileBackgroundColor(int tileBgColor) {
+        if (Color.alpha(tileBgColor) == 0) {
+            tileBgPaint = null;
+        } else {
+            tileBgPaint = new Paint();
+            tileBgPaint.setStyle(Style.FILL);
+            tileBgPaint.setColor(tileBgColor);
+        }
+        invalidate();
     }
 
     /**
