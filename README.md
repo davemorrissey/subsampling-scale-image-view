@@ -101,7 +101,7 @@ Add the library to you app using one of these methods:
 
 * Clone the project and import the library project as a module in your app;
 * *or* clone the project and copy the resources and classes from `com.davemorrissey.labs.subscaleview` into your project
-* *or* download the library from [builds/subsampling-scale-image-view.aar](https://github.com/davemorrissey/subsampling-scale-image-view/tree/master/builds/subsampling-scale-image-view.aar) and import it into your project
+* *or* download the library from [builds/subsampling-scale-image-view.aar](https://github.com/davemorrissey/subsampling-scale-image-view/raw/master/builds/subsampling-scale-image-view.aar) and import it into your project
 
 Add the view to your layout XML as shown below. Normally you should set width and height to `match_parent`.
 
