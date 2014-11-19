@@ -68,6 +68,7 @@ pinch to zoom is required to view the high resolution detail.
 #### Limitations
 * `SubsamplingScaleImageView` requires SDK 10 (Gingerbread).
 * `SubsamplingScaleImageView` cannot decode an image from resources or display a `Bitmap` object - the image file needs to be in assets or external storage.
+* `SubsamplingScaleImageView` cannot display grayscale PNGs on Android Lollipop, due to bugs in the skia library and/or BitmapRegionDecoder. Earlier versions of Android also have issues displaying some grayscale PNGs, but not all. I have reported these bugs to Google.
 * These views do not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
 * Images stored in assets cannot be rotated based on EXIF, you'll need to do it manually. You probably know the orientation of your own assets :-)
 
