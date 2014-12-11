@@ -1453,18 +1453,10 @@ public class SubsamplingScaleImageView extends View {
 
     /**
      * Set the minimum scale allowed. A value of 1 means 1:1 pixels at minimum scale. You may wish to set this according
-     * to screen density - on a retina screen, 1:1 may still be too small. Consider using {@link #setMinimumDpi(int)},
-     * which is density aware.
+     * to screen density. Consider using {@link #setMaximumDpi(int)}, which is density aware.
      */
     public final void setMinScale(float minScale) {
         this.minScale = minScale;
-    }
-
-    /**
-     * Returns the maximum allowed scale.
-     */
-    public float getMaxScale() {
-        return maxScale;
     }
 
     /**
@@ -1477,6 +1469,24 @@ public class SubsamplingScaleImageView extends View {
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
         setMaxScale(averageDpi/dpi);
+    }
+
+    /**
+     * This is a screen density aware alternative to {@link #setMinScale(float)}; it allows you to express the minimum
+     * allowed scale in terms of the maximum pixel density.
+     * @param dpi Source image pixel density at minimum zoom.
+     */
+    public final void setMaximumDpi(int dpi) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
+        setMinScale(averageDpi/dpi);
+    }
+
+    /**
+     * Returns the maximum allowed scale.
+     */
+    public float getMaxScale() {
+        return maxScale;
     }
 
     /**
