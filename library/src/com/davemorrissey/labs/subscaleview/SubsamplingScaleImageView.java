@@ -536,7 +536,7 @@ public class SubsamplingScaleImageView extends View {
                             float lastY = vTranslate.y;
                             fitToBounds(true);
                             if (lastX == vTranslate.x || (lastY == vTranslate.y && dy > 10) || isPanning) {
-                                isPanning = true;
+                                isPanning = false;
                             } else if (dx > 5) {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
