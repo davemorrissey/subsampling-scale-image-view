@@ -461,6 +461,9 @@ public class ScaleImageView extends View {
         }
         // Detect flings, taps and double taps
         if (detector == null || detector.onTouchEvent(event)) {
+            isZooming = false;
+            isPanning = false;
+            maxTouchCount = 0;
             return true;
         }
 
@@ -550,7 +553,10 @@ public class ScaleImageView extends View {
                             float lastX = vTranslate.x;
                             float lastY = vTranslate.y;
                             fitToBounds(true);
-                            if (lastX == vTranslate.x || (lastY == vTranslate.y && dy > 10) || isPanning) {
+                            boolean atXEdge = lastX != vTranslate.x;
+                            boolean edgeXSwipe = atXEdge && dx > dy && !isPanning;
+                            boolean yPan = lastY == vTranslate.y && dy > 15;
+                            if (!edgeXSwipe && (!atXEdge || yPan || isPanning)) {
                                 isPanning = true;
                             } else if (dx > 5) {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
