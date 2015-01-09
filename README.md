@@ -98,11 +98,12 @@ This allows them to be decoded as RGB_565.
 
 ## Basic setup
 
-Add the library to you app using one of these methods:
+Add the library to your app using one of these methods:
 
-* Clone the project and import the library project as a module in your app;
+* Add `com.davemorrissey.labs:subsampling-scale-image-view:2.2.1` as a dependency in your build.gradle file
+* *or* download the library aar file from the releases page and add to your app manually
+* *or* clone the project and import the library subproject as a module in your app
 * *or* clone the project and copy the resources and classes from `com.davemorrissey.labs.subscaleview` into your project
-* *or* download the library from [builds/subsampling-scale-image-view.aar](https://github.com/davemorrissey/subsampling-scale-image-view/raw/master/builds/subsampling-scale-image-view.aar) and import it into your project
 
 Add the view to your layout XML as shown below. Normally you should set width and height to `match_parent`.
 
