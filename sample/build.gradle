@@ -1,8 +1,19 @@
 apply plugin: 'android'
 
+allprojects {
+    repositories {
+        maven {
+            url 'https://github.com/suckgamony/RapidDecoder/raw/master/repository'
+        }
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':library')
+    compile 'rapid.decoder:library:0.2.8'
+    compile 'rapid.decoder:jpeg-decoder:0.2.8'
+    compile 'rapid.decoder:png-decoder:0.2.8'
 }
 
 android {

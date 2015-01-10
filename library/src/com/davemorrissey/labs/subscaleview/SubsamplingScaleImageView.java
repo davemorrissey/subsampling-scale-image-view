@@ -16,13 +16,13 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview;
 
+import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.content.res.TypedArray;
 import android.graphics.*;
-import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build.VERSION;
 import android.os.Handler;
@@ -35,6 +35,8 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import com.davemorrissey.labs.subscaleview.R.styleable;
+import com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder;
+import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -53,6 +55,9 @@ import java.util.*;
 public class SubsamplingScaleImageView extends View {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
+
+    private static final String FILE_SCHEME = "file:///";
+    private static final String ASSET_SCHEME = "file:///android_asset/";
 
     /** Attempt to use EXIF information on the image to rotate it. Works for external files only. */
     public static final int ORIENTATION_USE_EXIF = -1;
@@ -159,7 +164,8 @@ public class SubsamplingScaleImageView extends View {
     private GestureDetector detector;
 
     // Tile decoder
-    private BitmapRegionDecoder decoder;
+    private ImageRegionDecoder decoder;
+    private Class<? extends ImageRegionDecoder> decoderClass = SkiaImageRegionDecoder.class;
     private final Object decoderLock = new Object();
 
     // Sample size used to display the whole image when fully zoomed out
@@ -247,28 +253,44 @@ public class SubsamplingScaleImageView extends View {
 
     /**
      * Display an image from a file in internal or external storage.
-     * @param extFile URI of the file to display.
+     * @param fileUri URI of the file to display e.g. '/sdcard/DCIM1000.PNG' or 'file:///scard/DCIM1000.PNG' (these are equivalent).
+     * @deprecated Method name is outdated, other URIs are now accepted so use {@link #setImageUri(android.net.Uri)} or {@link #setImageUri(String)}.
      */
-    public final void setImageFile(String extFile) {
-        reset(true);
-        BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
-        task.execute();
-        invalidate();
+    @Deprecated
+    public final void setImageFile(String fileUri) {
+        setImageUri(fileUri);
     }
 
     /**
      * Display an image from a file in internal or external storage, starting with a given orientation setting, scale
      * and center. This is the best method to use when you want scale and center to be restored after screen orientation
      * change; it avoids any redundant loading of tiles in the wrong orientation.
-     * @param extFile URI of the file to display.
+     * @param fileUri URI of the file to display e.g. '/sdcard/DCIM1000.PNG' or 'file:///scard/DCIM1000.PNG' (these are equivalent).
+     * @param state State to be restored. Nullable.
+     * @deprecated Method name is outdated, other URIs are now accepted so use {@link #setImageUri(android.net.Uri, ImageViewState)} or {@link #setImageUri(String, ImageViewState)}.
+     */
+    @Deprecated
+    public final void setImageFile(String fileUri, ImageViewState state) {
+        setImageUri(fileUri, state);
+    }
+
+    /**
+     * Display an image from resources.
+     * @param resId Resource ID.
+     */
+    public final void setImageResource(int resId) {
+        setImageResource(resId, null);
+    }
+
+    /**
+     * Display an image from resources, starting with a given orientation setting, scale and center.
+     * This is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation.
+     * @param resId Resource ID.
      * @param state State to be restored. Nullable.
      */
-    public final void setImageFile(String extFile, ImageViewState state) {
-        reset(true);
-        restoreState(state);
-        BitmapInitTask task = new BitmapInitTask(this, getContext(), extFile, false);
-        task.execute();
-        invalidate();
+    public final void setImageResource(int resId, ImageViewState state) {
+        setImageUri(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + resId);
     }
 
     /**
@@ -280,16 +302,75 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Display an image from a file in assets, starting with a given orientation setting, scale and center. This is the
+     * Display an image from a file in assets, starting with a given orientation setting, scale andcenter. This is the
      * best method to use when you want scale and center to be restored after screen orientation change; it avoids any
      * redundant loading of tiles in the wrong orientation.
      * @param assetName asset name.
      * @param state State to be restored. Nullable.
      */
     public final void setImageAsset(String assetName, ImageViewState state) {
+        setImageUri(ASSET_SCHEME + assetName);
+
+    }
+
+    /**
+     * Display an image from a URI. The URI can be in one of the following formats:
+     * File: file:///scard/picture.jpg or /sdcard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     */
+    public final void setImageUri(String uri) {
+        setImageUri(uri, null);
+    }
+
+    /**
+     * Display an image from a URI, starting with a given orientation setting, scale andcenter. This
+     * is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation. The URI can be in
+     * one of the following formats:
+     * File: file:///scard/picture.jpg or /sdcard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     * @param state State to be restored. Nullable.
+     */
+    public final void setImageUri(String uri, ImageViewState state) {
+        if (!uri.contains("://")) {
+            if (uri.startsWith("/")) {
+                uri = uri.substring(1);
+            }
+            uri = FILE_SCHEME + uri;
+        }
+        setImageUri(Uri.parse(uri), state);
+    }
+
+    /**
+     * Display an image from a URI. The URI can be in one of the following formats:
+     * File: file:///scard/picture.jpg or /sdcard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     */
+    public final void setImageUri(Uri uri) {
+        setImageUri(uri, null);
+    }
+
+    /**
+     * Display an image from a URI, starting with a given orientation setting, scale andcenter. This
+     * is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation. The URI can be in
+     * one of the following formats:
+     * File: file:///scard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     * @param state State to be restored. Nullable.
+     */
+    public final void setImageUri(Uri uri, ImageViewState state) {
         reset(true);
-        restoreState(state);
-        BitmapInitTask task = new BitmapInitTask(this, getContext(), assetName, true);
+        if (state != null) { restoreState(state); }
+        BitmapInitTask task = new BitmapInitTask(this, getContext(), decoderClass, uri);
         task.execute();
         invalidate();
     }
@@ -976,7 +1057,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Called by worker task when decoder is ready and image size and EXIF orientation is known.
      */
-    private void onImageInited(BitmapRegionDecoder decoder, int sWidth, int sHeight, int sOrientation) {
+    private void onImageInited(ImageRegionDecoder decoder, int sWidth, int sHeight, int sOrientation) {
         this.decoder = decoder;
         this.sWidth = sWidth;
         this.sHeight = sHeight;
@@ -998,49 +1079,47 @@ public class SubsamplingScaleImageView extends View {
     private static class BitmapInitTask extends AsyncTask<Void, Void, int[]> {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
         private final WeakReference<Context> contextRef;
-        private final String source;
-        private final boolean sourceIsAsset;
-        private BitmapRegionDecoder decoder;
+        private final WeakReference<Class<? extends ImageRegionDecoder>> decoderClassRef;
+        private final Uri source;
+        private ImageRegionDecoder decoder;
 
-        public BitmapInitTask(SubsamplingScaleImageView view, Context context, String source, boolean sourceIsAsset) {
+        public BitmapInitTask(SubsamplingScaleImageView view, Context context, Class<? extends ImageRegionDecoder> decoderClass, Uri source) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
             this.contextRef = new WeakReference<Context>(context);
+            this.decoderClassRef = new WeakReference<Class<? extends ImageRegionDecoder>>(decoderClass);
             this.source = source;
-            this.sourceIsAsset = sourceIsAsset;
         }
 
         @Override
         protected int[] doInBackground(Void... params) {
             try {
-                if (viewRef != null && contextRef != null) {
-                    Context context = contextRef.get();
-                    if (context != null) {
-                        int exifOrientation = ORIENTATION_0;
-                        if (sourceIsAsset) {
-                            decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(source, AssetManager.ACCESS_RANDOM), true);
-                        } else {
-                            decoder = BitmapRegionDecoder.newInstance(source, true);
-                            try {
-                                ExifInterface exifInterface = new ExifInterface(source);
-                                int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-                                if (orientationAttr == ExifInterface.ORIENTATION_NORMAL) {
-                                    exifOrientation = ORIENTATION_0;
-                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_90) {
-                                    exifOrientation = ORIENTATION_90;
-                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_180) {
-                                    exifOrientation = ORIENTATION_180;
-                                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_270) {
-                                    exifOrientation = ORIENTATION_270;
-                                } else {
-                                    Log.w(TAG, "Unsupported EXIF orientation: " + orientationAttr);
-                                }
-                            } catch (Exception e) {
-                                Log.w(TAG, "Could not get EXIF orientation of image");
+                String sourceUri = source.toString();
+                Context context = contextRef.get();
+                Class<? extends ImageRegionDecoder> decoderClass = decoderClassRef.get();
+                if (context != null) {
+                    int exifOrientation = ORIENTATION_0;
+                    decoder = decoderClass.newInstance();
+                    Point dimensions = decoder.init(context, source);
+                    if (sourceUri.startsWith(FILE_SCHEME) && !sourceUri.startsWith(ASSET_SCHEME)) {
+                        try {
+                            ExifInterface exifInterface = new ExifInterface(sourceUri.substring(FILE_SCHEME.length() - 1));
+                            int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                            if (orientationAttr == ExifInterface.ORIENTATION_NORMAL) {
+                                exifOrientation = ORIENTATION_0;
+                            } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_90) {
+                                exifOrientation = ORIENTATION_90;
+                            } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_180) {
+                                exifOrientation = ORIENTATION_180;
+                            } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_270) {
+                                exifOrientation = ORIENTATION_270;
+                            } else {
+                                Log.w(TAG, "Unsupported EXIF orientation: " + orientationAttr);
                             }
-
+                        } catch (Exception e) {
+                            Log.w(TAG, "Could not get EXIF orientation of image");
                         }
-                        return new int[] { decoder.getWidth(), decoder.getHeight(), exifOrientation };
                     }
+                    return new int[] { dimensions.x, dimensions.y, exifOrientation };
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to initialise bitmap decoder", e);
@@ -1050,7 +1129,7 @@ public class SubsamplingScaleImageView extends View {
 
         @Override
         protected void onPostExecute(int[] xyo) {
-            if (viewRef != null && decoder != null) {
+            if (decoder != null) {
                 final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
                 if (subsamplingScaleImageView != null && decoder != null && xyo != null && xyo.length == 3) {
                     subsamplingScaleImageView.onImageInited(decoder, xyo[0], xyo[1], xyo[2]);
@@ -1064,13 +1143,13 @@ public class SubsamplingScaleImageView extends View {
      */
     private static class BitmapTileTask extends AsyncTask<Void, Void, Bitmap> {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
-        private final WeakReference<BitmapRegionDecoder> decoderRef;
+        private final WeakReference<ImageRegionDecoder> decoderRef;
         private final WeakReference<Object> decoderLockRef;
         private final WeakReference<Tile> tileRef;
 
-        public BitmapTileTask(SubsamplingScaleImageView view, BitmapRegionDecoder decoder, Object decoderLock, Tile tile) {
+        public BitmapTileTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Object decoderLock, Tile tile) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
-            this.decoderRef = new WeakReference<BitmapRegionDecoder>(decoder);
+            this.decoderRef = new WeakReference<ImageRegionDecoder>(decoder);
             this.decoderLockRef = new WeakReference<Object>(decoderLock);
             this.tileRef = new WeakReference<Tile>(tile);
             tile.loading = true;
@@ -1079,29 +1158,23 @@ public class SubsamplingScaleImageView extends View {
         @Override
         protected Bitmap doInBackground(Void... params) {
             try {
-                if (decoderRef != null && tileRef != null && viewRef != null) {
-                    final BitmapRegionDecoder decoder = decoderRef.get();
-                    final Object decoderLock = decoderLockRef.get();
-                    final Tile tile = tileRef.get();
-                    final SubsamplingScaleImageView view = viewRef.get();
-                    if (decoder != null && decoderLock != null && tile != null && view != null && !decoder.isRecycled()) {
-                        synchronized (decoderLock) {
-                            BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.inSampleSize = tile.sampleSize;
-                            options.inPreferredConfig = Config.RGB_565;
-                            options.inDither = true;
-                            Bitmap bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
-                            int rotation = view.getRequiredRotation();
-                            if (rotation != 0) {
-                                Matrix matrix = new Matrix();
-                                matrix.postRotate(rotation);
-                                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                            }
-                            return bitmap;
+                final ImageRegionDecoder decoder = decoderRef.get();
+                final Object decoderLock = decoderLockRef.get();
+                final Tile tile = tileRef.get();
+                final SubsamplingScaleImageView view = viewRef.get();
+                if (decoder != null && decoderLock != null && tile != null && view != null && decoder.isReady()) {
+                    synchronized (decoderLock) {
+                        Bitmap bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), tile.sampleSize);
+                        int rotation = view.getRequiredRotation();
+                        if (rotation != 0) {
+                            Matrix matrix = new Matrix();
+                            matrix.postRotate(rotation);
+                            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
                         }
-                    } else if (tile != null) {
-                        tile.loading = false;
+                        return bitmap;
                     }
+                } else if (tile != null) {
+                    tile.loading = false;
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decode tile", e);
@@ -1111,7 +1184,7 @@ public class SubsamplingScaleImageView extends View {
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            if (viewRef != null && tileRef != null && bitmap != null) {
+            if (bitmap != null) {
                 final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
                 final Tile tile = tileRef.get();
                 if (subsamplingScaleImageView != null && tile != null) {
@@ -1418,6 +1491,19 @@ public class SubsamplingScaleImageView extends View {
             timeF--;
             return (-change/2f) * (timeF * (timeF - 2) - 1) + from;
         }
+    }
+
+    /**
+     * Swap the default decoder implementation for one of your own. You must do this before setting the image file or
+     * asset, and you cannot use a custom decoder when using layout XML to set an asset name. Your class must have a
+     * public default constructor.
+     * @param decoderClass The {@link ImageRegionDecoder} implementation to use.
+     */
+    public final void setDecoderClass(Class<? extends ImageRegionDecoder> decoderClass) {
+        if (decoderClass == null) {
+            throw new IllegalArgumentException("Decoder class cannot be set to null");
+        }
+        this.decoderClass = decoderClass;
     }
 
     /**

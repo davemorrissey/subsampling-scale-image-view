@@ -4,7 +4,7 @@
           android:versionCode="2"
           android:versionName="2.0"
           android:hardwareAccelerated="true">
-<uses-sdk android:minSdkVersion="10" android:targetSdkVersion="14"/>
+<uses-sdk android:minSdkVersion="11" android:targetSdkVersion="14"/>
 <application android:label="Scale Image View Demo" android:theme="@style/demoTheme" android:icon="@drawable/launcher">
     <activity android:name=".MainActivity" android:label="Scale View Demo">
         <intent-filter>
