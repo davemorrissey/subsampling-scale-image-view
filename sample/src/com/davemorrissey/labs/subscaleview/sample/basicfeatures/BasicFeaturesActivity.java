@@ -25,6 +25,7 @@ import android.widget.TextView;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
+import com.davemorrissey.labs.subscaleview.sample.imagedisplay.decoders.RapidImageRegionDecoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +85,9 @@ public class BasicFeaturesActivity extends Activity implements OnClickListener {
 
     private void initialiseImage() {
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setDecoderClass(RapidImageRegionDecoder.class);
+        imageView.setDebug(true);
+        imageView.setImageAsset("squirrel_large.jpg");
     }
 
     private void updateNotes() {

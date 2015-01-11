@@ -26,6 +26,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
 import com.davemorrissey.labs.subscaleview.sample.extension.ExtensionActivity;
+import com.davemorrissey.labs.subscaleview.sample.imagedisplay.decoders.RapidImageRegionDecoder;
 
 public class ImageDisplayLargeFragment extends Fragment {
 
@@ -39,7 +40,9 @@ public class ImageDisplayLargeFragment extends Fragment {
             }
         });
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("card.png");
+        imageView.setDecoderClass(RapidImageRegionDecoder.class);
+        imageView.setDebug(true);
+        imageView.setImageAsset("card_jpg.jpg");
         return rootView;
     }
 

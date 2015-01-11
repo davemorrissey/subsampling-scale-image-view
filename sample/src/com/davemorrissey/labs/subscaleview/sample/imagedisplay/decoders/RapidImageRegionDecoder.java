@@ -45,9 +45,8 @@ public class RapidImageRegionDecoder implements ImageRegionDecoder {
         } else {
             decoder = BitmapDecoder.from(context, uri);
         }
-        // RapidDecoder's PNG library works well, the JPG library has serious problems. This is a crude check,
-        // and won't work for resources. An app should not use this decoder for JPGs.
-        return decoder.useBuiltInDecoder(uriString.toLowerCase().endsWith(".png"));
+        decoder.useBuiltInDecoder(true);
+        return decoder;
     }
 
     @Override
