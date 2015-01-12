@@ -8,51 +8,31 @@ import android.net.Uri;
 
 import com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder;
 
-import java.io.InputStream;
-
 import rapid.decoder.BitmapDecoder;
 
 /**
  * A very simple implementation of {@link com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder}
  * using the RapidDecoder library (https://github.com/suckgamony/RapidDecoder). For PNGs, this can
- * give more reliable decoding and better performance. For JPGs, it has limitations and bugs that
- * make it unsuitable.
+ * give more reliable decoding and better performance. For JPGs, it is slower and can run out of
+ * memory with large images, but has better support for grayscale and CMYK images.
  *
  * This is an incomplete and untested implementation provided as an example only.
  */
 public class RapidImageRegionDecoder implements ImageRegionDecoder {
 
-    private static final String ASSET_PREFIX = "file:///android_asset/";
-
-    private Context context;
-    private Uri uri;
+    private BitmapDecoder decoder;
 
     @Override
     public Point init(Context context, Uri uri) throws Exception {
-        this.context = context;
-        this.uri = uri;
-        BitmapDecoder decoder = newDecoder();
-        return new Point(decoder.sourceWidth(), decoder.sourceHeight());
-    }
-
-    private BitmapDecoder newDecoder() throws Exception {
-        BitmapDecoder decoder;
-        String uriString = uri.toString();
-        if (uriString.startsWith(ASSET_PREFIX)) {
-            String assetName = uriString.substring(ASSET_PREFIX.length());
-            InputStream in = context.getAssets().open(assetName);
-            decoder = BitmapDecoder.from(in);
-        } else {
-            decoder = BitmapDecoder.from(context, uri);
-        }
+        decoder = BitmapDecoder.from(context, uri);
         decoder.useBuiltInDecoder(true);
-        return decoder;
+        return new Point(decoder.sourceWidth(), decoder.sourceHeight());
     }
 
     @Override
     public synchronized Bitmap decodeRegion(Rect sRect, int sampleSize) {
         try {
-            return newDecoder().region(sRect).scale(sRect.width() / sampleSize, sRect.height()/sampleSize).decode();
+            return decoder.reset().region(sRect).scale(sRect.width()/sampleSize, sRect.height()/sampleSize).decode();
         } catch (Exception e) {
             return null;
         }
@@ -60,14 +40,14 @@ public class RapidImageRegionDecoder implements ImageRegionDecoder {
 
     @Override
     public boolean isReady() {
-        return context != null && uri != null;
+        return decoder != null;
     }
 
     @Override
     public void recycle() {
         BitmapDecoder.destroyMemoryCache();
         BitmapDecoder.destroyDiskCache();
-        context = null;
-        uri = null;
+        decoder.reset();
+        decoder = null;
     }
 }

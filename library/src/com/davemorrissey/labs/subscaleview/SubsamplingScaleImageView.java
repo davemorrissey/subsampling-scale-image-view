@@ -221,6 +221,12 @@ public class SubsamplingScaleImageView extends View {
                     setImageAsset(assetName);
                 }
             }
+            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_src)) {
+                int resId = typedAttr.getResourceId(styleable.SubsamplingScaleImageView_src, 0);
+                if (resId > 0) {
+                    setImageResource(resId);
+                }
+            }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_panEnabled)) {
                 setPanEnabled(typedAttr.getBoolean(styleable.SubsamplingScaleImageView_panEnabled, true));
             }
@@ -1096,7 +1102,7 @@ public class SubsamplingScaleImageView extends View {
                 String sourceUri = source.toString();
                 Context context = contextRef.get();
                 Class<? extends ImageRegionDecoder> decoderClass = decoderClassRef.get();
-                if (context != null) {
+                if (context != null && decoderClass != null) {
                     int exifOrientation = ORIENTATION_0;
                     decoder = decoderClass.newInstance();
                     Point dimensions = decoder.init(context, source);

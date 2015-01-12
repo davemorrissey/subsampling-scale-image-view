@@ -16,14 +16,15 @@ import java.util.List;
  * Default implementation of {@link com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder}
  * using Android's {@link android.graphics.BitmapRegionDecoder}, based on the Skia library. This
  * works well in most circumstances and has reasonable performance due to the cached decoder instance,
- * however it has some problems
+ * however it has some problems with grayscale, indexed and CMYK images.
  */
 public class SkiaImageRegionDecoder implements ImageRegionDecoder {
 
     private BitmapRegionDecoder decoder;
     private final Object decoderLock = new Object();
 
-    private static final String ASSET_PREFIX = "file:///android_asset/";
+    private static final String FILE_PREFIX = "file://";
+    private static final String ASSET_PREFIX = FILE_PREFIX + "/android_asset/";
     private static final String RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://";
 
     @Override
@@ -56,6 +57,8 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
         } else if (uriString.startsWith(ASSET_PREFIX)) {
             String assetName = uriString.substring(ASSET_PREFIX.length());
             decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(assetName, AssetManager.ACCESS_RANDOM), false);
+        } else if (uriString.startsWith(FILE_PREFIX)) {
+            decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_PREFIX.length()), false);
         } else {
             ContentResolver contentResolver = context.getContentResolver();
             decoder = BitmapRegionDecoder.newInstance(contentResolver.openInputStream(uri), false);

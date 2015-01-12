@@ -85,9 +85,7 @@ public class BasicFeaturesActivity extends Activity implements OnClickListener {
 
     private void initialiseImage() {
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-        imageView.setDecoderClass(RapidImageRegionDecoder.class);
-        imageView.setDebug(true);
-        imageView.setImageAsset("squirrel_large.jpg");
+        imageView.setImageAsset("squirrel.jpg");
     }
 
     private void updateNotes() {
