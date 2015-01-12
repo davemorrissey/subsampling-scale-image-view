@@ -915,7 +915,7 @@ public class ScaleImageView extends View {
                         try {
                             ExifInterface exifInterface = new ExifInterface(sourceUri.substring(FILE_SCHEME.length() - 1));
                             int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-                            if (orientationAttr == ExifInterface.ORIENTATION_NORMAL) {
+                            if (orientationAttr == ExifInterface.ORIENTATION_NORMAL || orientationAttr == ExifInterface.ORIENTATION_UNDEFINED) {
                                 exifOrientation = ORIENTATION_0;
                             } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_90) {
                                 exifOrientation = ORIENTATION_90;
