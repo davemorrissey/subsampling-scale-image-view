@@ -446,7 +446,7 @@ public class ScaleImageView extends View {
                 if (zoomEnabled && readySent && vTranslate != null) {
                     float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
                     boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
-                    float targetScale = zoomIn ? doubleTapZoomScale : Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+                    float targetScale = zoomIn ? doubleTapZoomScale : minScale();
                     PointF targetSCenter = viewToSourceCoord(new PointF(e.getX(), e.getY()));
                     if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
                         setScaleAndCenter(targetScale, targetSCenter);
@@ -836,14 +836,18 @@ public class ScaleImageView extends View {
             vTranslate.y = Math.max(vTranslate.y, -scaleHeight);
         }
 
+        // Asymmetric padding adjustments
+        float xPaddingRatio = getPaddingLeft() > 0 || getPaddingRight() > 0 ? getPaddingLeft()/(float)(getPaddingLeft() + getPaddingRight()) : 0.5f;
+        float yPaddingRatio = getPaddingTop() > 0 || getPaddingBottom() > 0 ? getPaddingTop()/(float)(getPaddingTop() + getPaddingBottom()) : 0.5f;
+
         float maxTx;
         float maxTy;
         if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
             maxTx = Math.max(0, getWidth()/2);
             maxTy = Math.max(0, getHeight()/2);
         } else if (center) {
-            maxTx = Math.max(0, (getWidth() - scaleWidth) / 2);
-            maxTy = Math.max(0, (getHeight() - scaleHeight) / 2);
+            maxTx = Math.max(0, (getWidth() - scaleWidth) * xPaddingRatio);
+            maxTy = Math.max(0, (getHeight() - scaleHeight) * yPaddingRatio);
         } else {
             maxTx = Math.max(0, getWidth());
             maxTy = Math.max(0, getHeight());
@@ -1101,12 +1105,14 @@ public class ScaleImageView extends View {
     }
 
     /**
-     * Get the translation required to place a given source coordinate at the center of the screen. Accepts the desired
-     * scale as an argument, so this is independent of current translate and scale. The result is fitted to bounds, putting
-     * the image point as near to the screen center as permitted.
+     * Get the translation required to place a given source coordinate at the center of the screen, with the center
+     * adjusted for asymmetric padding. Accepts the desired scale as an argument, so this is independent of current
+     * translate and scale. The result is fitted to bounds, putting the image point as near to the screen center as permitted.
      */
     private PointF vTranslateForSCenter(PointF sCenter, float scale) {
-        PointF vTranslate = new PointF((getWidth()/2) - (sCenter.x * scale), (getHeight()/2) - (sCenter.y * scale));
+        int vxCenter = getPaddingLeft() + (getWidth() - getPaddingRight() - getPaddingLeft())/2;
+        int vyCenter = getPaddingTop() + (getHeight() - getPaddingBottom() - getPaddingTop())/2;
+        PointF vTranslate = new PointF(vxCenter - (sCenter.x * scale), vyCenter - (sCenter.y * scale));
         ScaleAndTranslate sat = new ScaleAndTranslate(scale, vTranslate);
         fitToBounds(true, sat);
         return vTranslate;
@@ -1118,9 +1124,10 @@ public class ScaleImageView extends View {
      */
     private PointF limitedSCenter(PointF sCenter, float scale) {
         PointF vTranslate = vTranslateForSCenter(sCenter, scale);
-        int mY = getHeight()/2;
-        float sx = ((getWidth()/2) - vTranslate.x)/scale;
-        float sy = ((getHeight()/2) - vTranslate.y)/scale;
+        int vxCenter = getPaddingLeft() + (getWidth() - getPaddingRight() - getPaddingLeft())/2;
+        int vyCenter = getPaddingTop() + (getHeight() - getPaddingBottom() - getPaddingTop())/2;
+        float sx = (vxCenter - vTranslate.x)/scale;
+        float sy = (vyCenter - vTranslate.y)/scale;
         return new PointF(sx, sy);
     }
 
@@ -1128,12 +1135,14 @@ public class ScaleImageView extends View {
      * Returns the minimum allowed scale.
      */
     private float minScale() {
+        int vPadding = getPaddingBottom() + getPaddingTop();
+        int hPadding = getPaddingLeft() + getPaddingRight();
         if (minimumScaleType == SCALE_TYPE_CENTER_CROP) {
-            return Math.max(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+            return Math.max((getWidth() - hPadding) / (float) sWidth(), (getHeight() - vPadding) / (float) sHeight());
         } else if (minimumScaleType == SCALE_TYPE_CUSTOM && minScale > 0) {
             return minScale;
         } else {
-            return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+            return Math.min((getWidth() - hPadding) / (float) sWidth(), (getHeight() - vPadding) / (float) sHeight());
         }
     }
 
@@ -1612,6 +1621,8 @@ public class ScaleImageView extends View {
          * Starts the animation.
          */
         public void start() {
+            int vxCenter = getPaddingLeft() + (getWidth() - getPaddingRight() - getPaddingLeft())/2;
+            int vyCenter = getPaddingTop() + (getHeight() - getPaddingBottom() - getPaddingTop())/2;
             float targetScale = limitedScale(this.targetScale);
             PointF targetSCenter = panLimited ? limitedSCenter(this.targetSCenter, targetScale) : this.targetSCenter;
             anim = new Anim();
@@ -1623,8 +1634,8 @@ public class ScaleImageView extends View {
             anim.sCenterEnd = targetSCenter;
             anim.vFocusStart = sourceToViewCoord(targetSCenter);
             anim.vFocusEnd = new PointF(
-                getWidth()/2,
-                getHeight()/2
+                vxCenter,
+                vyCenter
             );
             anim.duration = duration;
             anim.interruptible = interruptible;
