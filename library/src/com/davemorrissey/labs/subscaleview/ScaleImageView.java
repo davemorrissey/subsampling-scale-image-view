@@ -1128,12 +1128,12 @@ public class ScaleImageView extends View {
      * Returns the minimum allowed scale.
      */
     private float minScale() {
-        if (minimumScaleType == SCALE_TYPE_CENTER_INSIDE) {
-            return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
-        } else if (minimumScaleType == SCALE_TYPE_CUSTOM) {
+        if (minimumScaleType == SCALE_TYPE_CENTER_CROP) {
+            return Math.max(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+        } else if (minimumScaleType == SCALE_TYPE_CUSTOM && minScale > 0) {
             return minScale;
         } else {
-            return Math.max(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
+            return Math.min(getWidth() / (float) sWidth(), getHeight() / (float) sHeight());
         }
     }
 
