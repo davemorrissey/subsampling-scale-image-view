@@ -423,6 +423,7 @@ public class SubsamplingScaleImageView extends View {
             }
             tileMap = null;
         }
+        setGestureDetector(getContext());
     }
 
     private void setGestureDetector(final Context context) {
@@ -1326,6 +1327,18 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Releases all resources the view is using and resets the state, nulling any fields that use significant memory.
+     * After you have called this method, the view can be re-used by setting a new image. Settings are remembered
+     * but state (scale and center) is forgotten. You can restore these yourself if required.
+     */
+    public void recycle() {
+        reset(true);
+        bitmapPaint = null;
+        debugPaint = null;
+        tileBgPaint = null;
+    }
+
+    /**
      * Convert screen coordinate to source coordinate.
      */
     public final PointF viewToSourceCoord(PointF vxy) {
@@ -1598,7 +1611,8 @@ public class SubsamplingScaleImageView extends View {
      * By default, image tiles are at least as high resolution as the screen. For a retina screen this may not be
      * necessary, and may increase the likelihood of an OutOfMemoryError. This method sets a DPI at which higher
      * resolution tiles should be loaded. Using a lower number will on average use less memory but result in a lower
-     * quality image. 160-240dpi will usually be enough.
+     * quality image. 160-240dpi will usually be enough. This should be called before setting the image source,
+     * because it affects which tiles get loaded.
      * @param minimumTileDpi Tile loading threshold.
      */
     public void setMinimumTileDpi(int minimumTileDpi) {

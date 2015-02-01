@@ -249,7 +249,8 @@ public class ScaleImageView extends View {
 
     /**
      * Display an image from a file in internal or external storage.
-     * @param fileUri URI of the file to displayy e.g. '/sdcard/DCIM1000.PNG' or 'file:///scard/DCIM1000.PNG' (these are equivalent).
+     * @param fileUri URI of the file to display e.g. '/sdcard/DCIM1000.PNG' or 'file:///scard/DCIM1000.PNG' (these are equivalent).
+     * @deprecated Method name is outdated, other URIs are now accepted so use {@link #setImageUri(android.net.Uri)} or {@link #setImageUri(String)}.
      */
     @Deprecated
     public final void setImageFile(String fileUri) {
@@ -417,6 +418,7 @@ public class ScaleImageView extends View {
             readySent = false;
         }
         forceCenterOnNextDraw();
+        setGestureDetector(getContext());
     }
 
     private void setGestureDetector(final Context context) {
@@ -1037,6 +1039,18 @@ public class ScaleImageView extends View {
         float x = x0 - x1;
         float y = y0 - y1;
         return FloatMath.sqrt(x * x + y * y);
+    }
+
+    /**
+     * Releases all resources the view is using and resets the state, nulling any fields that use significant memory.
+     * After you have called this method, the view can be re-used by setting a new image. Settings are remembered
+     * but state (scale and center) is forgotten. You can restore these yourself if required.
+     */
+    public void recycle() {
+        reset(true);
+        bitmapPaint = null;
+        debugPaint = null;
+        tileBgPaint = null;
     }
 
     /**
