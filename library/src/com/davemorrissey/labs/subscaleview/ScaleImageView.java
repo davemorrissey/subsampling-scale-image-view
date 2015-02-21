@@ -1537,6 +1537,20 @@ public class ScaleImageView extends View {
     }
 
     /**
+     * Returns true if double tap & swipe to zoom is enabled.
+     */
+    public final boolean isQuickScaleEnabled() {
+        return quickScaleEnabled;
+    }
+
+    /**
+     * Enable or disable double tap & swipe to zoom.
+     */
+    public final void setQuickScaleEnabled(boolean quickScaleEnabled) {
+        this.quickScaleEnabled = zoomEnabled;
+    }
+
+    /**
      * Set a solid color to render behind tiles, useful for displaying transparent PNGs.
      * @param tileBgColor Background color for tiles.
      */
