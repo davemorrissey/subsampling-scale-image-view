@@ -30,6 +30,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.FloatMath;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -134,6 +135,20 @@ public class ScaleImageView extends View {
     private float doubleTapZoomScale = 1F;
     private int doubleTapZoomStyle = ZOOM_FOCUS_FIXED;
 
+    // Quickscale behaviour
+    private boolean quickScaleEnabled = true;
+
+    // Current quickscale state
+    private boolean isQuickScaling = false;
+    private PointF quickScaleCenter;
+    private float quickScaleLastDistance;
+    private PointF quickScaleLastPoint;
+    private float quickScaleThreshold = 100.f;
+
+    // Whether we moved at all in this quick scale operation
+    // (if we didn't, do the normal double tap zoom on release)
+    private boolean quickScaleMoved = false;
+
     // Current scale and scale at start of zoom
     private float scale;
     private float scaleStart;
@@ -228,6 +243,8 @@ public class ScaleImageView extends View {
                 setTileBackgroundColor(typedAttr.getColor(styleable.SubsamplingScaleImageView_tileBackgroundColor, Color.argb(0, 0, 0, 0)));
             }
         }
+
+        quickScaleThreshold = TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics() );
     }
 
     public ScaleImageView(Context context) {
@@ -444,6 +461,24 @@ public class ScaleImageView extends View {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 if (zoomEnabled && readySent && vTranslate != null) {
+                    if (quickScaleEnabled) {
+                        vCenterStart = new PointF(e.getX(), e.getY());
+                        vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
+                        scaleStart = scale;
+
+                        isQuickScaling = true;
+                        isZooming = true;
+                        quickScaleCenter = viewToSourceCoord(vCenterStart);
+                        quickScaleLastDistance = -1F;
+                        quickScaleLastPoint = new PointF(quickScaleCenter.x, quickScaleCenter.y);
+                        quickScaleMoved = false;
+
+                        setGestureDetector(context);
+
+                        // We really want to get events in onTouchEvent after this, so don't return true
+                        return false;
+                    }
+
                     float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
                     boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                     float targetScale = zoomIn ? doubleTapZoomScale : minScale();
@@ -527,7 +562,7 @@ public class ScaleImageView extends View {
             return true;
         }
         // Detect flings, taps and double taps
-        if (detector == null || detector.onTouchEvent(event)) {
+        if (!isQuickScaling && (detector == null || detector.onTouchEvent(event))) {
             isZooming = false;
             isPanning = false;
             maxTouchCount = 0;
@@ -556,7 +591,7 @@ public class ScaleImageView extends View {
                     }
                     // Cancel long click timer
                     handler.removeMessages(MESSAGE_LONG_CLICK);
-                } else {
+                } else if ( !isQuickScaling ) {
                     // Start one-finger pan
                     vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
                     vCenterStart = new PointF(event.getX(), event.getY());
@@ -607,6 +642,51 @@ public class ScaleImageView extends View {
 
                             fitToBounds(true);
                         }
+                    } else if (isQuickScaling) {
+                        // One finger zoom
+                        // Stole Google's Magical Formula™ to make sure it feels the exact same
+                        float dist = Math.abs(vCenterStart.y - event.getY()) * 2 + quickScaleThreshold;
+
+                        if (quickScaleLastDistance == -1F) quickScaleLastDistance = dist;
+                        boolean isUpwards = event.getY() > quickScaleLastPoint.y;
+                        quickScaleLastPoint.set(0, event.getY());
+
+                        float spanDiff = (Math.abs(1 - (dist / quickScaleLastDistance)) * 0.5F);
+
+                        if (spanDiff > 0.03f || quickScaleMoved) {
+                            quickScaleMoved = true;
+
+                            float multiplier = 1;
+                            if (quickScaleLastDistance > 0) {
+                                multiplier = isUpwards ? (1 + spanDiff) : (1 - spanDiff);
+                            }
+
+                            scale = Math.max(minScale(), Math.min(maxScale, scale * multiplier));
+
+                            if (panEnabled) {
+                                float vLeftStart = vCenterStart.x - vTranslateStart.x;
+                                float vTopStart = vCenterStart.y - vTranslateStart.y;
+                                float vLeftNow = vLeftStart * (scale/scaleStart);
+                                float vTopNow = vTopStart * (scale/scaleStart);
+                                vTranslate.x = vCenterStart.x - vLeftNow;
+                                vTranslate.y = vCenterStart.y - vTopNow;
+                            }
+                            else if (sRequestedCenter != null) {
+                                // With a center specified from code, zoom around that point.
+                                vTranslate.x = (getWidth()/2) - (scale * sRequestedCenter.x);
+                                vTranslate.y = (getHeight()/2) - (scale * sRequestedCenter.y);
+                            } else {
+                                // With no requested center, scale around the image center.
+                                vTranslate.x = (getWidth()/2) - (scale * (sWidth()/2));
+                                vTranslate.y = (getHeight()/2) - (scale * (sHeight()/2));
+                            }
+                        }
+
+                        quickScaleLastDistance = dist;
+
+                        fitToBounds(true);
+
+                        consumed = true;
                     } else if (!isZooming) {
                         // One finger pan - translate the image. We do this calculation even with pan disabled so click
                         // and long click behaviour is preserved.
@@ -650,6 +730,23 @@ public class ScaleImageView extends View {
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_POINTER_2_UP:
                 handler.removeMessages(MESSAGE_LONG_CLICK);
+                if (isQuickScaling) {
+                    isQuickScaling = false;
+                    if ( !quickScaleMoved ) {
+                        float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
+                        boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
+                        float targetScale = zoomIn ? doubleTapZoomScale : minScale();
+                        if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
+                            setScaleAndCenter(targetScale, quickScaleCenter);
+                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn) {
+                            new AnimationBuilder(targetScale, quickScaleCenter).withInterruptible(false).start();
+                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
+                            new AnimationBuilder(targetScale, quickScaleCenter, vCenterStart).withInterruptible(false).start();
+                        }
+
+                        invalidate();
+                    }
+                }
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
                     if (isZooming && touchCount == 2) {
                         // Convert from zoom to pan with remaining touch
@@ -1437,6 +1534,20 @@ public class ScaleImageView extends View {
                 invalidate();
             }
         }
+    }
+
+    /**
+     * Returns true if double tap & swipe to zoom is enabled.
+     */
+    public final boolean isQuickScaleEnabled() {
+        return quickScaleEnabled;
+    }
+
+    /**
+     * Enable or disable double tap & swipe to zoom.
+     */
+    public final void setQuickScaleEnabled(boolean quickScaleEnabled) {
+        this.quickScaleEnabled = zoomEnabled;
     }
 
     /**
