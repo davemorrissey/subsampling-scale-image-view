@@ -1,4 +1,4 @@
-Subsampling Zoom Image View
+Subsampling Scale Image View
 ===========================
 
 Custom image views for Android, designed for photo galleries and displaying huge images (e.g. maps and building plans) without `OutOfMemoryError`s. Includes pinch to zoom, panning, rotation and animation support, and allows easy extension so you can add your own overlays and touch event detection.
@@ -38,6 +38,7 @@ This library includes two view classes. `SubsamplingScaleImageView` uses subsamp
 #### Gesture detection
 * One finger pan
 * Two finger pinch to zoom
+* Quick scale (one finger zoom)
 * Pan while zooming
 * Seamless switch between pan and zoom
 * Fling momentum after panning
@@ -88,7 +89,7 @@ Use `ScaleImageView` if:
 
 Add the library to your app using one of these methods:
 
-* Add `com.davemorrissey.labs:subsampling-scale-image-view:2.3.0` as a dependency in your build.gradle file
+* Add `com.davemorrissey.labs:subsampling-scale-image-view:2.4.0` as a dependency in your build.gradle file
 * *or* download the library aar file from the releases page and add to your app manually
 * *or* clone the project and import the library subproject as a module in your app
 * *or* clone the project and copy the resources and classes from `com.davemorrissey.labs.subscaleview` into your project
