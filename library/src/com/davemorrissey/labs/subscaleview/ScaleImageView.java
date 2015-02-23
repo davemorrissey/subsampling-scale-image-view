@@ -130,24 +130,11 @@ public class ScaleImageView extends View {
     // Gesture detection settings
     private boolean panEnabled = true;
     private boolean zoomEnabled = true;
+    private boolean quickScaleEnabled = true;
 
     // Double tap zoom behaviour
     private float doubleTapZoomScale = 1F;
     private int doubleTapZoomStyle = ZOOM_FOCUS_FIXED;
-
-    // Quickscale behaviour
-    private boolean quickScaleEnabled = true;
-
-    // Current quickscale state
-    private boolean isQuickScaling = false;
-    private PointF quickScaleCenter;
-    private float quickScaleLastDistance;
-    private PointF quickScaleLastPoint;
-    private float quickScaleThreshold = 100.f;
-
-    // Whether we moved at all in this quick scale operation
-    // (if we didn't, do the normal double tap zoom on release)
-    private boolean quickScaleMoved = false;
 
     // Current scale and scale at start of zoom
     private float scale;
@@ -171,6 +158,8 @@ public class ScaleImageView extends View {
     private boolean isZooming;
     // Is one-finger panning in progress
     private boolean isPanning;
+    // Is quick-scale gesture in progress
+    private boolean isQuickScaling;
     // Max touches used in current gesture
     private int maxTouchCount;
 
@@ -183,6 +172,13 @@ public class ScaleImageView extends View {
     // Debug values
     private PointF vCenterStart;
     private float vDistStart;
+
+    // Current quickscale state
+    private final float quickScaleThreshold;
+    private PointF quickScaleCenter;
+    private float quickScaleLastDistance;
+    private PointF quickScaleLastPoint;
+    private boolean quickScaleMoved;
 
     // Scale and center animation tracking
     private Anim anim;
@@ -244,7 +240,7 @@ public class ScaleImageView extends View {
             }
         }
 
-        quickScaleThreshold = TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics() );
+        quickScaleThreshold = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics());
     }
 
     public ScaleImageView(Context context) {
@@ -424,9 +420,14 @@ public class ScaleImageView extends View {
         sRequestedCenter = null;
         isZooming = false;
         isPanning = false;
+        isQuickScaling = false;
         maxTouchCount = 0;
         vCenterStart = null;
         vDistStart = 0;
+        quickScaleCenter = null;
+        quickScaleLastDistance = 0f;
+        quickScaleLastPoint = null;
+        quickScaleMoved = false;
         anim = null;
         if (newImage) {
             sWidth = 0;
@@ -440,6 +441,7 @@ public class ScaleImageView extends View {
 
     private void setGestureDetector(final Context context) {
         this.detector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 if (panEnabled && readySent && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
@@ -591,7 +593,7 @@ public class ScaleImageView extends View {
                     }
                     // Cancel long click timer
                     handler.removeMessages(MESSAGE_LONG_CLICK);
-                } else if ( !isQuickScaling ) {
+                } else if (!isQuickScaling) {
                     // Start one-finger pan
                     vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
                     vCenterStart = new PointF(event.getX(), event.getY());
@@ -670,8 +672,7 @@ public class ScaleImageView extends View {
                                 float vTopNow = vTopStart * (scale/scaleStart);
                                 vTranslate.x = vCenterStart.x - vLeftNow;
                                 vTranslate.y = vCenterStart.y - vTopNow;
-                            }
-                            else if (sRequestedCenter != null) {
+                            } else if (sRequestedCenter != null) {
                                 // With a center specified from code, zoom around that point.
                                 vTranslate.x = (getWidth()/2) - (scale * sRequestedCenter.x);
                                 vTranslate.y = (getHeight()/2) - (scale * sRequestedCenter.y);
@@ -732,7 +733,7 @@ public class ScaleImageView extends View {
                 handler.removeMessages(MESSAGE_LONG_CLICK);
                 if (isQuickScaling) {
                     isQuickScaling = false;
-                    if ( !quickScaleMoved ) {
+                    if (!quickScaleMoved) {
                         float doubleTapZoomScale = Math.min(maxScale, ScaleImageView.this.doubleTapZoomScale);
                         boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                         float targetScale = zoomIn ? doubleTapZoomScale : minScale();
@@ -743,7 +744,6 @@ public class ScaleImageView extends View {
                         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
                             new AnimationBuilder(targetScale, quickScaleCenter, vCenterStart).withInterruptible(false).start();
                         }
-
                         invalidate();
                     }
                 }

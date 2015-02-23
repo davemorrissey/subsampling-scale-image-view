@@ -19,16 +19,8 @@ package com.davemorrissey.labs.subscaleview;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
+import android.graphics.*;
 import android.graphics.Paint.Style;
-import android.graphics.Point;
-import android.graphics.PointF;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -43,17 +35,12 @@ import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.davemorrissey.labs.subscaleview.R.styleable;
 import com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder;
 import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Displays an image subsampled as necessary to avoid loading too much image data into memory. After a pinch to zoom in,
@@ -144,24 +131,11 @@ public class SubsamplingScaleImageView extends View {
     // Gesture detection settings
     private boolean panEnabled = true;
     private boolean zoomEnabled = true;
+    private boolean quickScaleEnabled = true;
 
     // Double tap zoom behaviour
     private float doubleTapZoomScale = 1F;
     private int doubleTapZoomStyle = ZOOM_FOCUS_FIXED;
-
-    // Quickscale behaviour
-    private boolean quickScaleEnabled = true;
-
-    // Current quickscale state
-    private boolean isQuickScaling = false;
-    private PointF quickScaleCenter;
-    private float quickScaleLastDistance;
-    private PointF quickScaleLastPoint;
-    private float quickScaleThreshold = 100.f;
-
-    // Whether we moved at all in this quick scale operation
-    // (if we didn't, do the normal double tap zoom on release)
-    private boolean quickScaleMoved = false;
 
     // Current scale and scale at start of zoom
     private float scale;
@@ -185,6 +159,8 @@ public class SubsamplingScaleImageView extends View {
     private boolean isZooming;
     // Is one-finger panning in progress
     private boolean isPanning;
+    // Is quick-scale gesture in progress
+    private boolean isQuickScaling;
     // Max touches used in current gesture
     private int maxTouchCount;
 
@@ -205,6 +181,13 @@ public class SubsamplingScaleImageView extends View {
     // Debug values
     private PointF vCenterStart;
     private float vDistStart;
+
+    // Current quickscale state
+    private final float quickScaleThreshold;
+    private PointF quickScaleCenter;
+    private float quickScaleLastDistance;
+    private PointF quickScaleLastPoint;
+    private boolean quickScaleMoved;
 
     // Scale and center animation tracking
     private Anim anim;
@@ -266,7 +249,7 @@ public class SubsamplingScaleImageView extends View {
             }
         }
 
-        quickScaleThreshold = TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics() );
+        quickScaleThreshold = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics());
     }
 
     public SubsamplingScaleImageView(Context context) {
@@ -424,10 +407,15 @@ public class SubsamplingScaleImageView extends View {
         sRequestedCenter = null;
         isZooming = false;
         isPanning = false;
+        isQuickScaling = false;
         maxTouchCount = 0;
         fullImageSampleSize = 0;
         vCenterStart = null;
         vDistStart = 0;
+        quickScaleCenter = null;
+        quickScaleLastDistance = 0f;
+        quickScaleLastPoint = null;
+        quickScaleMoved = false;
         anim = null;
         if (newImage) {
             if (decoder != null) {
@@ -610,7 +598,7 @@ public class SubsamplingScaleImageView extends View {
                     }
                     // Cancel long click timer
                     handler.removeMessages(MESSAGE_LONG_CLICK);
-                } else if ( !isQuickScaling ) {
+                } else if (!isQuickScaling) {
                     // Start one-finger pan
                     vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
                     vCenterStart = new PointF(event.getX(), event.getY());
@@ -690,8 +678,7 @@ public class SubsamplingScaleImageView extends View {
                                 float vTopNow = vTopStart * (scale/scaleStart);
                                 vTranslate.x = vCenterStart.x - vLeftNow;
                                 vTranslate.y = vCenterStart.y - vTopNow;
-                            }
-                            else if (sRequestedCenter != null) {
+                            } else if (sRequestedCenter != null) {
                                 // With a center specified from code, zoom around that point.
                                 vTranslate.x = (getWidth()/2) - (scale * sRequestedCenter.x);
                                 vTranslate.y = (getHeight()/2) - (scale * sRequestedCenter.y);
@@ -755,7 +742,7 @@ public class SubsamplingScaleImageView extends View {
                 handler.removeMessages(MESSAGE_LONG_CLICK);
                 if (isQuickScaling) {
                     isQuickScaling = false;
-                    if ( !quickScaleMoved ) {
+                    if (!quickScaleMoved) {
                         float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
                         boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                         float targetScale = zoomIn ? doubleTapZoomScale : minScale();
@@ -766,7 +753,6 @@ public class SubsamplingScaleImageView extends View {
                         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
                             new AnimationBuilder(targetScale, quickScaleCenter, vCenterStart).withInterruptible(false).start();
                         }
-
                         invalidate();
                     }
                 }
