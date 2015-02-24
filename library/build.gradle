@@ -52,6 +52,7 @@ uploadArchives {
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'com.android.support:support-annotations:20.0.0'
 }
 
 android {
