@@ -1,4 +1,4 @@
-Subsampling Zoom Image View
+Subsampling Scale Image View
 ===========================
 
 Custom image views for Android, designed for photo galleries and displaying huge images (e.g. maps and building plans) without `OutOfMemoryError`s. Includes pinch to zoom, panning, rotation and animation support, and allows easy extension so you can add your own overlays and touch event detection.
@@ -13,9 +13,11 @@ This library includes two view classes. `SubsamplingScaleImageView` uses subsamp
 
 **Are you using this library in your app? Let me know and I'll add it to this list.**
 
-| [![Fourth Mate](https://lh3.ggpht.com/2ALnL-05ILKLwP9U8Dfy7n4iI54OlXeZG-rHf31FP5l8Bup9wws9wnSlyX56ShgzlQ=w100)](https://play.google.com/store/apps/details?id=com.sleetworks.serenity.android)  | [![Journey](https://lh3.ggpht.com/Mz6YqxKsLfVbjYVHj_3nfUxLe5Yvl9W4KO2sKnwud6hZl5mnGitm55PnILT2jx4Hafv6=w100)](https://play.google.com/store/apps/details?id=com.journey.app)  | [![Clover](https://lh5.ggpht.com/Q8vw6LLyj3AjRev4ID3uvFUxnMp4ca4eBEaPlkupcK7cNn2xtVg-wIxVsKSJ-IIFaUM=w100)](https://play.google.com/store/apps/details?id=org.floens.chan)  | [![Tag Gallery](https://lh5.ggpht.com/mKch3_fgPYswBPmZ-qEvp91_fPKdbvN2UubCvUTDqy1sAaLJBzfFYETb-sJgPfCvDg=w100)](https://play.google.com/store/apps/details?id=me.snapdiary.us.taggallery)  | [![nycTrans.it](https://lh5.ggpht.com/eDe_bnb2KVXd6fwjJDroWYfEs7Qy-ity93s4LnOwei3S8AGZIeJy8wwmjllt1TKciD4=w100)](https://play.google.com/store/apps/details?id=com.nyctrans.it)  |
-| ------------- | ------------- | ------------- | ------------- | ------------- |
-| **Fourth Mate** | **Journal** | **Clover** | **Tag Gallery** | **nycTrans.it**|
+| [![Fourth Mate](https://lh3.ggpht.com/2ALnL-05ILKLwP9U8Dfy7n4iI54OlXeZG-rHf31FP5l8Bup9wws9wnSlyX56ShgzlQ=w100)](https://play.google.com/store/apps/details?id=com.sleetworks.serenity.android) | [![Sync for reddit](https://lh5.ggpht.com/eOcmQUHHFCXM5uiajTkTsak5sIB5eTLKXaKSGGGWi8TJ3edYtqz8EtvjlOto5eFYvoLb=w100)](https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync) | [![Journey](https://lh3.ggpht.com/Mz6YqxKsLfVbjYVHj_3nfUxLe5Yvl9W4KO2sKnwud6hZl5mnGitm55PnILT2jx4Hafv6=w100)](https://play.google.com/store/apps/details?id=com.journey.app)  |
+|---|---|---|
+| **Fourth Mate** | **Sync for reddit** | **Journal** |
+| [![Clover](https://lh5.ggpht.com/Q8vw6LLyj3AjRev4ID3uvFUxnMp4ca4eBEaPlkupcK7cNn2xtVg-wIxVsKSJ-IIFaUM=w100)](https://play.google.com/store/apps/details?id=org.floens.chan)  | [![Tag Gallery](https://lh5.ggpht.com/mKch3_fgPYswBPmZ-qEvp91_fPKdbvN2UubCvUTDqy1sAaLJBzfFYETb-sJgPfCvDg=w100)](https://play.google.com/store/apps/details?id=me.snapdiary.us.taggallery)  | [![nycTrans.it](https://lh5.ggpht.com/eDe_bnb2KVXd6fwjJDroWYfEs7Qy-ity93s4LnOwei3S8AGZIeJy8wwmjllt1TKciD4=w100)](https://play.google.com/store/apps/details?id=com.nyctrans.it)  |
+| **Clover** | **Tag Gallery** | **nycTrans.it** |
 
 ## Features
 
@@ -38,6 +40,7 @@ This library includes two view classes. `SubsamplingScaleImageView` uses subsamp
 #### Gesture detection
 * One finger pan
 * Two finger pinch to zoom
+* Quick scale (one finger zoom)
 * Pan while zooming
 * Seamless switch between pan and zoom
 * Fling momentum after panning
@@ -88,7 +91,7 @@ Use `ScaleImageView` if:
 
 Add the library to your app using one of these methods:
 
-* Add `com.davemorrissey.labs:subsampling-scale-image-view:2.3.0` as a dependency in your build.gradle file
+* Add `com.davemorrissey.labs:subsampling-scale-image-view:2.4.0` as a dependency in your build.gradle file
 * *or* download the library aar file from the releases page and add to your app manually
 * *or* clone the project and import the library subproject as a module in your app
 * *or* clone the project and copy the resources and classes from `com.davemorrissey.labs.subscaleview` into your project
