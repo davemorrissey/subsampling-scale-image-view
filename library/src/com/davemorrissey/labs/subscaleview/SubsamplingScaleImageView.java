@@ -194,7 +194,12 @@ public class SubsamplingScaleImageView extends View {
     private Anim anim;
 
     // Whether a ready notification has been sent to subclasses
-    private boolean readySent = false;
+    private boolean dimensionsReadySent = false;
+    // Whether a base layer loaded notification has been sent to subclasses
+    private boolean baseLayerReadySent = false;
+
+    // Event listener
+    private OnImageEventListener onImageEventListener;
 
     // Long click listener
     private OnLongClickListener onLongClickListener;
@@ -432,7 +437,8 @@ public class SubsamplingScaleImageView extends View {
             sWidth = 0;
             sHeight = 0;
             sOrientation = 0;
-            readySent = false;
+            dimensionsReadySent = false;
+            baseLayerReadySent = false;
         }
         if (tileMap != null) {
             for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
@@ -454,7 +460,7 @@ public class SubsamplingScaleImageView extends View {
 
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (panEnabled && readySent && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
+                if (panEnabled && dimensionsReadySent && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.getX() - e2.getX()) > 50 || Math.abs(e1.getY() - e2.getY()) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
                     PointF vTranslateEnd = new PointF(vTranslate.x + (velocityX * 0.25f), vTranslate.y + (velocityY * 0.25f));
                     float sCenterXEnd = ((getWidth()/2) - vTranslateEnd.x)/scale;
                     float sCenterYEnd = ((getHeight()/2) - vTranslateEnd.y)/scale;
@@ -472,7 +478,7 @@ public class SubsamplingScaleImageView extends View {
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                if (zoomEnabled && readySent && vTranslate != null) {
+                if (zoomEnabled && dimensionsReadySent && vTranslate != null) {
                     if (quickScaleEnabled) {
                         vCenterStart = new PointF(e.getX(), e.getY());
                         vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
@@ -520,7 +526,7 @@ public class SubsamplingScaleImageView extends View {
      */
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        if (readySent) {
+        if (dimensionsReadySent) {
             setScaleAndCenter(getScale(), getCenter());
         }
     }
@@ -797,11 +803,6 @@ public class SubsamplingScaleImageView extends View {
         return super.onTouchEvent(event);
     }
 
-    @Override
-    public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
-        this.onLongClickListener = onLongClickListener;
-    }
-
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
      * the scaling and tiling required. Once the view is setup, tiles are displayed as they are loaded.
@@ -822,29 +823,8 @@ public class SubsamplingScaleImageView extends View {
             return;
         }
 
-        // If waiting to translate to new center position, set translate now
-        if (sPendingCenter != null && pendingScale != null) {
-            scale = pendingScale;
-            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
-            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
-            sPendingCenter = null;
-            pendingScale = null;
-            fitToBounds(true);
-            refreshRequiredTiles(true);
-        }
-
-        // On first display of base image set up position, and in other cases make sure scale is correct.
-        fitToBounds(false);
-
-        // Everything is set up and coordinates are valid. Inform subclasses.
-        if (!readySent) {
-            readySent = true;
-            new Thread(new Runnable() {
-                public void run() {
-                    onImageReady();
-                }
-            }).start();
-        }
+        // Set scale and translate before draw.
+        preDraw();
 
         // If animating scale, calculate current scale and center with easing equations
         if (anim != null) {
@@ -1018,6 +998,25 @@ public class SubsamplingScaleImageView extends View {
             sVisTop = viewToSourceY(0),
             sVisBottom = viewToSourceY(getHeight());
         return !(sVisLeft > tile.sRect.right || tile.sRect.left > sVisRight || sVisTop > tile.sRect.bottom || tile.sRect.top > sVisBottom);
+    }
+
+    /**
+     * Sets scale and translate ready for the next draw.
+     */
+    private void preDraw() {
+        // If waiting to translate to new center position, set translate now
+        if (sPendingCenter != null && pendingScale != null) {
+            scale = pendingScale;
+            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
+            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
+            sPendingCenter = null;
+            pendingScale = null;
+            fitToBounds(true);
+            refreshRequiredTiles(true);
+        }
+
+        // On first display of base image set up position, and in other cases make sure scale is correct.
+        fitToBounds(false);
     }
 
     /**
@@ -1195,13 +1194,44 @@ public class SubsamplingScaleImageView extends View {
         this.sOrientation = sOrientation;
         requestLayout();
         invalidate();
+
+        // Inform subclasses that image dimensions are known and the scale and translate are set.
+        if (!dimensionsReadySent) {
+            preDraw();
+            dimensionsReadySent = true;
+            onImageReady();
+            if (onImageEventListener != null) {
+                onImageEventListener.onImageReady();
+            }
+        }
     }
 
     /**
      * Called by worker task when a tile has loaded. Redraws the view.
      */
-    private void onTileLoaded() {
+    private synchronized void onTileLoaded() {
         invalidate();
+
+        // If all base layer tiles are ready, inform subclasses the image is ready to display on next draw.
+        if (!baseLayerReadySent) {
+            boolean baseLayerReady = true;
+            for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
+                if (tileMapEntry.getKey() == fullImageSampleSize) {
+                    for (Tile tile : tileMapEntry.getValue()) {
+                        if (tile.loading || tile.bitmap == null) {
+                            baseLayerReady = false;
+                        }
+                    }
+                }
+            }
+            if (baseLayerReady) {
+                baseLayerReadySent = true;
+                onBaseLayerReady();
+                if (onImageEventListener != null) {
+                    onImageEventListener.onBaseLayerReady();
+                }
+            }
+        }
     }
 
     /**
@@ -1213,6 +1243,7 @@ public class SubsamplingScaleImageView extends View {
         private final WeakReference<Class<? extends ImageRegionDecoder>> decoderClassRef;
         private final Uri source;
         private ImageRegionDecoder decoder;
+        private Exception exception;
 
         public BitmapInitTask(SubsamplingScaleImageView view, Context context, Class<? extends ImageRegionDecoder> decoderClass, Uri source) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
@@ -1254,16 +1285,19 @@ public class SubsamplingScaleImageView extends View {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to initialise bitmap decoder", e);
+                this.exception = e;
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(int[] xyo) {
-            if (decoder != null) {
-                final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
-                if (subsamplingScaleImageView != null && decoder != null && xyo != null && xyo.length == 3) {
+            final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
+            if (subsamplingScaleImageView != null) {
+                if (decoder != null && xyo != null && xyo.length == 3) {
                     subsamplingScaleImageView.onImageInited(decoder, xyo[0], xyo[1], xyo[2]);
+                } else if (exception != null && subsamplingScaleImageView.onImageEventListener != null) {
+                    subsamplingScaleImageView.onImageEventListener.onInitialisationError(exception);
                 }
             }
         }
@@ -1276,6 +1310,7 @@ public class SubsamplingScaleImageView extends View {
         private final WeakReference<SubsamplingScaleImageView> viewRef;
         private final WeakReference<ImageRegionDecoder> decoderRef;
         private final WeakReference<Tile> tileRef;
+        private Exception exception;
 
         public BitmapTileTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Tile tile) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
@@ -1308,19 +1343,26 @@ public class SubsamplingScaleImageView extends View {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decode tile", e);
+                this.exception = e;
+                final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
+                if (subsamplingScaleImageView != null && subsamplingScaleImageView.onImageEventListener != null) {
+                    subsamplingScaleImageView.onImageEventListener.onTileLoadError(e);
+                }
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            if (bitmap != null) {
-                final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
-                final Tile tile = tileRef.get();
-                if (subsamplingScaleImageView != null && tile != null) {
+            final SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
+            final Tile tile = tileRef.get();
+            if (subsamplingScaleImageView != null && tile != null) {
+                if (bitmap != null) {
                     tile.bitmap = bitmap;
                     tile.loading = false;
                     subsamplingScaleImageView.onTileLoaded();
+                } else if (exception != null && subsamplingScaleImageView.onImageEventListener != null) {
+                    subsamplingScaleImageView.onImageEventListener.onTileLoadError(exception);
                 }
             }
         }
@@ -1842,18 +1884,38 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Subclasses can override this method to be informed when the view is set up and ready for rendering, so they can
-     * skip their own rendering until the base layer (and its scale and translate) are known.
+     * Subclasses can override this method to be informed when the view is set up and ready for rendering,
+     * so they can skip their own rendering until the base layer dimensions are known and the scale and
+     * translate have been calculated. This is called before the base layer tiles have been loaded;
+     * to be notified when they are ready override {@link #onBaseLayerReady()}. You can also use an
+     * {@link OnImageEventListener} to receive notification of these events.
      */
     protected void onImageReady() {
 
     }
 
     /**
-     * Call to find whether the view is initialised and ready for rendering tiles.
+     * Call to find whether the view is initialised and ready for rendering tiles. The view is ready
+     * once the dimensions of the image are known.
      */
     public final boolean isImageReady() {
-        return readySent && vTranslate != null && tileMap != null && sWidth > 0 && sHeight > 0;
+        return dimensionsReadySent && vTranslate != null && tileMap != null && sWidth > 0 && sHeight > 0;
+    }
+
+    /**
+     * Subclasses can override this method to be informed when the base layer tiles have been loaded -
+     * this is called immediately before the view draws them. You can also use an {@link OnImageEventListener}
+     * to receive notification of this event.
+     */
+    protected void onBaseLayerReady() {
+
+    }
+
+    /**
+     * Call to find whether the base layer tiles have been loaded. Before this event the view is blank.
+     */
+    public final boolean isBaseLayerReady() {
+        return baseLayerReadySent;
     }
 
     /**
@@ -2005,12 +2067,27 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
+        this.onLongClickListener = onLongClickListener;
+    }
+
+    /**
+     * Add a listener allowing notification of load and error events.
+     */
+    public void setOnImageEventListener(OnImageEventListener onImageEventListener) {
+        this.onImageEventListener = onImageEventListener;
+    }
+
+    /**
      * Creates a panning animation builder, that when started will animate the image to place the given coordinates of
      * the image in the center of the screen. If doing this would move the image beyond the edges of the screen, the
      * image is instead animated to move the center point as near to the center of the screen as is allowed - it's
      * guaranteed to be on screen.
      * @param sCenter Target center point
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateCenter(PointF sCenter) {
         if (!isImageReady()) {
@@ -2023,7 +2100,7 @@ public class SubsamplingScaleImageView extends View {
      * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
      * beyond the panning limits, the image is automatically panned during the animation.
      * @param scale Target scale.
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateScale(float scale) {
         if (!isImageReady()) {
@@ -2036,7 +2113,7 @@ public class SubsamplingScaleImageView extends View {
      * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
      * beyond the panning limits, the image is automatically panned during the animation.
      * @param scale Target scale.
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link SubsamplingScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateScaleAndCenter(float scale, PointF sCenter) {
         if (!isImageReady()) {
@@ -2170,4 +2247,55 @@ public class SubsamplingScaleImageView extends View {
         }
 
     }
+
+    /**
+     * An event listener, allowing subclasses and activities to be notified of significant events.
+     */
+    public static interface OnImageEventListener {
+
+        /**
+         * Called when the dimensions of the image are known. This occurs when the bitmap region decoder
+         * has initialised, but before the base layer tiles have been decoded. The view will be briefly
+         * blank but scale and translate will be calculated and ready for use to draw overlays.
+         */
+        void onImageReady();
+
+        /**
+         * Called when the lowest resolution base layer of tiles are loaded and about to be rendered,
+         * in other words the view will no longer be blank. You can use this event as a trigger to
+         * display overlays, remove loading animations etc.
+         */
+        void onBaseLayerReady();
+
+        /**
+         * Called when the dimensions of an image file could not be determined. This method cannot be
+         * relied upon; certain encoding types of supported image formats can result in corrupt or
+         * blank images being loaded and displayed with no detectable error.
+         * @param e The exception thrown. This error is also logged by the view.
+         */
+        void onInitialisationError(Exception e);
+
+        /**
+         * Called when an image tile could not be loaded. This method cannot be relied upon; certain
+         * encoding types of supported image formats can result in corrupt or blank images being loaded
+         * and displayed with no detectable error. Most cases where an unsupported file is used will
+         * result in an error caught by {@link #onInitialisationError(Exception)}.
+         * @param e The exception thrown. This error is logged by the view.
+         */
+        void onTileLoadError(Exception e);
+
+    }
+
+    /**
+     * Default implementation of {@link OnImageEventListener} for extension. This does nothing in any method.
+     */
+    public class DefaultOnImageEventListener implements OnImageEventListener {
+
+        @Override public void onImageReady() { }
+        @Override public void onBaseLayerReady() { }
+        @Override public void onInitialisationError(Exception e) { }
+        @Override public void onTileLoadError(Exception e) { }
+
+    }
+
 }

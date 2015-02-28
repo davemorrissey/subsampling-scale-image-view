@@ -187,6 +187,9 @@ public class ScaleImageView extends View {
     // Whether a ready notification has been sent to subclasses
     private boolean readySent = false;
 
+    // Event listener
+    private OnImageEventListener onImageEventListener;
+
     // Long click listener
     private OnLongClickListener onLongClickListener;
 
@@ -311,6 +314,11 @@ public class ScaleImageView extends View {
         this.sHeight = bitmap.getHeight();
         invalidate();
         requestLayout();
+        readySent = true;
+        onImageReady();
+        if (onImageEventListener != null) {
+            onImageEventListener.onImageReady();
+        }
     }
 
     /**
@@ -790,11 +798,6 @@ public class ScaleImageView extends View {
         return super.onTouchEvent(event);
     }
 
-    @Override
-    public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
-        this.onLongClickListener = onLongClickListener;
-    }
-
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
      * the scale and center.
@@ -809,31 +812,8 @@ public class ScaleImageView extends View {
             return;
         }
 
-        // If waiting to translate to new center position, set translate now
-        if (sPendingCenter != null && pendingScale != null) {
-            if (vTranslate == null) {
-                vTranslate = new PointF(0, 0);
-            }
-            scale = pendingScale;
-            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
-            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
-            sPendingCenter = null;
-            pendingScale = null;
-            fitToBounds(true);
-        }
-
-        // On first display of base image set up position, and in other cases make sure scale is correct.
-        fitToBounds(false);
-
-        // Everything is set up and coordinates are valid. Inform subclasses.
-        if (!readySent) {
-            readySent = true;
-            new Thread(new Runnable() {
-                public void run() {
-                    onImageReady();
-                }
-            }).start();
-        }
+        // Set scale and translate before draw.
+        preDraw();
 
         // If animating scale, calculate current scale and center with easing equations
         if (anim != null) {
@@ -916,6 +896,28 @@ public class ScaleImageView extends View {
             debugPaint.setStyle(Style.STROKE);
         }
     }
+
+    /**
+     * Sets scale and translate ready for the next draw.
+     */
+    private void preDraw() {
+        // If waiting to translate to new center position, set translate now
+        if (sPendingCenter != null && pendingScale != null) {
+            if (vTranslate == null) {
+                vTranslate = new PointF(0, 0);
+            }
+            scale = pendingScale;
+            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
+            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
+            sPendingCenter = null;
+            pendingScale = null;
+            fitToBounds(true);
+        }
+
+        // On first display of base image set up position, and in other cases make sure scale is correct.
+        fitToBounds(false);
+    }
+
 
     /**
      * Adjusts hypothetical future scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
@@ -1003,6 +1005,16 @@ public class ScaleImageView extends View {
         forceCenterOnNextDraw();
         requestLayout();
         invalidate();
+
+        // Inform subclasses that the image is ready and scale and translate are set.
+        if (!readySent) {
+            preDraw();
+            readySent = true;
+            onImageReady();
+            if (onImageEventListener != null) {
+                onImageEventListener.onImageReady();
+            }
+        }
     }
 
     /**
@@ -1014,6 +1026,7 @@ public class ScaleImageView extends View {
         private final WeakReference<Class<? extends ImageDecoder>> decoderClassRef;
         private final Uri source;
         private Bitmap bitmap;
+        private Exception exception;
 
         public BitmapInitTask(ScaleImageView view, Context context, Class<? extends ImageDecoder> decoderClass, Uri source) {
             this.viewRef = new WeakReference<ScaleImageView>(view);
@@ -1054,16 +1067,19 @@ public class ScaleImageView extends View {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to initialise bitmap decoder", e);
+                this.exception = e;
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(int[] xyo) {
-            if (bitmap != null) {
-                final ScaleImageView scaleImageView = viewRef.get();
-                if (scaleImageView != null && bitmap != null && xyo != null && xyo.length == 3) {
+            final ScaleImageView scaleImageView = viewRef.get();
+            if (scaleImageView != null) {
+                if (bitmap != null && xyo != null && xyo.length == 3) {
                     scaleImageView.onImageInited(bitmap, xyo[0], xyo[1], xyo[2]);
+                } else if (exception != null && scaleImageView.onImageEventListener != null) {
+                    scaleImageView.onImageEventListener.onInitialisationError(exception);
                 }
             }
         }
@@ -1530,7 +1546,8 @@ public class ScaleImageView extends View {
 
     /**
      * Subclasses can override this method to be informed when the view is set up and ready for rendering, so they can
-     * skip their own rendering until the base layer (and its scale and translate) are known.
+     * skip their own rendering until the base layer (and its scale and translate) are known. You can also use an
+     * {@link OnImageEventListener} to receive notification of this events.
      */
     protected void onImageReady() {
 
@@ -1691,12 +1708,27 @@ public class ScaleImageView extends View {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
+        this.onLongClickListener = onLongClickListener;
+    }
+
+    /**
+     * Add a listener allowing notification of load and error events.
+     */
+    public void setOnImageEventListener(OnImageEventListener onImageEventListener) {
+        this.onImageEventListener = onImageEventListener;
+    }
+
+    /**
      * Creates a panning animation builder, that when started will animate the image to place the given coordinates of
      * the image in the center of the screen. If doing this would move the image beyond the edges of the screen, the
      * image is instead animated to move the center point as near to the center of the screen as is allowed - it's
      * guaranteed to be on screen.
      * @param sCenter Target center point
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.ScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link ScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateCenter(PointF sCenter) {
         if (!isImageReady()) {
@@ -1709,7 +1741,7 @@ public class ScaleImageView extends View {
      * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
      * beyond the panning limits, the image is automatically panned during the animation.
      * @param scale Target scale.
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.ScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link ScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateScale(float scale) {
         if (!isImageReady()) {
@@ -1722,7 +1754,7 @@ public class ScaleImageView extends View {
      * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
      * beyond the panning limits, the image is automatically panned during the animation.
      * @param scale Target scale.
-     * @return {@link AnimationBuilder} instance. Call {@link com.davemorrissey.labs.subscaleview.ScaleImageView.AnimationBuilder#start()} to start the anim.
+     * @return {@link AnimationBuilder} instance. Call {@link ScaleImageView.AnimationBuilder#start()} to start the anim.
      */
     public AnimationBuilder animateScaleAndCenter(float scale, PointF sCenter) {
         if (!isImageReady()) {
@@ -1856,4 +1888,36 @@ public class ScaleImageView extends View {
         }
 
     }
+
+    /**
+     * An event listener, allowing subclasses and activities to be notified of significant events.
+     */
+    public interface OnImageEventListener {
+
+        /**
+         * Called when the dimensions of the image are known and the bitmap has been loaded ready for
+         * rendering in the next draw.
+         */
+        void onImageReady();
+
+        /**
+         * Called when the image file could not be loaded. This method cannot be relied upon; certain
+         * encoding types of supported image formats can result in corrupt or blank images being loaded
+         * and displayed with no detectable error.
+         * @param e The exception thrown. This error is also logged by the view.
+         */
+        void onInitialisationError(Exception e);
+
+    }
+
+    /**
+     * Default implementation of {@link OnImageEventListener} for extension. This does nothing in any method.
+     */
+    public class DefaultOnImageEventListener implements OnImageEventListener {
+
+        @Override public void onImageReady() { }
+        @Override public void onInitialisationError(Exception e) { }
+
+    }
+
 }

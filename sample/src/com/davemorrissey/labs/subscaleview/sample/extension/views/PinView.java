@@ -60,7 +60,7 @@ public class PinView extends SubsamplingScaleImageView {
         super.onDraw(canvas);
 
         // Don't draw pin before image is ready so it doesn't move around during setup.
-        if (!isImageReady()) {
+        if (!isBaseLayerReady()) {
             return;
         }
 

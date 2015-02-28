@@ -118,7 +118,7 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
         super.onDraw(canvas);
 
         // Don't draw anything before image is ready.
-        if (!isImageReady()) {
+        if (!isBaseLayerReady()) {
             return;
         }
 
