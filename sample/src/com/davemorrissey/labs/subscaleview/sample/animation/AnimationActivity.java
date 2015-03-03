@@ -23,6 +23,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.AnimationBuilder;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
@@ -81,7 +83,7 @@ public class AnimationActivity extends Activity implements OnClickListener {
         } else if (view.getId() == id.play) {
             PinView pinView = (PinView)findViewById(id.imageView);
             Random random = new Random();
-            if (pinView.isImageReady()) {
+            if (pinView.isReady()) {
                 float maxScale = pinView.getMaxScale();
                 float minScale = pinView.getMinScale();
                 float scale = (random.nextFloat() * (maxScale - minScale)) + minScale;
@@ -105,7 +107,7 @@ public class AnimationActivity extends Activity implements OnClickListener {
 
     private void initialiseImage() {
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setImage(ImageSource.asset("squirrel.jpg"));
     }
 
     private void updateNotes() {

@@ -27,6 +27,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
@@ -93,7 +95,7 @@ public class AdvancedEventHandlingActivity extends Activity implements OnClickLi
         final GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                if (imageView.isImageReady()) {
+                if (imageView.isReady()) {
                     PointF sCoord = imageView.viewToSourceCoord(e.getX(), e.getY());
                     Toast.makeText(getApplicationContext(), "Single tap: " + ((int)sCoord.x) + ", " + ((int)sCoord.y), Toast.LENGTH_SHORT).show();
                 } else {
@@ -103,7 +105,7 @@ public class AdvancedEventHandlingActivity extends Activity implements OnClickLi
             }
             @Override
             public void onLongPress(MotionEvent e) {
-                if (imageView.isImageReady()) {
+                if (imageView.isReady()) {
                     PointF sCoord = imageView.viewToSourceCoord(e.getX(), e.getY());
                     Toast.makeText(getApplicationContext(), "Long press: " + ((int)sCoord.x) + ", " + ((int)sCoord.y), Toast.LENGTH_SHORT).show();
                 } else {
@@ -112,7 +114,7 @@ public class AdvancedEventHandlingActivity extends Activity implements OnClickLi
             }
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                if (imageView.isImageReady()) {
+                if (imageView.isReady()) {
                     PointF sCoord = imageView.viewToSourceCoord(e.getX(), e.getY());
                     Toast.makeText(getApplicationContext(), "Double tap: " + ((int)sCoord.x) + ", " + ((int)sCoord.y), Toast.LENGTH_SHORT).show();
                 } else {
@@ -122,7 +124,7 @@ public class AdvancedEventHandlingActivity extends Activity implements OnClickLi
             }
         });
 
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setImage(ImageSource.asset("squirrel.jpg"));
         imageView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {

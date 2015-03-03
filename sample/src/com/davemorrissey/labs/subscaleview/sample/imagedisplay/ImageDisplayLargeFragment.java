@@ -22,6 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
@@ -38,7 +40,7 @@ public class ImageDisplayLargeFragment extends Fragment {
             }
         });
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("card.png");
+        imageView.setImage(ImageSource.asset("card.png").withDimensions(7557, 5669), ImageSource.asset("card_preview.png"));
         return rootView;
     }
 

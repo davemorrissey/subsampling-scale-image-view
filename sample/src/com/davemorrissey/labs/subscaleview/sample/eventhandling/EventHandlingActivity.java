@@ -24,6 +24,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
@@ -98,7 +100,7 @@ public class EventHandlingActivity extends Activity implements OnClickListener, 
 
     private void initialiseImage() {
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setImage(ImageSource.asset("squirrel.jpg"));
     }
 
     private void updateNotes() {

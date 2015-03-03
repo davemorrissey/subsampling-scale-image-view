@@ -22,6 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
 import com.davemorrissey.labs.subscaleview.sample.extension.views.FreehandView;
@@ -38,7 +40,7 @@ public class ExtensionFreehandFragment extends Fragment {
             }
         });
         final FreehandView imageView = (FreehandView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setImage(ImageSource.asset("squirrel.jpg"));
         rootView.findViewById(id.reset).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

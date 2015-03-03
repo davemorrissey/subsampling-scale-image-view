@@ -22,6 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+
+import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
@@ -35,7 +37,7 @@ public class ImageDisplayRotateFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.imagedisplay_rotate_fragment, container, false);
         final SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
+        imageView.setImage(ImageSource.asset("squirrel.jpg"));
         imageView.setOrientation(90);
         rootView.findViewById(id.previous).setOnClickListener(new OnClickListener() {
             @Override

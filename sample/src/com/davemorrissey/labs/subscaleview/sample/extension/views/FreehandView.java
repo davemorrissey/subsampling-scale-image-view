@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.*;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -60,7 +61,7 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
         if (sPoints != null && !drawing) {
             return super.onTouchEvent(event);
         }
@@ -118,7 +119,7 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
         super.onDraw(canvas);
 
         // Don't draw anything before image is ready.
-        if (!isBaseLayerReady()) {
+        if (!isReady()) {
             return;
         }
 
