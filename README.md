@@ -1,9 +1,43 @@
 Subsampling Scale Image View
 ===========================
 
-Custom image views for Android, designed for photo galleries and displaying huge images (e.g. maps and building plans) without `OutOfMemoryError`s. Includes pinch to zoom, panning, rotation and animation support, and allows easy extension so you can add your own overlays and touch event detection.
+A custom image view for Android, designed for photo galleries and displaying huge images (e.g. maps and building plans) without `OutOfMemoryError`s. Includes pinch to zoom, panning, rotation and animation support, and allows easy extension so you can add your own overlays and touch event detection.
 
-This library includes two view classes. `SubsamplingScaleImageView` uses subsampling and tiles to support large images - as you zoom in, the low resolution initial image is overlaid with smaller high resolution tiles to avoid holding too much data in memory. It's ideal for displaying large images while allowing you to zoom in to the high resolution details. `ScaleImageView` doesn't subsample images but can display `Bitmap` objects and supports all the same features. To decide which is best for you, see below.
+The view optionally uses subsampling and tiles to support very large images - a low resolution base layer is loaded and as you zoom in, it is overlaid with smaller high resolution tiles for the visible area. This avoids holding too much data in memory. It's ideal for displaying large images while allowing you to zoom in to the high resolution details. You can disable tiling for smaller images and when displaying a bitmap object. There are some advantages and disadvantages to disabling tiling so to decide which is best, see below.
+
+#### 2.x.x to 3.x.x migration
+
+**Version 3 includes breaking changes. To upgrade, you will need to make a few simple changes to your activities and subclasses.**
+
+**What's new**
+
+* Support for preview images, allowing a low resolution preview to be displayed and gestures to be enabled while base layer tiles of the full size image are loaded. This is useful for very big images (over 10,000px).
+
+* Revised lifecycle events, so you can display a loading message until the base layer is fully loaded.
+
+* A listener interface to allow activities to respond to lifecycle events and image loading errors.
+
+* `ScaleImageView` has been merged into `SubsamplingScaleImageView`, which now supports display of large images with tiling, and small images without tiling or from a bitmap object.
+
+**Migrating to version 3**
+
+**1)** Change the method for setting the image source.
+
+| Old method | New method |
+| ---------- | ---------- |
+| `view.setImageAsset("map.png")` | `view.setImage(ImageSource.asset("map.png"))` |
+| `view.setImageResource(R.drawable.map)` | `view.setImage(ImageSource.resource(R.drawable.map, context))` |
+| `view.setImageUri("/sdcard/map.png")` | `view.setImage(ImageSource.uri("/sdcard/map.png"))` |
+| `view.setImageBitmap(map)` | `view.getImage(ImageSource.bitmap(map))` |
+
+**2)** Replace uses of `ScaleImageView` with `SubsamplingScaleImageView` and disable tiling if required. For example:
+
+    SubsamplingScaleImageView view = (SubsamplingScaleImageView)findViewById(id.imageView);
+    view.setImage(ImageSource.asset("map.png").withTilingDisabled());
+    
+**3)** Replace uses of `isImageReady()` with `isReady()`.
+
+**4)** In subclasses, replace overrides of `onImageReady()` with `onReady()`.
 
 #### Download the sample app
 
@@ -23,19 +57,19 @@ This library includes two view classes. `SubsamplingScaleImageView` uses subsamp
 
 #### Image display
 
-* Display images from assets, resources or the file system
+* Display images from assets, resources, the file system or bitmaps
 * Automatically rotate images from the file system (e.g. the camera or gallery) according to EXIF
 * Manually rotate images in 90° increments
 * Swap images at runtime
 * Use a custom bitmap decoder
 
-*`SubsamplingScaleImageView` only:*
+*With tiling enabled:*
 
 * Display huge images, larger than can be loaded into memory
 * Show high resolution detail on zooming in
-* Tested up to 20,000x13,000px, though larger images are slower
+* Tested up to 20,000x20,000px, though larger images are slower
 
-*These views don't extend `ImageView` and aren't intended as a general purpose replacement for it. They're specialised for the display of photos and other large images, not the display of 9-patches, shapes and the other types of drawable that ImageView supports.*
+*This view doesn't extend `ImageView` and isn't intended as a general purpose replacement for it. It's specialised for the display of photos and other large images, not the display of 9-patches, shapes and the other types of drawable that ImageView supports.*
 
 #### Gesture detection
 * One finger pan
@@ -64,15 +98,16 @@ This library includes two view classes. `SubsamplingScaleImageView` uses subsamp
 * Handles view resizing and `wrap_content` layout
 
 #### Limitations
-* `SubsamplingScaleImageView` requires SDK 10 (Gingerbread).
-* `SubsamplingScaleImageView` cannot display a `Bitmap` object - the image file needs to be in assets, resources or external storage.
-* `SubsamplingScaleImageView` cannot display grayscale PNGs on Android Lollipop, due to bugs in the skia library and/or BitmapRegionDecoder. Earlier versions of Android also have issues displaying some grayscale PNGs, but not all. I have reported these bugs to Google. For a workaround, see the section on custom bitmap decoders below.
-* These views do not extend ImageView so attributes including android:tint, android:scaleType and android:src are not supported.
+* Tiling requires SDK 10 (Gingerbread). You can work around this with a custom decoder - see the section below.
+* With tiling enabled, the view cannot display grayscale PNGs on Android Lollipop, due to bugs in the skia library and/or BitmapRegionDecoder. Earlier versions of Android also have issues displaying some grayscale PNGs, but not all. I have reported these bugs to Google. For a workaround, see the section on custom bitmap decoders below.
+* The view does not extend ImageView so attributes including android:tint and android:src are not supported. Support for android:scaleType is limited and it must be set from code.
 * Images stored in resources and assets cannot be rotated based on EXIF, you'll need to do it manually. You probably know the orientation of your own files :-)
 
-## Which view is best?
+## When to use tiling
 
-Use `SubsamplingScaleImageView` if:
+Tiling is enabled by default. You may wish to disable it under some circumstances.
+
+Enable tiling if:
 
 * You want to zoom into very large images without losing detail.
 * You need to display images of unknown size e.g. from the camera or gallery.
@@ -80,7 +115,7 @@ Use `SubsamplingScaleImageView` if:
 * You need to display images larger than 2048px.
 * You don't need to support devices older than SDK 10.
 
-Use `ScaleImageView` if:
+Disable tiling if:
 
 * You know the size of the images you're displaying.
 * You know the images are small enough to fit in memory on all your target devices.
@@ -112,11 +147,11 @@ Add the view to your layout XML as shown below. Normally you should set width an
 Now, in your fragment or activity, set the image resource, asset name or file path.
 
     SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-    imageView.setImageResource(R.drawable.monkey);
+    imageView.setImage(ImageSource.resource(R.drawable.monkey));
     // ... or ...
-    imageView.setImageAsset("map.png");
+    imageView.setImage(ImageSource.asset("map.png"))
     // ... or ...
-    imageView.setImageUri("/sdcard/DCIM/DSCM00123.JPG");
+    imageView.setImage(ImageSource.uri("/sdcard/DCIM/DSCM00123.JPG"));
 
 That's it! Keep reading for some more options.
 
@@ -153,7 +188,7 @@ If you want the current scale, center and orientation to be preserved when the s
             imageViewState = (ImageViewState)savedInstanceState.getSerializable(BUNDLE_STATE);
         }
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("map.png", imageViewState);
+        imageView.setImage(ImageSource.asset("map.png"), imageViewState);
         
         return rootView;
     }
@@ -195,4 +230,4 @@ Take a look at the sample app for examples of classes that overlay graphics on t
 
 ## About
 
-Copyright 2014 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it, and send a link to your project on GitHub or app in Google Play if you'd like me to add it to this page.
+Copyright 2015 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it, and send a link to your project on GitHub or app in Google Play if you'd like me to add it to this page.
