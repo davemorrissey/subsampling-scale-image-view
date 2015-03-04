@@ -20,6 +20,7 @@ public final class ImageSource {
 
     private final Uri uri;
     private final Bitmap bitmap;
+    private final Integer resource;
     private boolean tile;
     private int sWidth;
     private int sHeight;
@@ -27,6 +28,7 @@ public final class ImageSource {
     private ImageSource(Bitmap bitmap) {
         this.bitmap = bitmap;
         this.uri = null;
+        this.resource = null;
         this.tile = false;
         this.sWidth = bitmap.getWidth();
         this.sHeight = bitmap.getHeight();
@@ -35,16 +37,23 @@ public final class ImageSource {
     private ImageSource(Uri uri) {
         this.bitmap = null;
         this.uri = uri;
+        this.resource = null;
+        this.tile = true;
+    }
+
+    private ImageSource(int resource) {
+        this.bitmap = null;
+        this.uri = null;
+        this.resource = resource;
         this.tile = true;
     }
 
     /**
      * Create an instance from a resource. The correct resource for the device screen resolution will be used.
      * @param resId resource ID.
-     * @param context application context.
      */
-    public static ImageSource resource(int resId, Context context) {
-        return uri(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/" + resId);
+    public static ImageSource resource(int resId) {
+        return new ImageSource(resId);
     }
 
     /**
@@ -143,6 +152,10 @@ public final class ImageSource {
 
     protected final Bitmap getBitmap() {
         return bitmap;
+    }
+
+    protected final Integer getResource() {
+        return resource;
     }
 
     protected final boolean getTile() {

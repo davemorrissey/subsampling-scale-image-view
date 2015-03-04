@@ -16,6 +16,7 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.*;
@@ -253,7 +254,7 @@ public class SubsamplingScaleImageView extends View {
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_src)) {
                 int resId = typedAttr.getResourceId(styleable.SubsamplingScaleImageView_src, 0);
                 if (resId > 0) {
-                    setImage(ImageSource.resource(resId, context).withTilingEnabled());
+                    setImage(ImageSource.resource(resId).withTilingEnabled());
                 }
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_panEnabled)) {
@@ -355,7 +356,11 @@ public class SubsamplingScaleImageView extends View {
             if (previewSource.getBitmap() != null) {
                 onPreviewLoaded(bitmap);
             } else {
-                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderClass, previewSource.getUri(), true);
+                Uri uri = previewSource.getUri();
+                if (uri == null && previewSource.getResource() != null) {
+                    uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + previewSource.getResource());
+                }
+                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderClass, uri, true);
                 task.execute();
             }
         }
@@ -363,14 +368,20 @@ public class SubsamplingScaleImageView extends View {
         if (imageSource.getBitmap() != null) {
             // Display the image as it is.
             onImageLoaded(bitmap, ORIENTATION_0);
-        } else if (imageSource.getTile()) {
-            // Load the bitmap using tile decoding.
-            TilesInitTask task = new TilesInitTask(this, getContext(), regionDecoderClass, imageSource.getUri());
-            task.execute();
         } else {
-            // Load the bitmap as a single image.
-            BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderClass, imageSource.getUri(), false);
-            task.execute();
+            Uri uri = imageSource.getUri();
+            if (uri == null && imageSource.getResource() != null) {
+                uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + imageSource.getResource());
+            }
+            if (imageSource.getTile()) {
+                // Load the bitmap using tile decoding.
+                TilesInitTask task = new TilesInitTask(this, getContext(), regionDecoderClass, uri);
+                task.execute();
+            } else {
+                // Load the bitmap as a single image.
+                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderClass, uri, false);
+                task.execute();
+            }
         }
     }
 
@@ -936,6 +947,7 @@ public class SubsamplingScaleImageView extends View {
             readySent = true;
             if (onImageEventListener != null) {
                 onImageEventListener.onReady();
+                onReady();
             }
         }
         return ready;
@@ -952,6 +964,7 @@ public class SubsamplingScaleImageView extends View {
             imageLoadedSent = true;
             if (onImageEventListener != null) {
                 onImageEventListener.onImageLoaded();
+                onImageLoaded();
             }
         }
         return imageLoaded;
@@ -2050,11 +2063,27 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Called once when the view is initialised, has dimensions, and will display an image on the
+     * next draw. This is triggered at the same time as {@link OnImageEventListener#onReady()} but
+     * allows a subclass to receive this event without using a listener.
+     */
+    protected void onReady() {
+
+    }
+
+    /**
      * Call to find whether the main image (base layer tiles where relevant) have been loaded. Before
      * this event the view is blank unless a preview was provided.
      */
     public final boolean isImageLoaded() {
         return imageLoadedSent;
+    }
+
+    /**
+     * Called once when the full size image or its base layer tiles have been loaded.
+     */
+    protected void onImageLoaded() {
+
     }
 
     /**
