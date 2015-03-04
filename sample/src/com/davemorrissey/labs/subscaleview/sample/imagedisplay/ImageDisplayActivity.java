@@ -47,7 +47,8 @@ public class ImageDisplayActivity extends FragmentActivity {
         }
         pages = Arrays.asList(
                 new Page("Large images", ImageDisplayLargeFragment.class),
-                new Page("Rotation", ImageDisplayRotateFragment.class)
+                new Page("Rotation", ImageDisplayRotateFragment.class),
+                new Page("Display region", ImageDisplayRegionFragment.class)
         );
 
         updatePage();

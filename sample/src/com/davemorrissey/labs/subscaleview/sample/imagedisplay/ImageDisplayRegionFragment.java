@@ -16,6 +16,7 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview.sample.imagedisplay;
 
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -25,28 +26,20 @@ import android.view.ViewGroup;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
-import com.davemorrissey.labs.subscaleview.sample.extension.ExtensionActivity;
 
-public class ImageDisplayRotateFragment extends Fragment {
+import java.util.Random;
 
-
+public class ImageDisplayRegionFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(layout.imagedisplay_rotate_fragment, container, false);
+        View rootView = inflater.inflate(layout.imagedisplay_region_fragment, container, false);
         final SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImageAsset("squirrel.jpg");
-        imageView.setOrientation(90);
+        imageView.setImageAsset("squirrel.jpg", null, randomRegion(2456, 1632));
         rootView.findViewById(id.previous).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 ((ImageDisplayActivity)getActivity()).previous();
-            }
-        });
-        rootView.findViewById(id.next).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ImageDisplayActivity)getActivity()).next();
             }
         });
         rootView.findViewById(id.rotate).setOnClickListener(new OnClickListener() {
@@ -59,4 +52,14 @@ public class ImageDisplayRotateFragment extends Fragment {
         return rootView;
     }
 
+    private static Rect randomRegion(int width, int height) {
+        Random random = new Random(System.nanoTime());
+
+        int left = random.nextInt(width - 2);
+        int top = random.nextInt(height - 2);
+        int right = random.nextInt(width - left + 1) + left;
+        int bottom = random.nextInt(height - top + 1) + top;
+
+        return new Rect(left, top, right, bottom);
+    }
 }
