@@ -165,6 +165,8 @@ public class SubsamplingScaleImageView extends View {
     private int sWidth;
     private int sHeight;
     private int sOrientation;
+    private Rect sRegion;
+    private Rect pRegion;
 
     // Is two-finger zooming in progress
     private boolean isZooming;
@@ -350,6 +352,7 @@ public class SubsamplingScaleImageView extends View {
             }
             this.sWidth = imageSource.getSWidth();
             this.sHeight = imageSource.getSHeight();
+            this.pRegion = previewSource.getSRegion();
             if (previewSource.getBitmap() != null) {
                 onPreviewLoaded(previewSource.getBitmap());
             } else {
@@ -362,15 +365,17 @@ public class SubsamplingScaleImageView extends View {
             }
         }
 
-        if (imageSource.getBitmap() != null) {
-            // Display the image as it is.
+        if (imageSource.getBitmap() != null && imageSource.getSRegion() != null) {
+            onPreviewLoaded(Bitmap.createBitmap(imageSource.getBitmap(), imageSource.getSRegion().left, imageSource.getSRegion().top, imageSource.getSRegion().width(), imageSource.getSRegion().height()));
+        } else if (imageSource.getBitmap() != null) {
             onImageLoaded(imageSource.getBitmap(), ORIENTATION_0);
         } else {
+            this.sRegion = imageSource.getSRegion();
             Uri uri = imageSource.getUri();
             if (uri == null && imageSource.getResource() != null) {
                 uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + imageSource.getResource());
             }
-            if (imageSource.getTile()) {
+            if (imageSource.getTile() || this.sRegion != null) {
                 // Load the bitmap using tile decoding.
                 TilesInitTask task = new TilesInitTask(this, getContext(), regionDecoderClass, uri);
                 task.execute();
@@ -421,6 +426,8 @@ public class SubsamplingScaleImageView extends View {
             sWidth = 0;
             sHeight = 0;
             sOrientation = 0;
+            sRegion = null;
+            pRegion = null;
             readySent = false;
             imageLoadedSent = false;
             bitmap = null;
@@ -1294,8 +1301,14 @@ public class SubsamplingScaleImageView extends View {
                 if (context != null && decoderClass != null && view != null) {
                     decoder = decoderClass.newInstance();
                     Point dimensions = decoder.init(context, source);
+                    int sWidth = dimensions.x;
+                    int sHeight = dimensions.y;
                     int exifOrientation = view.getExifOrientation(sourceUri);
-                    return new int[] { dimensions.x, dimensions.y, exifOrientation };
+                    if (view.sRegion != null) {
+                        sWidth = view.sRegion.width();
+                        sHeight = view.sRegion.height();
+                    }
+                    return new int[] { sWidth, sHeight, exifOrientation };
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to initialise bitmap decoder", e);
@@ -1366,6 +1379,9 @@ public class SubsamplingScaleImageView extends View {
                     synchronized (view.decoderLock) {
                         // Update tile's file sRect according to rotation
                         view.fileSRect(tile.sRect, tile.fileSRect);
+                        if (view.sRegion != null) {
+                            tile.fileSRect.offset(view.sRegion.left, view.sRegion.top);
+                        }
                         Bitmap bitmap = decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
                         int rotation = view.getRequiredRotation();
                         if (rotation != 0) {
@@ -1485,13 +1501,17 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Called by worker task when preview image is loaded.
      */
-    private synchronized void onPreviewLoaded(Bitmap bitmap) {
-        if (this.bitmap != null || imageLoadedSent) {
-            bitmap.recycle();
+    private synchronized void onPreviewLoaded(Bitmap previewBitmap) {
+        if (bitmap != null || imageLoadedSent) {
+            previewBitmap.recycle();
             return;
         }
-        this.preview = true;
-        this.bitmap = bitmap;
+        if (pRegion != null) {
+            bitmap = Bitmap.createBitmap(previewBitmap, pRegion.left, pRegion.top, pRegion.width(), pRegion.height());
+        } else {
+            bitmap = previewBitmap;
+        }
+        preview = true;
         if (checkReady()) {
             invalidate();
             requestLayout();
