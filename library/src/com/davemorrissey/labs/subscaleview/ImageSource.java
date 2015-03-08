@@ -9,7 +9,7 @@ import android.net.Uri;
  * use of a bitmap, asset, resource, external file or any other URI.
  *
  * When you are using a preview image, you must set the dimensions of the full size image on the
- * ImageSource object for the full size image using the {@link #withDimensions(int, int)} method.
+ * ImageSource object for the full size image using the {@link #dimensions(int, int)} method.
  */
 public final class ImageSource {
 
@@ -111,8 +111,8 @@ public final class ImageSource {
      * and tiling cannot be disabled when displaying a region of the source image.
      * @return this instance for chaining.
      */
-    public ImageSource withTilingEnabled() {
-        return withTiling(true);
+    public ImageSource tilingEnabled() {
+        return tiling(true);
     }
 
     /**
@@ -120,8 +120,8 @@ public final class ImageSource {
      * and tiling cannot be disabled when displaying a region of the source image.
      * @return this instance for chaining.
      */
-    public ImageSource withTilingDisabled() {
-        return withTiling(false);
+    public ImageSource tilingDisabled() {
+        return tiling(false);
     }
 
     /**
@@ -129,7 +129,7 @@ public final class ImageSource {
      * and tiling cannot be disabled when displaying a region of the source image.
      * @return this instance for chaining.
      */
-    public ImageSource withTiling(boolean tile) {
+    public ImageSource tiling(boolean tile) {
         this.tile = tile;
         return this;
     }
@@ -139,7 +139,7 @@ public final class ImageSource {
      * you are using one.
      * @return this instance for chaining.
      */
-    public ImageSource withRegion(Rect sRegion) {
+    public ImageSource region(Rect sRegion) {
         this.sRegion = sRegion;
         setInvariants();
         return this;
@@ -151,7 +151,7 @@ public final class ImageSource {
      * the image dimensions. Note if the declared dimensions are found to be incorrect, the view will reset.
      * @return this instance for chaining.
      */
-    public ImageSource withDimensions(int sWidth, int sHeight) {
+    public ImageSource dimensions(int sWidth, int sHeight) {
         if (bitmap == null) {
             this.sWidth = sWidth;
             this.sHeight = sHeight;

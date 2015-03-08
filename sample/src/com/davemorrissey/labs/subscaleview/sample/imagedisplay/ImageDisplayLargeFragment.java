@@ -40,7 +40,7 @@ public class ImageDisplayLargeFragment extends Fragment {
             }
         });
         SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("card.png").withDimensions(7557, 5669), ImageSource.asset("card_preview.png"));
+        imageView.setImage(ImageSource.asset("card.png"));
         return rootView;
     }
 
