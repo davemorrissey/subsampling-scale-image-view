@@ -956,9 +956,9 @@ public class SubsamplingScaleImageView extends View {
         if (!readySent && ready) {
             preDraw();
             readySent = true;
+            onReady();
             if (onImageEventListener != null) {
                 onImageEventListener.onReady();
-                onReady();
             }
         }
         return ready;
@@ -973,9 +973,9 @@ public class SubsamplingScaleImageView extends View {
         if (!imageLoadedSent && imageLoaded) {
             preDraw();
             imageLoadedSent = true;
+            onImageLoaded();
             if (onImageEventListener != null) {
                 onImageEventListener.onImageLoaded();
-                onImageLoaded();
             }
         }
         return imageLoaded;
@@ -2466,7 +2466,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Default implementation of {@link OnImageEventListener} for extension. This does nothing in any method.
      */
-    public class DefaultOnImageEventListener implements OnImageEventListener {
+    public static class DefaultOnImageEventListener implements OnImageEventListener {
 
         @Override public void onReady() { }
         @Override public void onImageLoaded() { }
