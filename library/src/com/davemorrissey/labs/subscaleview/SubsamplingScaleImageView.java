@@ -155,6 +155,7 @@ public class SubsamplingScaleImageView extends View {
     private int sWidth;
     private int sHeight;
     private int sOrientation;
+    private Rect displayRegion;
 
     // Is two-finger zooming in progress
     private boolean isZooming;
@@ -304,6 +305,20 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Display an image from a file in internal or external storage, starting with a given orientation setting, scale
+     * and center. This is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation.
+     * @param fileUri URI of the file to display e.g. '/sdcard/DCIM1000.PNG' or 'file:///scard/DCIM1000.PNG' (these are equivalent).
+     * @param state State to be restored. Nullable.
+     * @param displayRegion Set the region to display instead of the whole image. Nullable.
+     * @deprecated Method name is outdated, other URIs are now accepted so use {@link #setImageUri(android.net.Uri, ImageViewState)} or {@link #setImageUri(String, ImageViewState)}.
+     */
+    @Deprecated
+    public final void setImageFile(String fileUri, ImageViewState state, Rect displayRegion) {
+        setImageUri(fileUri, state, displayRegion);
+    }
+
+    /**
      * Display an image from resources.
      * @param resId Resource ID.
      */
@@ -323,6 +338,18 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Display an image from resources, starting with a given orientation setting, scale and center.
+     * This is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation.
+     * @param resId Resource ID.
+     * @param state State to be restored. Nullable.
+     * @param displayRegion Set the region to display instead of the whole image. Nullable.
+     */
+    public final void setImageResource(int resId, ImageViewState state, Rect displayRegion) {
+        setImageUri(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + resId, state, displayRegion);
+    }
+
+    /**
      * Display an image from a file in assets.
      * @param assetName asset name.
      */
@@ -339,6 +366,18 @@ public class SubsamplingScaleImageView extends View {
      */
     public final void setImageAsset(String assetName, ImageViewState state) {
         setImageUri(ASSET_SCHEME + assetName, state);
+    }
+
+    /**
+     * Display an image from a file in assets, starting with a given orientation setting, scale andcenter. This is the
+     * best method to use when you want scale and center to be restored after screen orientation change; it avoids any
+     * redundant loading of tiles in the wrong orientation.
+     * @param assetName asset name.
+     * @param state State to be restored. Nullable.
+     * @param displayRegion Set the region to display instead of the whole image. Nullable.
+     */
+    public final void setImageAsset(String assetName, ImageViewState state, Rect displayRegion) {
+        setImageUri(ASSET_SCHEME + assetName, state, displayRegion);
     }
 
     /**
@@ -364,13 +403,29 @@ public class SubsamplingScaleImageView extends View {
      * @param state State to be restored. Nullable.
      */
     public final void setImageUri(String uri, ImageViewState state) {
+        setImageUri(uri, state, null);
+    }
+    
+    /**
+     * Display an image from a URI, starting with a given orientation setting, scale andcenter. This
+     * is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation. The URI can be in
+     * one of the following formats:
+     * File: file:///scard/picture.jpg or /sdcard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     * @param state State to be restored. Nullable.
+     * @param displayRegion Set the region to display instead of the whole image. Nullable.
+     */
+    public final void setImageUri(String uri, ImageViewState state, Rect displayRegion) {
         if (!uri.contains("://")) {
             if (uri.startsWith("/")) {
                 uri = uri.substring(1);
             }
             uri = FILE_SCHEME + uri;
         }
-        setImageUri(Uri.parse(uri), state);
+        setImageUri(Uri.parse(uri), state, displayRegion);
     }
 
     /**
@@ -396,8 +451,25 @@ public class SubsamplingScaleImageView extends View {
      * @param state State to be restored. Nullable.
      */
     public final void setImageUri(Uri uri, ImageViewState state) {
+        setImageUri(uri, state, null);
+    }
+    
+    /**
+     * Display an image from a URI, starting with a given orientation setting, scale andcenter. This
+     * is the best method to use when you want scale and center to be restored after screen orientation
+     * change; it avoids any redundant loading of tiles in the wrong orientation. The URI can be in
+     * one of the following formats:
+     * File: file:///scard/picture.jpg
+     * Asset: file:///android_asset/picture.png
+     * Resource: android.resource://com.example.app/drawable/picture
+     * @param uri image URI.
+     * @param state State to be restored. Nullable.
+     * @param displayRegion Set the region to display instead of the whole image. Nullable.
+     */
+    public final void setImageUri(Uri uri, ImageViewState state, Rect displayRegion) {
         reset(true);
         if (state != null) { restoreState(state); }
+        this.displayRegion = displayRegion;
         BitmapInitTask task = new BitmapInitTask(this, getContext(), decoderClass, uri);
         task.execute();
         invalidate();
@@ -437,6 +509,7 @@ public class SubsamplingScaleImageView extends View {
             sWidth = 0;
             sHeight = 0;
             sOrientation = 0;
+            displayRegion = null;
             dimensionsReadySent = false;
             baseLayerReadySent = false;
         }
@@ -1189,8 +1262,13 @@ public class SubsamplingScaleImageView extends View {
      */
     private void onImageInited(ImageRegionDecoder decoder, int sWidth, int sHeight, int sOrientation) {
         this.decoder = decoder;
-        this.sWidth = sWidth;
-        this.sHeight = sHeight;
+        if (displayRegion == null) {
+            this.sWidth = sWidth;
+            this.sHeight = sHeight;
+        } else {
+            this.sWidth = displayRegion.width();
+            this.sHeight = displayRegion.height();
+        }
         this.sOrientation = sOrientation;
         requestLayout();
         invalidate();
@@ -1329,6 +1407,9 @@ public class SubsamplingScaleImageView extends View {
                     synchronized (view.decoderLock) {
                         // Update tile's file sRect according to rotation
                         view.fileSRect(tile.sRect, tile.fileSRect);
+                        if (view.displayRegion != null) {
+                            tile.fileSRect.offset(view.displayRegion.left, view.displayRegion.top);
+                        }
                         Bitmap bitmap = decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
                         int rotation = view.getRequiredRotation();
                         if (rotation != 0) {
