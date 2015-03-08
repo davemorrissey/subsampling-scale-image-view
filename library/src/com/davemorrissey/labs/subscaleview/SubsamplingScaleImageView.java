@@ -727,12 +727,23 @@ public class SubsamplingScaleImageView extends View {
                 if (isQuickScaling) {
                     isQuickScaling = false;
                     if (!quickScaleMoved) {
+                        if (!panEnabled) {
+                            if (sRequestedCenter != null) {
+                                // With a center specified from code, zoom around that point.
+                                quickScaleCenter.x = sRequestedCenter.x;
+                                quickScaleCenter.y = sRequestedCenter.y;
+                            } else {
+                                // With no requested center, scale around the image center.
+                                quickScaleCenter.x = sWidth()/2;
+                                quickScaleCenter.y = sHeight()/2;
+                            }
+                        }
                         float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
                         boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
                         float targetScale = zoomIn ? doubleTapZoomScale : minScale();
                         if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
                             setScaleAndCenter(targetScale, quickScaleCenter);
-                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn) {
+                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !panEnabled) {
                             new AnimationBuilder(targetScale, quickScaleCenter).withInterruptible(false).start();
                         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
                             new AnimationBuilder(targetScale, quickScaleCenter, vCenterStart).withInterruptible(false).start();
