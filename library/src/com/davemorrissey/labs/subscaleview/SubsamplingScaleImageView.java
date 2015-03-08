@@ -143,6 +143,7 @@ public class SubsamplingScaleImageView extends View {
     // Gesture detection settings
     private boolean panEnabled = true;
     private boolean zoomEnabled = true;
+    private boolean quickScaleEnabled = true;
 
     // Double tap zoom behaviour
     private float doubleTapZoomScale = 1F;
@@ -261,6 +262,9 @@ public class SubsamplingScaleImageView extends View {
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_zoomEnabled)) {
                 setZoomEnabled(typedAttr.getBoolean(styleable.SubsamplingScaleImageView_zoomEnabled, true));
+            }
+            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_quickScaleEnabled)) {
+                setQuickScaleEnabled(typedAttr.getBoolean(styleable.SubsamplingScaleImageView_quickScaleEnabled, true));
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_tileBackgroundColor)) {
                 setTileBackgroundColor(typedAttr.getColor(styleable.SubsamplingScaleImageView_tileBackgroundColor, Color.argb(0, 0, 0, 0)));
@@ -472,21 +476,28 @@ public class SubsamplingScaleImageView extends View {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 if (zoomEnabled && readySent && vTranslate != null) {
-                    vCenterStart = new PointF(e.getX(), e.getY());
-                    vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
-                    scaleStart = scale;
-
-                    isQuickScaling = true;
-                    isZooming = true;
-                    quickScaleCenter = viewToSourceCoord(vCenterStart);
-                    quickScaleLastDistance = -1F;
-                    quickScaleLastPoint = new PointF(quickScaleCenter.x, quickScaleCenter.y);
-                    quickScaleMoved = false;
-
+                    // Hacky solution for #15 - after a double tap the GestureDetector gets in a state
+                    // where the next fling is ignored, so here we replace it with a new one.
                     setGestureDetector(context);
-
-                    // We really want to get events in onTouchEvent after this, so don't return true
-                    return false;
+                    if (quickScaleEnabled) {
+                        // Store quick scale params. This will become either a double tap zoom or a
+                        // quick scale depending on whether the user swipes.
+                        vCenterStart = new PointF(e.getX(), e.getY());
+                        vTranslateStart = new PointF(vTranslate.x, vTranslate.y);
+                        scaleStart = scale;
+                        isQuickScaling = true;
+                        isZooming = true;
+                        quickScaleCenter = viewToSourceCoord(vCenterStart);
+                        quickScaleLastDistance = -1F;
+                        quickScaleLastPoint = new PointF(quickScaleCenter.x, quickScaleCenter.y);
+                        quickScaleMoved = false;
+                        // We need to get events in onTouchEvent after this.
+                        return false;
+                    } else {
+                        // Start double tap zoom animation.
+                        doubleTapZoom(viewToSourceCoord(new PointF(e.getX(), e.getY())), new PointF(e.getX(), e.getY()));
+                        return true;
+                    }
                 }
                 return super.onDoubleTapEvent(e);
             }
@@ -731,28 +742,7 @@ public class SubsamplingScaleImageView extends View {
                 if (isQuickScaling) {
                     isQuickScaling = false;
                     if (!quickScaleMoved) {
-                        if (!panEnabled) {
-                            if (sRequestedCenter != null) {
-                                // With a center specified from code, zoom around that point.
-                                quickScaleCenter.x = sRequestedCenter.x;
-                                quickScaleCenter.y = sRequestedCenter.y;
-                            } else {
-                                // With no requested center, scale around the image center.
-                                quickScaleCenter.x = sWidth()/2;
-                                quickScaleCenter.y = sHeight()/2;
-                            }
-                        }
-                        float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
-                        boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
-                        float targetScale = zoomIn ? doubleTapZoomScale : minScale();
-                        if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
-                            setScaleAndCenter(targetScale, quickScaleCenter);
-                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !panEnabled) {
-                            new AnimationBuilder(targetScale, quickScaleCenter).withInterruptible(false).start();
-                        } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
-                            new AnimationBuilder(targetScale, quickScaleCenter, vCenterStart).withInterruptible(false).start();
-                        }
-                        invalidate();
+                        doubleTapZoom(quickScaleCenter, vCenterStart);
                     }
                 }
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
@@ -787,6 +777,35 @@ public class SubsamplingScaleImageView extends View {
                 return true;
         }
         return super.onTouchEvent(event);
+    }
+
+    /**
+     * Double tap zoom handler triggered from gesture detector or on touch, depending on whether
+     * quick scale is enabled.
+     */
+    private void doubleTapZoom(PointF sCenter, PointF vFocus) {
+        if (!panEnabled) {
+            if (sRequestedCenter != null) {
+                // With a center specified from code, zoom around that point.
+                sCenter.x = sRequestedCenter.x;
+                sCenter.y = sRequestedCenter.y;
+            } else {
+                // With no requested center, scale around the image center.
+                sCenter.x = sWidth()/2;
+                sCenter.y = sHeight()/2;
+            }
+        }
+        float doubleTapZoomScale = Math.min(maxScale, SubsamplingScaleImageView.this.doubleTapZoomScale);
+        boolean zoomIn = scale <= doubleTapZoomScale * 0.9;
+        float targetScale = zoomIn ? doubleTapZoomScale : minScale();
+        if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
+            setScaleAndCenter(targetScale, sCenter);
+        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !panEnabled) {
+            new AnimationBuilder(targetScale, sCenter).withInterruptible(false).start();
+        } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
+            new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).start();
+        }
+        invalidate();
     }
 
     /**
@@ -2172,6 +2191,20 @@ public class SubsamplingScaleImageView extends View {
      */
     public final void setZoomEnabled(boolean zoomEnabled) {
         this.zoomEnabled = zoomEnabled;
+    }
+
+    /**
+     * Returns true if double tap & swipe to zoom is enabled.
+     */
+    public final boolean isQuickScaleEnabled() {
+        return quickScaleEnabled;
+    }
+
+    /**
+     * Enable or disable double tap & swipe to zoom.
+     */
+    public final void setQuickScaleEnabled(boolean quickScaleEnabled) {
+        this.quickScaleEnabled = quickScaleEnabled;
     }
 
     /**
