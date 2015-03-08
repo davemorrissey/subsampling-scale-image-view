@@ -66,7 +66,9 @@ public class ViewPagerActivity extends FragmentActivity {
 
         @Override
         public Fragment getItem(int position) {
-            return new ViewPagerFragment(IMAGES[position]);
+            ViewPagerFragment fragment = new ViewPagerFragment();
+            fragment.setAsset(IMAGES[position]);
+            return fragment;
         }
 
         @Override

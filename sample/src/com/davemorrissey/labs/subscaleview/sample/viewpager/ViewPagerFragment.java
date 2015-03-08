@@ -36,7 +36,7 @@ public class ViewPagerFragment extends Fragment {
     public ViewPagerFragment() {
     }
 
-    public ViewPagerFragment(String asset) {
+    public void setAsset(String asset) {
         this.asset = asset;
     }
 
