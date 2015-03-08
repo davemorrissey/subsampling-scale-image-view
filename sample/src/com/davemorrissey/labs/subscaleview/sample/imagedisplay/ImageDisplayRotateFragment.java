@@ -27,7 +27,6 @@ import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
-import com.davemorrissey.labs.subscaleview.sample.extension.ExtensionActivity;
 
 public class ImageDisplayRotateFragment extends Fragment {
 
