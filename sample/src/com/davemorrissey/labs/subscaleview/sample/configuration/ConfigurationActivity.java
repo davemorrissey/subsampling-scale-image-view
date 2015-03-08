@@ -141,13 +141,13 @@ public class ConfigurationActivity extends Activity implements OnClickListener {
             imageView.setDebug(false);
         }
         if (position == 2) {
-            imageView.setScaleAndCenter(1f, new PointF(0, 0));
+            imageView.setScaleAndCenter(0f, new PointF(1228, 816));
             imageView.setPanEnabled(false);
         } else {
             imageView.setPanEnabled(true);
         }
         if (position == 3) {
-            imageView.setScaleAndCenter(1f, new PointF(0, 0));
+            imageView.setScaleAndCenter(1f, new PointF(1228, 816));
             imageView.setZoomEnabled(false);
         } else {
             imageView.setZoomEnabled(true);
