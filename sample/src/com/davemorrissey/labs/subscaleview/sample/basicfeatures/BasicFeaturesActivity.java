@@ -53,6 +53,7 @@ public class BasicFeaturesActivity extends Activity implements OnClickListener {
         }
         notes = Arrays.asList(
                 new Note("Pinch to zoom", "Use a two finger pinch to zoom in and out. The zoom is centred on the pinch gesture, and you can pan at the same time."),
+                new Note("Quick scale", "Double tap and swipe up or down to zoom in or out. The zoom is centred where you tapped."),
                 new Note("Drag", "Use one finger to drag the image around."),
                 new Note("Fling", "If you drag quickly and let go, fling momentum keeps the image moving."),
                 new Note("Double tap", "Double tap the image to zoom in to that spot. Double tap again to zoom out.")
