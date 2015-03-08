@@ -15,8 +15,8 @@ import android.net.Uri;
  */
 public final class ImageSource {
 
-    private static final String FILE_SCHEME = "file:///";
-    private static final String ASSET_SCHEME = "file:///android_asset/";
+    static final String FILE_SCHEME = "file:///";
+    static final String ASSET_SCHEME = "file:///android_asset/";
 
     private final Uri uri;
     private final Bitmap bitmap;

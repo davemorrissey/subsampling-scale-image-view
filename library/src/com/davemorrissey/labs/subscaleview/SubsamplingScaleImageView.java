@@ -60,9 +60,6 @@ public class SubsamplingScaleImageView extends View {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
 
-    private static final String FILE_SCHEME = "file:///";
-    private static final String ASSET_SCHEME = "file:///android_asset/";
-
     /** Attempt to use EXIF information on the image to rotate it. Works for external files only. */
     public static final int ORIENTATION_USE_EXIF = -1;
     /** Display the image file in its native orientation. */
@@ -1529,9 +1526,9 @@ public class SubsamplingScaleImageView extends View {
      */
     private int getExifOrientation(String sourceUri) {
         int exifOrientation = ORIENTATION_0;
-        if (sourceUri.startsWith(FILE_SCHEME) && !sourceUri.startsWith(ASSET_SCHEME)) {
+        if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
             try {
-                ExifInterface exifInterface = new ExifInterface(sourceUri.substring(FILE_SCHEME.length() - 1));
+                ExifInterface exifInterface = new ExifInterface(sourceUri.substring(ImageSource.FILE_SCHEME.length() - 1));
                 int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
                 if (orientationAttr == ExifInterface.ORIENTATION_NORMAL || orientationAttr == ExifInterface.ORIENTATION_UNDEFINED) {
                     exifOrientation = ORIENTATION_0;
