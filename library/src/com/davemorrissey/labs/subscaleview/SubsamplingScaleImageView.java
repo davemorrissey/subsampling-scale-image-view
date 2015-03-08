@@ -1256,8 +1256,8 @@ public class SubsamplingScaleImageView extends View {
                     tile.sRect = new Rect(
                             x * sTileWidth,
                             y * sTileHeight,
-                            (x + 1) * sTileWidth,
-                            (y + 1) * sTileHeight
+                            x == xTiles - 1 ? sWidth : (x + 1) * sTileWidth,
+                            y == yTiles - 1 ? sHeight : (y + 1) * sTileHeight
                     );
                     tile.vRect = new Rect(0, 0, 0, 0);
                     tile.fileSRect = new Rect(tile.sRect);
