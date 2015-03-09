@@ -33,7 +33,7 @@ The view optionally uses subsampling and tiles to support very large images - a 
 **2)** Replace uses of `ScaleImageView` with `SubsamplingScaleImageView` and disable tiling if required. For example:
 
     SubsamplingScaleImageView view = (SubsamplingScaleImageView)findViewById(id.imageView);
-    view.setImage(ImageSource.asset("map.png").withTilingDisabled());
+    view.setImage(ImageSource.asset("map.png").tilingDisabled());
     
 **3)** Replace uses of `isImageReady()` with `isReady()`.
 
