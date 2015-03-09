@@ -72,7 +72,6 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = sampleSize;
             options.inPreferredConfig = Config.RGB_565;
-            options.inDither = true;
             return decoder.decodeRegion(sRect, options);
         }
     }

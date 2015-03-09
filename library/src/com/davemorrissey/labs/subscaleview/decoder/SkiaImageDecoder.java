@@ -28,7 +28,6 @@ public class SkiaImageDecoder implements ImageDecoder {
         String uriString = uri.toString();
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
-        options.inDither = true;
         if (uriString.startsWith(RESOURCE_PREFIX)) {
             Resources res;
             String packageName = uri.getAuthority();
