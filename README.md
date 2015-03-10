@@ -28,7 +28,7 @@ The view optionally uses subsampling and tiles to support very large images - a 
 | `view.setImageAsset("map.png")` | `view.setImage(ImageSource.asset("map.png"))` |
 | `view.setImageResource(R.drawable.map)` | `view.setImage(ImageSource.resource(R.drawable.map, context))` |
 | `view.setImageUri("/sdcard/map.png")` | `view.setImage(ImageSource.uri("/sdcard/map.png"))` |
-| `view.setImageBitmap(map)` | `view.getImage(ImageSource.bitmap(map))` |
+| `view.setImageBitmap(map)` | `view.setImage(ImageSource.bitmap(map))` |
 
 **2)** Replace uses of `ScaleImageView` with `SubsamplingScaleImageView` and disable tiling if required. For example:
 
