@@ -128,7 +128,7 @@ Disable tiling if:
 
 Add the library to your app using one of these methods:
 
-* Add `com.davemorrissey.labs:subsampling-scale-image-view:3.1.1` as a dependency in your build.gradle file
+* Add `com.davemorrissey.labs:subsampling-scale-image-view:3.1.2` as a dependency in your build.gradle file
 * *or* download the library aar file from the releases page and add to your app manually
 * *or* clone the project and import the library subproject as a module in your app
 * *or* clone the project and copy the resources and classes from `com.davemorrissey.labs.subscaleview` into your project
