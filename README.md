@@ -11,7 +11,7 @@ The view optionally uses subsampling and tiles to support very large images - a 
 * [Installation and setup](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/1.-Setup)
 * [Image display notes & limitations](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/2.-Displaying-images)
 * [Handling orientation changes](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/5.-Orientation-changes)
-* [Advanced configuration](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/6.-Configuration)
+* [Advanced configuration](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/7.-Configuration)
 
 #### 2.x.x to 3.x.x migration
 
