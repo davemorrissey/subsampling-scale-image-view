@@ -8,10 +8,13 @@ The view optionally uses subsampling and tiles to support very large images - a 
 #### Guides
 
 * [Releases & downloads](https://github.com/davemorrissey/subsampling-scale-image-view/releases)
-* [Installation and setup](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/1.-Setup)
-* [Image display notes & limitations](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/2.-Displaying-images)
-* [Handling orientation changes](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/5.-Orientation-changes)
-* [Advanced configuration](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/7.-Configuration)
+* [Installation and setup](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/01.-Setup)
+* [Image display notes & limitations](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/02.-Displaying-images)
+* [Using preview images](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/03.-Preview-images)
+* [Handling orientation changes](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/05.-Orientation-changes)
+* [Advanced configuration](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/07.-Configuration)
+* [Event handling](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/09.-Events)
+* [Animation](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/08.-Animation)
 
 #### 2.x.x to 3.x.x migration
 
