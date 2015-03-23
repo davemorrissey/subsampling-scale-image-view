@@ -15,6 +15,7 @@ The view optionally uses subsampling and tiles to support very large images - a 
 * [Advanced configuration](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/07.-Configuration)
 * [Event handling](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/09.-Events)
 * [Animation](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/08.-Animation)
+* [Extension](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/10.-Extension)
 
 #### 2.x.x to 3.x.x migration
 
