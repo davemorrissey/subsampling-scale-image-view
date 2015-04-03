@@ -46,11 +46,12 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.davemorrissey.labs.subscaleview.R.styleable;
+import com.davemorrissey.labs.subscaleview.decoder.CompatDecoderFactory;
 import com.davemorrissey.labs.subscaleview.decoder.DecoderFactory;
 import com.davemorrissey.labs.subscaleview.decoder.ImageDecoder;
 import com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder;
-import com.davemorrissey.labs.subscaleview.decoder.SkiaImageDecoderFactory;
-import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoderFactory;
+import com.davemorrissey.labs.subscaleview.decoder.SkiaImageDecoder;
+import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -198,8 +199,8 @@ public class SubsamplingScaleImageView extends View {
     // Tile and image decoding
     private ImageRegionDecoder decoder;
     private final Object decoderLock = new Object();
-    private DecoderFactory<? extends ImageDecoder> bitmapDecoderFactory = new SkiaImageDecoderFactory();
-    private DecoderFactory<? extends ImageRegionDecoder> regionDecoderFactory = new SkiaImageRegionDecoderFactory();
+    private DecoderFactory<? extends ImageDecoder> bitmapDecoderFactory = new CompatDecoderFactory<ImageDecoder>(SkiaImageDecoder.class);
+    private DecoderFactory<? extends ImageRegionDecoder> regionDecoderFactory = new CompatDecoderFactory<ImageRegionDecoder>(SkiaImageRegionDecoder.class);
 
     // Debug values
     private PointF vCenterStart;
@@ -1973,16 +1974,43 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     *
+     * Swap the default region decoder implementation for one of your own. You must do this before setting the image file or
+     * asset, and you cannot use a custom decoder when using layout XML to set an asset name. Your class must have a
+     * public default constructor.
+     * @param regionDecoderClass The {@link ImageRegionDecoder} implementation to use.
+     */
+    public final void setRegionDecoderClass(Class<? extends ImageRegionDecoder> regionDecoderClass) {
+        if (regionDecoderClass == null) {
+            throw new IllegalArgumentException("Decoder class cannot be set to null");
+        }
+        this.regionDecoderFactory = new CompatDecoderFactory<ImageRegionDecoder>(regionDecoderClass);
+    }
+
+    /**
      * Swap the default region decoder implementation for one of your own. You must do this before setting the image file or
      * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
      * @param regionDecoderFactory The {@link DecoderFactory} implementation that produces {@link ImageRegionDecoder}
      *                             instances.
      */
-    public final void setRegionDecoderClass(DecoderFactory<? extends ImageRegionDecoder> regionDecoderFactory) {
+    public final void setRegionDecoderFactory(DecoderFactory<? extends ImageRegionDecoder> regionDecoderFactory) {
         if (regionDecoderFactory == null) {
             throw new IllegalArgumentException("Decoder factory cannot be set to null");
         }
         this.regionDecoderFactory = regionDecoderFactory;
+    }
+
+    /**
+     * Swap the default bitmap decoder implementation for one of your own. You must do this before setting the image file or
+     * asset, and you cannot use a custom decoder when using layout XML to set an asset name. Your class must have a
+     * public default constructor.
+     * @param bitmapDecoderClass The {@link ImageDecoder} implementation to use.
+     */
+    public final void setBitmapDecoderClass(Class<? extends ImageDecoder> bitmapDecoderClass) {
+        if (bitmapDecoderClass == null) {
+            throw new IllegalArgumentException("Decoder class cannot be set to null");
+        }
+        this.bitmapDecoderFactory = new CompatDecoderFactory<ImageDecoder>(bitmapDecoderClass);
     }
 
     /**
