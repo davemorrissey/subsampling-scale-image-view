@@ -72,7 +72,11 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = sampleSize;
             options.inPreferredConfig = Config.RGB_565;
-            return decoder.decodeRegion(sRect, options);
+            Bitmap bitmap = decoder.decodeRegion(sRect, options);
+            if (bitmap == null) {
+                throw new RuntimeException("Skia image decoder returned null bitmap - image format may not be supported");
+            }
+            return bitmap;
         }
     }
 
