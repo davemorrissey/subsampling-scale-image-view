@@ -96,7 +96,7 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-    </RelativeLayout>
+    </LinearLayout>
 
 **3)** Now, in your fragment or activity, set the image resource, asset name or file path.
 
