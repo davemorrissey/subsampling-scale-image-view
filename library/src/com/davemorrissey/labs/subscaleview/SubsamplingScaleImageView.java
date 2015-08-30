@@ -126,7 +126,10 @@ public class SubsamplingScaleImageView extends View {
     private Bitmap bitmap;
 
     // Whether the bitmap is a preview image
-    private boolean preview;
+    private boolean bitmapIsPreview;
+
+    // Specifies if a cache handler is also referencing the bitmap. Do not recycle if so.
+    private boolean bitmapIsCached;
 
     // Sample size used to display the whole image when fully zoomed out
     private int fullImageSampleSize;
@@ -375,6 +378,7 @@ public class SubsamplingScaleImageView extends View {
             this.sHeight = imageSource.getSHeight();
             this.pRegion = previewSource.getSRegion();
             if (previewSource.getBitmap() != null) {
+                this.bitmapIsCached = previewSource.isCached();
                 onPreviewLoaded(previewSource.getBitmap());
             } else {
                 Uri uri = previewSource.getUri();
@@ -389,6 +393,7 @@ public class SubsamplingScaleImageView extends View {
         if (imageSource.getBitmap() != null && imageSource.getSRegion() != null) {
             onImageLoaded(Bitmap.createBitmap(imageSource.getBitmap(), imageSource.getSRegion().left, imageSource.getSRegion().top, imageSource.getSRegion().width(), imageSource.getSRegion().height()), ORIENTATION_0);
         } else if (imageSource.getBitmap() != null) {
+            this.bitmapIsCached = imageSource.isCached();
             onImageLoaded(imageSource.getBitmap(), ORIENTATION_0);
         } else {
             this.sRegion = imageSource.getSRegion();
@@ -441,7 +446,7 @@ public class SubsamplingScaleImageView extends View {
                     decoder = null;
                 }
             }
-            if (bitmap != null) {
+            if (bitmap != null && !bitmapIsCached) {
                 bitmap.recycle();
             }
             sWidth = 0;
@@ -452,7 +457,8 @@ public class SubsamplingScaleImageView extends View {
             readySent = false;
             imageLoadedSent = false;
             bitmap = null;
-            preview = false;
+            bitmapIsPreview = false;
+            bitmapIsCached = false;
         }
         if (tileMap != null) {
             for (Map.Entry<Integer, List<Tile>> tileMapEntry : tileMap.entrySet()) {
@@ -950,7 +956,7 @@ public class SubsamplingScaleImageView extends View {
         } else if (bitmap != null) {
 
             float xScale = scale, yScale = scale;
-            if (preview) {
+            if (bitmapIsPreview) {
                 xScale = scale * ((float)sWidth/bitmap.getWidth());
                 yScale = scale * ((float)sHeight/bitmap.getHeight());
             }
@@ -998,7 +1004,7 @@ public class SubsamplingScaleImageView extends View {
      * Checks whether the base layer of tiles or full size bitmap is ready.
      */
     private boolean isBaseLayerReady() {
-        if (bitmap != null && !preview) {
+        if (bitmap != null && !bitmapIsPreview) {
             return true;
         } else if (tileMap != null) {
             boolean baseLayerReady = true;
@@ -1405,9 +1411,12 @@ public class SubsamplingScaleImageView extends View {
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false);
             if (bitmap != null) {
-                bitmap.recycle();
+                if (!bitmapIsCached) {
+                    bitmap.recycle();
+                }
                 bitmap = null;
-                preview = false;
+                bitmapIsPreview = false;
+                bitmapIsCached = false;
             }
         }
         this.decoder = decoder;
@@ -1484,9 +1493,12 @@ public class SubsamplingScaleImageView extends View {
         checkReady();
         checkImageLoaded();
         if (isBaseLayerReady() && bitmap != null) {
-            bitmap.recycle();
+            if (!bitmapIsCached) {
+                bitmap.recycle();
+            }
             bitmap = null;
-            preview = false;
+            bitmapIsPreview = false;
+            bitmapIsCached = false;
         }
         invalidate();
     }
@@ -1563,7 +1575,7 @@ public class SubsamplingScaleImageView extends View {
         } else {
             bitmap = previewBitmap;
         }
-        preview = true;
+        bitmapIsPreview = true;
         if (checkReady()) {
             invalidate();
             requestLayout();
@@ -1578,10 +1590,11 @@ public class SubsamplingScaleImageView extends View {
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != bitmap.getWidth() || this.sHeight != bitmap.getHeight())) {
             reset(false);
         }
-        if (this.bitmap != null) {
+        if (this.bitmap != null && !bitmapIsCached) {
             this.bitmap.recycle();
         }
-        this.preview = false;
+        this.bitmapIsPreview = false;
+        this.bitmapIsCached = false;
         this.bitmap = bitmap;
         this.sWidth = bitmap.getWidth();
         this.sHeight = bitmap.getHeight();
