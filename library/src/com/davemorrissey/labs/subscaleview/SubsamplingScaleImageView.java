@@ -1628,7 +1628,7 @@ public class SubsamplingScaleImageView extends View {
                     cursor.close();
                 }
             } catch (Exception e) {
-                Log.w(TAG, "Could not get EXIF orientation of image");
+                Log.w(TAG, "Could not get orientation of image from media store");
             }
         } else if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
             try {
