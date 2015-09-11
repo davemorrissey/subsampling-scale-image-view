@@ -57,9 +57,10 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
         } else if (uriString.startsWith(ASSET_PREFIX)) {
             String assetName = uriString.substring(ASSET_PREFIX.length());
             decoder = BitmapRegionDecoder.newInstance(context.getAssets().open(assetName, AssetManager.ACCESS_RANDOM), false);
-        } else if (uriString.startsWith(FILE_PREFIX)) {
-            decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_PREFIX.length()), false);
         } else {
+            if (uriString.startsWith(FILE_PREFIX)) {
+                uri = Uri.parse(uriString.substring(FILE_PREFIX.length()));
+            }
             ContentResolver contentResolver = context.getContentResolver();
             decoder = BitmapRegionDecoder.newInstance(contentResolver.openInputStream(uri), false);
         }
