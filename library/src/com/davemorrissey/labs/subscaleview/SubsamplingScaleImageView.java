@@ -740,7 +740,7 @@ public class SubsamplingScaleImageView extends View {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
-                                getParent().requestDisallowInterceptTouchEvent(false);
+                                //getParent().requestDisallowInterceptTouchEvent(false);
                             }
 
                             if (!panEnabled) {
