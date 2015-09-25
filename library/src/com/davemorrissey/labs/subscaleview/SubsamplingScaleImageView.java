@@ -1451,7 +1451,7 @@ public class SubsamplingScaleImageView extends View {
                 SubsamplingScaleImageView view = viewRef.get();
                 ImageRegionDecoder decoder = decoderRef.get();
                 Tile tile = tileRef.get();
-                if (decoder != null && tile != null && view != null && decoder.isReady()) {
+                if (decoder != null && tile != null && view != null && decoder.isReady() && tile.visible) {
                     synchronized (view.decoderLock) {
                         // Update tile's file sRect according to rotation
                         view.fileSRect(tile.sRect, tile.fileSRect);
