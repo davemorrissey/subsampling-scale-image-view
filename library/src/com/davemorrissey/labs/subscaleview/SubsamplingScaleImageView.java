@@ -246,6 +246,7 @@ public class SubsamplingScaleImageView extends View {
     private RectF sRect;
     private float[] srcArray = new float[8];
     private float[] dstArray = new float[8];
+    private static int simultaneousClicks = 0;
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -592,6 +593,9 @@ public class SubsamplingScaleImageView extends View {
             isZooming = false;
             isPanning = false;
             maxTouchCount = 0;
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                simultaneousClicks--;
+            }
             return true;
         }
 
@@ -599,8 +603,10 @@ public class SubsamplingScaleImageView extends View {
         if (vCenterStart == null) { vCenterStart = new PointF(0, 0); }
 
         int touchCount = event.getPointerCount();
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                simultaneousClicks++;
             case MotionEvent.ACTION_POINTER_1_DOWN:
             case MotionEvent.ACTION_POINTER_2_DOWN:
                 anim = null;
@@ -740,7 +746,9 @@ public class SubsamplingScaleImageView extends View {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
-                                //getParent().requestDisallowInterceptTouchEvent(false);
+                                if (simultaneousClicks == 1){
+                                    getParent().requestDisallowInterceptTouchEvent(false);
+                                }
                             }
 
                             if (!panEnabled) {
@@ -760,6 +768,7 @@ public class SubsamplingScaleImageView extends View {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                simultaneousClicks--;
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_POINTER_2_UP:
                 handler.removeMessages(MESSAGE_LONG_CLICK);
@@ -2634,3 +2643,4 @@ public class SubsamplingScaleImageView extends View {
     }
 
 }
+
