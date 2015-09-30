@@ -4,6 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.net.Uri;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 /**
  * Helper class used to set the source and additional attributes from a variety of sources. Supports
  * use of a bitmap, asset, resource, external file or any other URI.
@@ -36,6 +40,18 @@ public final class ImageSource {
     }
 
     private ImageSource(Uri uri) {
+        // #114 If file doesn't exist, attempt to url decode the URI and try again
+        String uriString = uri.toString();
+        if (uriString.startsWith(FILE_SCHEME)) {
+            File uriFile = new File(uriString.substring(FILE_SCHEME.length() - 1));
+            if (!uriFile.exists()) {
+                try {
+                    uri = Uri.parse(URLDecoder.decode(uriString, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    // Fallback to encoded URI. This exception is not expected.
+                }
+            }
+        }
         this.bitmap = null;
         this.uri = uri;
         this.resource = null;
