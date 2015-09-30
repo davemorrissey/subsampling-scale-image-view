@@ -33,6 +33,7 @@ import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
@@ -55,11 +56,14 @@ import com.davemorrissey.labs.subscaleview.decoder.SkiaImageDecoder;
 import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Displays an image subsampled as necessary to avoid loading too much image data into memory. After a pinch to zoom in,
@@ -158,6 +162,9 @@ public class SubsamplingScaleImageView extends View {
 
     // Minimum scale type
     private int minimumScaleType = SCALE_TYPE_CENTER_INSIDE;
+
+    // Whether to use the thread pool executor to load tiles
+    private boolean parallelLoadingEnabled;
 
     // Gesture detection settings
     private boolean panEnabled = true;
@@ -387,7 +394,7 @@ public class SubsamplingScaleImageView extends View {
                     uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + previewSource.getResource());
                 }
                 BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, true);
-                task.execute();
+                execute(task);
             }
         }
 
@@ -404,11 +411,11 @@ public class SubsamplingScaleImageView extends View {
             if (imageSource.getTile() || this.sRegion != null) {
                 // Load the bitmap using tile decoding.
                 TilesInitTask task = new TilesInitTask(this, getContext(), regionDecoderFactory, uri);
-                task.execute();
+                execute(task);
             } else {
                 // Load the bitmap as a single image.
                 BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false);
-                task.execute();
+                execute(task);
             }
         }
     }
@@ -1096,7 +1103,7 @@ public class SubsamplingScaleImageView extends View {
         List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
         for (Tile baseTile : baseGrid) {
             TileLoadTask task = new TileLoadTask(this, decoder, baseTile);
-            task.execute();
+            execute(task);
         }
         refreshRequiredTiles(true);
 
@@ -1128,7 +1135,7 @@ public class SubsamplingScaleImageView extends View {
                         tile.visible = true;
                         if (!tile.loading && tile.bitmap == null && load) {
                             TileLoadTask task = new TileLoadTask(this, decoder, tile);
-                            task.execute();
+                            execute(task);
                         }
                     } else if (tile.sampleSize != fullImageSampleSize) {
                         tile.visible = false;
@@ -1651,6 +1658,21 @@ public class SubsamplingScaleImageView extends View {
         return exifOrientation;
     }
 
+    private void execute(AsyncTask<Void, Void, ?> asyncTask) {
+        if (parallelLoadingEnabled && VERSION.SDK_INT >= 11) {
+            try {
+                Field executorField = AsyncTask.class.getField("THREAD_POOL_EXECUTOR");
+                Executor executor = (Executor)executorField.get(null);
+                Method executeMethod = AsyncTask.class.getMethod("executeOnExecutor", new Class[] { Executor.class, Object[].class });
+                executeMethod.invoke(asyncTask, executor, null);
+                return;
+            } catch (Exception e) {
+                Log.i(TAG, "Failed to execute AsyncTask on thread pool executor, falling back to single threaded executor", e);
+            }
+        }
+        asyncTask.execute();
+    }
+
     private static class Tile {
 
         private Rect sRect;
@@ -2125,7 +2147,7 @@ public class SubsamplingScaleImageView extends View {
     public final void setMaximumDpi(int dpi) {
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
-        setMinScale(averageDpi/dpi);
+        setMinScale(averageDpi / dpi);
     }
 
     /**
@@ -2378,6 +2400,17 @@ public class SubsamplingScaleImageView extends View {
             throw new IllegalArgumentException("Invalid zoom style: " + doubleTapZoomStyle);
         }
         this.doubleTapZoomStyle = doubleTapZoomStyle;
+    }
+
+    /**
+     * Toggle parallel loading. When enabled, tiles are loaded using the thread pool executor available
+     * in SDK 11+. In older versions this has no effect. Parallel loading may use more memory and there
+     * is a possibility that it will make the tile loading unreliable, but it reduces the chances of
+     * an app's background processes blocking loading.
+     * @param parallelLoadingEnabled Whether to run AsyncTasks using a thread pool executor.
+     */
+    public void setParallelLoadingEnabled(boolean parallelLoadingEnabled) {
+        this.parallelLoadingEnabled = parallelLoadingEnabled;
     }
 
     /**
