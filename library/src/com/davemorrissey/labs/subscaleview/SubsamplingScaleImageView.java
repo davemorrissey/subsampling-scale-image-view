@@ -136,6 +136,9 @@ public class SubsamplingScaleImageView extends View {
     // Specifies if a cache handler is also referencing the bitmap. Do not recycle if so.
     private boolean bitmapIsCached;
 
+    // Uri of full size image
+    private Uri uri;
+
     // Sample size used to display the whole image when fully zoomed out
     private int fullImageSampleSize;
 
@@ -403,12 +406,12 @@ public class SubsamplingScaleImageView extends View {
         } else if (imageSource.getBitmap() != null) {
             onImageLoaded(imageSource.getBitmap(), ORIENTATION_0, imageSource.isCached());
         } else {
-            this.sRegion = imageSource.getSRegion();
-            Uri uri = imageSource.getUri();
+            sRegion = imageSource.getSRegion();
+            uri = imageSource.getUri();
             if (uri == null && imageSource.getResource() != null) {
                 uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + imageSource.getResource());
             }
-            if (imageSource.getTile() || this.sRegion != null) {
+            if (imageSource.getTile() || sRegion != null) {
                 // Load the bitmap using tile decoding.
                 TilesInitTask task = new TilesInitTask(this, getContext(), regionDecoderFactory, uri);
                 execute(task);
@@ -447,6 +450,7 @@ public class SubsamplingScaleImageView extends View {
         matrix = null;
         sRect = null;
         if (newImage) {
+            uri = null;
             if (decoder != null) {
                 synchronized (decoderLock) {
                     decoder.recycle();
@@ -1098,14 +1102,27 @@ public class SubsamplingScaleImageView extends View {
             fullImageSampleSize /= 2;
         }
 
-        initialiseTileMap(maxTileDimensions);
+        if (fullImageSampleSize == 1 && sRegion == null && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
 
-        List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
-        for (Tile baseTile : baseGrid) {
-            TileLoadTask task = new TileLoadTask(this, decoder, baseTile);
+            // Whole image is required at native resolution, and is smaller than the canvas max bitmap size.
+            // Use BitmapDecoder for better image support.
+            decoder.recycle();
+            decoder = null;
+            BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false);
             execute(task);
+
+        } else {
+
+            initialiseTileMap(maxTileDimensions);
+
+            List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
+            for (Tile baseTile : baseGrid) {
+                TileLoadTask task = new TileLoadTask(this, decoder, baseTile);
+                execute(task);
+            }
+            refreshRequiredTiles(true);
+
         }
-        refreshRequiredTiles(true);
 
     }
 
