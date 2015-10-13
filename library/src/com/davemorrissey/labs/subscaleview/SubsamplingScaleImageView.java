@@ -975,14 +975,14 @@ public class SubsamplingScaleImageView extends View {
             if (matrix == null) { matrix = new Matrix(); }
             matrix.reset();
             matrix.postScale(xScale, yScale);
-            matrix.postRotate(getOrientation());
+            matrix.postRotate(getRequiredRotation());
             matrix.postTranslate(vTranslate.x, vTranslate.y);
 
-            if (getOrientation() == ORIENTATION_180) {
+            if (getRequiredRotation() == ORIENTATION_180) {
                 matrix.postTranslate(scale * sWidth, scale * sHeight);
-            } else if (getOrientation() == ORIENTATION_90) {
+            } else if (getRequiredRotation() == ORIENTATION_90) {
                 matrix.postTranslate(scale * sHeight, 0);
-            } else if (getOrientation() == ORIENTATION_270) {
+            } else if (getRequiredRotation() == ORIENTATION_270) {
                 matrix.postTranslate(0, scale * sWidth);
             }
 
