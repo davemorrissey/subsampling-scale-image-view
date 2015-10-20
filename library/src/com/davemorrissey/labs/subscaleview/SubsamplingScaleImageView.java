@@ -573,21 +573,6 @@ public class SubsamplingScaleImageView extends View {
         setMeasuredDimension(width, height);
     }
 
-    private interface CustomParent{
-        void requestDisallowInterceptTouchEvent(boolean b);
-    }
-
-    private CustomParent myGetParent(){
-        return new CustomParent() {
-            @Override
-            public void requestDisallowInterceptTouchEvent(boolean b) {
-                if (!simultaneousClicks){
-                    getParent().requestDisallowInterceptTouchEvent(b);
-                }
-            }
-        };
-    }
-
     public void enableSimultaneousClicks(){
         simultaneousClicks = true;
     }
@@ -763,7 +748,9 @@ public class SubsamplingScaleImageView extends View {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
-                                myGetParent().requestDisallowInterceptTouchEvent(false);
+                                if (!simultaneousClicks){
+                                    getParent().requestDisallowInterceptTouchEvent(false);
+                                }
                             }
 
                             if (!panEnabled) {
