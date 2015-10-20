@@ -45,6 +45,7 @@ import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewParent;
 
 import com.davemorrissey.labs.subscaleview.R.styleable;
 import com.davemorrissey.labs.subscaleview.decoder.CompatDecoderFactory;
@@ -246,7 +247,8 @@ public class SubsamplingScaleImageView extends View {
     private RectF sRect;
     private float[] srcArray = new float[8];
     private float[] dstArray = new float[8];
-    private static int simultaneousClicks = 0;
+
+    private boolean simultaneousClicks = false;
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -571,6 +573,25 @@ public class SubsamplingScaleImageView extends View {
         setMeasuredDimension(width, height);
     }
 
+    private interface CustomParent{
+        void requestDisallowInterceptTouchEvent(boolean b);
+    }
+
+    private CustomParent myGetParent(){
+        return new CustomParent() {
+            @Override
+            public void requestDisallowInterceptTouchEvent(boolean b) {
+                if (!simultaneousClicks){
+                    getParent().requestDisallowInterceptTouchEvent(b);
+                }
+            }
+        };
+    }
+
+    public void enableSimultaneousClicks(){
+        simultaneousClicks = true;
+    }
+
     /**
      * Handle touch events. One finger pans, and two finger pinch and zoom plus panning.
      */
@@ -593,9 +614,6 @@ public class SubsamplingScaleImageView extends View {
             isZooming = false;
             isPanning = false;
             maxTouchCount = 0;
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                simultaneousClicks--;
-            }
             return true;
         }
 
@@ -606,7 +624,6 @@ public class SubsamplingScaleImageView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                simultaneousClicks++;
             case MotionEvent.ACTION_POINTER_1_DOWN:
             case MotionEvent.ACTION_POINTER_2_DOWN:
                 anim = null;
@@ -746,9 +763,7 @@ public class SubsamplingScaleImageView extends View {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
-                                if (simultaneousClicks == 1){
-                                    getParent().requestDisallowInterceptTouchEvent(false);
-                                }
+                                myGetParent().requestDisallowInterceptTouchEvent(false);
                             }
 
                             if (!panEnabled) {
@@ -768,7 +783,6 @@ public class SubsamplingScaleImageView extends View {
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                simultaneousClicks--;
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_POINTER_2_UP:
                 handler.removeMessages(MESSAGE_LONG_CLICK);
