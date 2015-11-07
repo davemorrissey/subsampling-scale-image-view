@@ -33,7 +33,6 @@ import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
@@ -590,6 +589,13 @@ public class SubsamplingScaleImageView extends View {
             getParent().requestDisallowInterceptTouchEvent(true);
             return true;
         } else {
+            if (anim != null && anim.listener != null) {
+                try {
+                    anim.listener.onInterruptedByUser();
+                } catch (Exception e) {
+                    Log.w(TAG, "Error thrown by animation listener", e);
+                }
+            }
             anim = null;
         }
 
@@ -889,6 +895,13 @@ public class SubsamplingScaleImageView extends View {
             fitToBounds(finished || (anim.scaleStart == anim.scaleEnd));
             refreshRequiredTiles(finished);
             if (finished) {
+                if (anim.listener != null) {
+                    try {
+                        anim.listener.onComplete();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Error thrown by animation listener", e);
+                    }
+                }
                 anim = null;
             }
             invalidate();
@@ -1719,6 +1732,7 @@ public class SubsamplingScaleImageView extends View {
         private boolean interruptible = true; // Whether the anim can be interrupted by a touch
         private int easing = EASE_IN_OUT_QUAD; // Easing style
         private long time = System.currentTimeMillis(); // Start time
+        private OnAnimationEventListener listener; // Event listener
 
     }
 
@@ -2508,6 +2522,7 @@ public class SubsamplingScaleImageView extends View {
         private int easing = EASE_IN_OUT_QUAD;
         private boolean interruptible = true;
         private boolean panLimited = true;
+        private OnAnimationEventListener listener;
 
         private AnimationBuilder(PointF sCenter) {
             this.targetScale = scale;
@@ -2567,6 +2582,16 @@ public class SubsamplingScaleImageView extends View {
         }
 
         /**
+         * Add an animation event listener.
+         * @param listener The listener.
+         * @return this builder for method chaining.
+         */
+        public AnimationBuilder withOnAnimationEventListener(OnAnimationEventListener listener) {
+            this.listener = listener;
+            return this;
+        }
+
+        /**
          * Only for internal use. When set to true, the animation proceeds towards the actual end point - the nearest
          * point to the center allowed by pan limits. When false, animation is in the direction of the requested end
          * point and is stopped when the limit for each axis is reached. The latter behaviour is used for flings but
@@ -2581,6 +2606,14 @@ public class SubsamplingScaleImageView extends View {
          * Starts the animation.
          */
         public void start() {
+            if (anim != null && anim.listener != null) {
+                try {
+                    anim.listener.onInterruptedByNewAnim();
+                } catch (Exception e) {
+                    Log.w(TAG, "Error thrown by animation listener", e);
+                }
+            }
+
             int vxCenter = getPaddingLeft() + (getWidth() - getPaddingRight() - getPaddingLeft())/2;
             int vyCenter = getPaddingTop() + (getHeight() - getPaddingBottom() - getPaddingTop())/2;
             float targetScale = limitedScale(this.targetScale);
@@ -2601,6 +2634,7 @@ public class SubsamplingScaleImageView extends View {
             anim.interruptible = interruptible;
             anim.easing = easing;
             anim.time = System.currentTimeMillis();
+            anim.listener = listener;
 
             if (vFocus != null) {
                 // Calculate where translation will be at the end of the anim
@@ -2618,6 +2652,42 @@ public class SubsamplingScaleImageView extends View {
 
             invalidate();
         }
+
+    }
+
+    /**
+     * An event listener for animations, allows events to be triggered when an animation completes,
+     * is aborted by another animation starting, or is aborted by a touch event. Note that none of
+     * these events are triggered if the activity is paused, the image is swapped, or in other cases
+     * where the view's internal state gets wiped or draw events stop.
+     */
+    public static interface OnAnimationEventListener {
+
+        /**
+         * The animation has completed, having reached its endpoint.
+         */
+        void onComplete();
+
+        /**
+         * The animation has been aborted before reaching its endpoint because the user touched the screen.
+         */
+        void onInterruptedByUser();
+
+        /**
+         * The animation has been aborted before reaching its endpoint because a new animation has been started.
+         */
+        void onInterruptedByNewAnim();
+
+    }
+
+    /**
+     * Default implementation of {@link OnAnimationEventListener} for extension. This does nothing in any method.
+     */
+    public static class DefaultOnAnimationEventListener implements OnAnimationEventListener {
+
+        @Override public void onComplete() { }
+        @Override public void onInterruptedByUser() { }
+        @Override public void onInterruptedByNewAnim() { }
 
     }
 
