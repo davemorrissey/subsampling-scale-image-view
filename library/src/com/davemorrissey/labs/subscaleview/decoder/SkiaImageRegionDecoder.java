@@ -10,6 +10,7 @@ import android.graphics.Bitmap.Config;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -60,8 +61,16 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
         } else if (uriString.startsWith(FILE_PREFIX)) {
             decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_PREFIX.length()), false);
         } else {
-            ContentResolver contentResolver = context.getContentResolver();
-            decoder = BitmapRegionDecoder.newInstance(contentResolver.openInputStream(uri), false);
+            InputStream inputStream = null;
+            try {
+                ContentResolver contentResolver = context.getContentResolver();
+                inputStream = contentResolver.openInputStream(uri);
+                decoder = BitmapRegionDecoder.newInstance(inputStream, false);
+            } finally {
+                if (inputStream != null) {
+                    try { inputStream.close(); } catch (Exception e) { }
+                }
+            }
         }
         return new Point(decoder.getWidth(), decoder.getHeight());
     }
