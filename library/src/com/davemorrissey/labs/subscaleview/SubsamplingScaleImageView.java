@@ -237,6 +237,9 @@ public class SubsamplingScaleImageView extends View {
     // Event listener
     private OnImageEventListener onImageEventListener;
 
+    //Zoom changed listener
+    private OnZoomChangedListener onZoomChangedListener;
+
     // Long click listener
     private OnLongClickListener onLongClickListener;
 
@@ -426,7 +429,7 @@ public class SubsamplingScaleImageView extends View {
      * Reset all state before setting/changing image or setting new rotation.
      */
     private void reset(boolean newImage) {
-        scale = 0f;
+        setScale(0f);
         scaleStart = 0f;
         vTranslate = null;
         vTranslateStart = null;
@@ -659,7 +662,7 @@ public class SubsamplingScaleImageView extends View {
                             isPanning = true;
                             consumed = true;
 
-                            scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
+                            setScale(Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart));
 
                             if (scale <= minScale()) {
                                 // Minimum scale reached so don't pan. Adjust start settings so any expand will zoom in.
@@ -708,7 +711,7 @@ public class SubsamplingScaleImageView extends View {
                                 multiplier = isUpwards ? (1 + spanDiff) : (1 - spanDiff);
                             }
 
-                            scale = Math.max(minScale(), Math.min(maxScale, scale * multiplier));
+                            setScale(Math.max(minScale(), Math.min(maxScale, scale * multiplier)));
 
                             if (panEnabled) {
                                 float vLeftStart = vCenterStart.x - vTranslateStart.x;
@@ -882,7 +885,7 @@ public class SubsamplingScaleImageView extends View {
             long scaleElapsed = System.currentTimeMillis() - anim.time;
             boolean finished = scaleElapsed > anim.duration;
             scaleElapsed = Math.min(scaleElapsed, anim.duration);
-            scale = ease(anim.easing, scaleElapsed, anim.scaleStart, anim.scaleEnd - anim.scaleStart, anim.duration);
+            setScale(ease(anim.easing, scaleElapsed, anim.scaleStart, anim.scaleEnd - anim.scaleStart, anim.duration));
 
             // Apply required animation to the focal point
             float vFocusNowX = ease(anim.easing, scaleElapsed, anim.vFocusStart.x, anim.vFocusEnd.x - anim.vFocusStart.x, anim.duration);
@@ -1203,7 +1206,7 @@ public class SubsamplingScaleImageView extends View {
 
         // If waiting to translate to new center position, set translate now
         if (sPendingCenter != null && pendingScale != null) {
-            scale = pendingScale;
+            setScale(pendingScale);
             if (vTranslate == null) {
                 vTranslate = new PointF();
             }
@@ -1327,7 +1330,7 @@ public class SubsamplingScaleImageView extends View {
         satTemp.scale = scale;
         satTemp.vTranslate.set(vTranslate);
         fitToBounds(center, satTemp);
-        scale = satTemp.scale;
+        setScale(satTemp.scale);
         vTranslate.set(satTemp.vTranslate);
         if (init) {
             vTranslate.set(vTranslateForSCenter(sWidth()/2, sHeight()/2, scale));
@@ -2232,6 +2235,17 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Sets new scale value
+     * @param scale
+     */
+    private void setScale(float scale){
+        this.scale = scale;
+        if(onZoomChangedListener != null){
+            onZoomChangedListener.onZoomLevelChanged(scale);
+        }
+    }
+
+    /**
      * Externally change the scale and translation of the source image. This may be used with getCenter() and getScale()
      * to restore the scale and zoom after a screen rotate.
      * @param scale New scale to set.
@@ -2466,6 +2480,13 @@ public class SubsamplingScaleImageView extends View {
      */
     public void setOnImageEventListener(OnImageEventListener onImageEventListener) {
         this.onImageEventListener = onImageEventListener;
+    }
+
+    /**
+     * Sets a listener allowing notification of zoom level change event.
+     */
+    public void setOnZoomChangedListener(OnZoomChangedListener onZoomChangedListener){
+        this.onZoomChangedListener = onZoomChangedListener;
     }
 
     /**
@@ -2739,6 +2760,17 @@ public class SubsamplingScaleImageView extends View {
          */
         void onTileLoadError(Exception e);
 
+    }
+
+    /**
+     * An event listener, allowing to be notified of zoom events.
+     */
+    public interface OnZoomChangedListener{
+        /**
+         * Called when zoom level changed
+         * Warning! Method can be called very often
+         */
+        void onZoomLevelChanged(float zoom);
     }
 
     /**
