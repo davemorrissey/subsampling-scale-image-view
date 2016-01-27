@@ -1550,7 +1550,7 @@ public class SubsamplingScaleImageView extends View {
         private final Uri source;
         private final boolean preview;
         private Bitmap bitmap;
-        private Exception exception;
+        private Throwable throwable;
 
         public BitmapLoadTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageDecoder> decoderFactory, Uri source, boolean preview) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
@@ -1571,9 +1571,9 @@ public class SubsamplingScaleImageView extends View {
                     bitmap = decoderFactory.make().decode(context, source);
                     return subsamplingScaleImageView.getExifOrientation(sourceUri);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.e(TAG, "Failed to load bitmap", e);
-                this.exception = e;
+                this.throwable = e;
             }
             return null;
         }
@@ -1588,11 +1588,11 @@ public class SubsamplingScaleImageView extends View {
                     } else {
                         subsamplingScaleImageView.onImageLoaded(bitmap, orientation, false);
                     }
-                } else if (exception != null && subsamplingScaleImageView.onImageEventListener != null) {
+                } else if (throwable != null && subsamplingScaleImageView.onImageEventListener != null) {
                     if (preview) {
-                        subsamplingScaleImageView.onImageEventListener.onPreviewLoadError(exception);
+                        subsamplingScaleImageView.onImageEventListener.onPreviewLoadError(throwable);
                     } else {
-                        subsamplingScaleImageView.onImageEventListener.onImageLoadError(exception);
+                        subsamplingScaleImageView.onImageEventListener.onImageLoadError(throwable);
                     }
                 }
             }
@@ -2661,7 +2661,7 @@ public class SubsamplingScaleImageView extends View {
      * these events are triggered if the activity is paused, the image is swapped, or in other cases
      * where the view's internal state gets wiped or draw events stop.
      */
-    public static interface OnAnimationEventListener {
+    public interface OnAnimationEventListener {
 
         /**
          * The animation has completed, having reached its endpoint.
@@ -2694,7 +2694,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * An event listener, allowing subclasses and activities to be notified of significant events.
      */
-    public static interface OnImageEventListener {
+    public interface OnImageEventListener {
 
         /**
          * Called when the dimensions of the image and view are known, and either a preview image,
@@ -2719,7 +2719,7 @@ public class SubsamplingScaleImageView extends View {
          * and displayed with no detectable error. The view will continue to load the full size image.
          * @param e The exception thrown. This error is logged by the view.
          */
-        void onPreviewLoadError(Exception e);
+        void onPreviewLoadError(Throwable e);
 
         /**
          * Indicates an error initiliasing the decoder when using a tiling, or when loading the full
@@ -2728,16 +2728,16 @@ public class SubsamplingScaleImageView extends View {
          * displayed with no detectable error.
          * @param e The exception thrown. This error is also logged by the view.
          */
-        void onImageLoadError(Exception e);
+        void onImageLoadError(Throwable e);
 
         /**
          * Called when an image tile could not be loaded. This method cannot be relied upon; certain
          * encoding types of supported image formats can result in corrupt or blank images being loaded
          * and displayed with no detectable error. Most cases where an unsupported file is used will
-         * result in an error caught by {@link #onImageLoadError(Exception)}.
+         * result in an error caught by {@link #onImageLoadError(Throwable)}.
          * @param e The exception thrown. This error is logged by the view.
          */
-        void onTileLoadError(Exception e);
+        void onTileLoadError(Throwable e);
 
     }
 
@@ -2748,9 +2748,9 @@ public class SubsamplingScaleImageView extends View {
 
         @Override public void onReady() { }
         @Override public void onImageLoaded() { }
-        @Override public void onPreviewLoadError(Exception e) { }
-        @Override public void onImageLoadError(Exception e) { }
-        @Override public void onTileLoadError(Exception e) { }
+        @Override public void onPreviewLoadError(Throwable e) { }
+        @Override public void onImageLoadError(Throwable e) { }
+        @Override public void onTileLoadError(Throwable e) { }
 
     }
 
