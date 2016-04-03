@@ -1505,6 +1505,9 @@ public class SubsamplingScaleImageView extends View {
             } catch (Exception e) {
                 Log.e(TAG, "Failed to decode tile", e);
                 this.exception = e;
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG, "Failed to decode tile - OutOfMemoryError", e);
+                this.exception = new RuntimeException(e);
             }
             return null;
         }
@@ -1576,6 +1579,9 @@ public class SubsamplingScaleImageView extends View {
             } catch (Exception e) {
                 Log.e(TAG, "Failed to load bitmap", e);
                 this.exception = e;
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG, "Failed to load bitmap - OutOfMemoryError", e);
+                this.exception = new RuntimeException(e);
             }
             return null;
         }
