@@ -177,6 +177,7 @@ public class SubsamplingScaleImageView extends View {
     // Double tap zoom behaviour
     private float doubleTapZoomScale = 1F;
     private int doubleTapZoomStyle = ZOOM_FOCUS_FIXED;
+    private int doubleTapZoomDuration = 500;
 
     // Current scale and scale at start of zoom
     private float scale;
@@ -842,9 +843,9 @@ public class SubsamplingScaleImageView extends View {
         if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
             setScaleAndCenter(targetScale, sCenter);
         } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !panEnabled) {
-            new AnimationBuilder(targetScale, sCenter).withInterruptible(false).start();
+            new AnimationBuilder(targetScale, sCenter).withInterruptible(false).withDuration(doubleTapZoomDuration).start();
         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
-            new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).start();
+            new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).withDuration(doubleTapZoomDuration).start();
         }
         invalidate();
     }
@@ -2434,6 +2435,14 @@ public class SubsamplingScaleImageView extends View {
             throw new IllegalArgumentException("Invalid zoom style: " + doubleTapZoomStyle);
         }
         this.doubleTapZoomStyle = doubleTapZoomStyle;
+    }
+
+    /**
+     * Set the duration of the double tap zoom animation.
+     * @param durationMs Duration in milliseconds.
+     */
+    public final void setDoubleTapZoomDuration(int durationMs) {
+        this.doubleTapZoomDuration = Math.max(0, durationMs);
     }
 
     /**
