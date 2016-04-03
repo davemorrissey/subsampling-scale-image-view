@@ -83,7 +83,7 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
 
 ## Quick start
 
-**1)** Add `com.davemorrissey.labs:subsampling-scale-image-view:3.4.1` as a dependency in your build.gradle file.
+**1)** Add `com.davemorrissey.labs:subsampling-scale-image-view:3.5.0` as a dependency in your build.gradle file.
 
 **2)** Add the view to your layout XML.
 

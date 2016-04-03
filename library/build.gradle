@@ -4,7 +4,7 @@ apply plugin: 'signing'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
-version = '3.4.1'
+version = '3.5.0'
 
 signing {
     required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
