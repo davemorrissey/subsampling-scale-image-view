@@ -1659,9 +1659,10 @@ public class SubsamplingScaleImageView extends View {
     private int getExifOrientation(String sourceUri) {
         int exifOrientation = ORIENTATION_0;
         if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
+            Cursor cursor = null;
             try {
-                final String[] columns = { MediaStore.Images.Media.ORIENTATION };
-                final Cursor cursor = getContext().getContentResolver().query(Uri.parse(sourceUri), columns, null, null, null);
+                String[] columns = { MediaStore.Images.Media.ORIENTATION };
+                cursor = getContext().getContentResolver().query(Uri.parse(sourceUri), columns, null, null, null);
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
                         int orientation = cursor.getInt(0);
@@ -1671,10 +1672,13 @@ public class SubsamplingScaleImageView extends View {
                             Log.w(TAG, "Unsupported orientation: " + orientation);
                         }
                     }
-                    cursor.close();
                 }
             } catch (Exception e) {
                 Log.w(TAG, "Could not get orientation of image from media store");
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
             }
         } else if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
             try {
