@@ -6,49 +6,49 @@ group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
 version = '3.5.0'
 
-signing {
-    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
-uploadArchives {
-    configuration = configurations.archives
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-            authentication(userName: sonatypeUsername, password: sonatypePassword)
-        }
-
-        pom.project {
-            name 'SubsamplingScaleImageView'
-            packaging 'aar'
-            description 'Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.'
-            url 'https://github.com/davemorrissey/subsampling-scale-image-view'
-
-            scm {
-                url 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
-                connection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
-                developerConnection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
-            }
-
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
-
-            developers {
-                developer {
-                    id 'davemorrissey'
-                    name 'Dave Morrissey'
-                }
-            }
-        }
-    }
-}
+//signing {
+//    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+//    sign configurations.archives
+//}
+//
+//uploadArchives {
+//    configuration = configurations.archives
+//    repositories.mavenDeployer {
+//        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+//
+//        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+//            authentication(userName: sonatypeUsername, password: sonatypePassword)
+//        }
+//
+//        pom.project {
+//            name 'SubsamplingScaleImageView'
+//            packaging 'aar'
+//            description 'Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.'
+//            url 'https://github.com/davemorrissey/subsampling-scale-image-view'
+//
+//            scm {
+//                url 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+//                connection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+//                developerConnection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+//            }
+//
+//            licenses {
+//                license {
+//                    name 'The Apache Software License, Version 2.0'
+//                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+//                    distribution 'repo'
+//                }
+//            }
+//
+//            developers {
+//                developer {
+//                    id 'davemorrissey'
+//                    name 'Dave Morrissey'
+//                }
+//            }
+//        }
+//    }
+//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
@@ -56,8 +56,8 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     sourceSets {
         main {

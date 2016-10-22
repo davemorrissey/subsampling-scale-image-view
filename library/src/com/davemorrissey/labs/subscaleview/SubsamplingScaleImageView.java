@@ -151,6 +151,12 @@ public class SubsamplingScaleImageView extends View {
     // Image orientation setting
     private int orientation = ORIENTATION_0;
 
+    //Image flipping about vertical axis
+    private float verticalFlip = 1.0f;
+
+    //Image flipping about vertical axis
+    private float horizontalFlip = 1.0f;
+
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
 
@@ -336,6 +342,30 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Sets the image flipping. It's best to call this before setting the image file or asset, because it may waste
+     * loading of tiles. However, this can be freely called at any time.
+     */
+
+    public enum Flipping{
+        HORIZONTAL,
+        VERTICAL
+    }
+
+    public void setFlipping(Flipping axis){
+
+        switch (axis){
+            case HORIZONTAL: {
+                this.horizontalFlip *= -1;
+                break;
+            }
+            case VERTICAL: {
+                this.verticalFlip *= -1;
+                break;
+            }
+        }
+    }
+
+    /**
      * Set the image source from a bitmap, resource, asset, file or other URI.
      * @param imageSource Image source.
      */
@@ -407,7 +437,7 @@ public class SubsamplingScaleImageView extends View {
                 if (uri == null && previewSource.getResource() != null) {
                     uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getContext().getPackageName() + "/" + previewSource.getResource());
                 }
-                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, true);
+                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, true, horizontalFlip, verticalFlip);
                 execute(task);
             }
         }
@@ -428,7 +458,7 @@ public class SubsamplingScaleImageView extends View {
                 execute(task);
             } else {
                 // Load the bitmap as a single image.
-                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false);
+                BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false, horizontalFlip, verticalFlip);
                 execute(task);
             }
         }
@@ -1139,7 +1169,7 @@ public class SubsamplingScaleImageView extends View {
             // Use BitmapDecoder for better image support.
             decoder.recycle();
             decoder = null;
-            BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false);
+            BitmapLoadTask task = new BitmapLoadTask(this, getContext(), bitmapDecoderFactory, uri, false, horizontalFlip, verticalFlip);
             execute(task);
 
         } else {
@@ -1148,7 +1178,7 @@ public class SubsamplingScaleImageView extends View {
 
             List<Tile> baseGrid = tileMap.get(fullImageSampleSize);
             for (Tile baseTile : baseGrid) {
-                TileLoadTask task = new TileLoadTask(this, decoder, baseTile);
+                TileLoadTask task = new TileLoadTask(this, decoder, baseTile, horizontalFlip, verticalFlip);
                 execute(task);
             }
             refreshRequiredTiles(true);
@@ -1182,7 +1212,7 @@ public class SubsamplingScaleImageView extends View {
                     if (tileVisible(tile)) {
                         tile.visible = true;
                         if (!tile.loading && tile.bitmap == null && load) {
-                            TileLoadTask task = new TileLoadTask(this, decoder, tile);
+                            TileLoadTask task = new TileLoadTask(this, decoder, tile, horizontalFlip, verticalFlip);
                             execute(task);
                         }
                     } else if (tile.sampleSize != fullImageSampleSize) {
@@ -1495,12 +1525,16 @@ public class SubsamplingScaleImageView extends View {
         private final WeakReference<ImageRegionDecoder> decoderRef;
         private final WeakReference<Tile> tileRef;
         private Exception exception;
+        private float horizontalFlip;
+        private float verticalFlip;
 
-        public TileLoadTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Tile tile) {
+        public TileLoadTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Tile tile, float horizontalFlip, float verticalFlip) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
             this.decoderRef = new WeakReference<ImageRegionDecoder>(decoder);
             this.tileRef = new WeakReference<Tile>(tile);
             tile.loading = true;
+            this.horizontalFlip = horizontalFlip;
+            this.verticalFlip = verticalFlip;
         }
 
         @Override
@@ -1513,10 +1547,15 @@ public class SubsamplingScaleImageView extends View {
                     synchronized (view.decoderLock) {
                         // Update tile's file sRect according to rotation
                         view.fileSRect(tile.sRect, tile.fileSRect);
+                        // Update tile's file sRect according to flip state
+                        view.fileSRectFlip(tile.sRect, tile.fileSRect);
                         if (view.sRegion != null) {
                             tile.fileSRect.offset(view.sRegion.left, view.sRegion.top);
                         }
-                        return decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
+                        Bitmap result = decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
+                        Matrix matrix = new Matrix();
+                        matrix.preScale(horizontalFlip, verticalFlip);
+                        return Bitmap.createBitmap(result, 0, 0, result.getWidth(), result.getHeight(), matrix, true);
                     }
                 } else if (tile != null) {
                     tile.loading = false;
@@ -1578,13 +1617,17 @@ public class SubsamplingScaleImageView extends View {
         private final boolean preview;
         private Bitmap bitmap;
         private Exception exception;
+        private float horizontalFlip;
+        private float verticalFlip;
 
-        public BitmapLoadTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageDecoder> decoderFactory, Uri source, boolean preview) {
+        public BitmapLoadTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageDecoder> decoderFactory, Uri source, boolean preview, float horizontalFlip, float verticalFlip) {
             this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
             this.contextRef = new WeakReference<Context>(context);
             this.decoderFactoryRef = new WeakReference<DecoderFactory<? extends ImageDecoder>>(decoderFactory);
             this.source = source;
             this.preview = preview;
+            this.horizontalFlip = horizontalFlip;
+            this.verticalFlip = verticalFlip;
         }
 
         @Override
@@ -1596,6 +1639,9 @@ public class SubsamplingScaleImageView extends View {
                 SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
                 if (context != null && decoderFactory != null && subsamplingScaleImageView != null) {
                     bitmap = decoderFactory.make().decode(context, source);
+                    Matrix matrix = new Matrix();
+                    matrix.preScale(horizontalFlip, verticalFlip);
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
                     return subsamplingScaleImageView.getExifOrientation(sourceUri);
                 }
             } catch (Exception e) {
@@ -1874,6 +1920,24 @@ public class SubsamplingScaleImageView extends View {
             target.set(sWidth - sRect.right, sHeight - sRect.bottom, sWidth - sRect.left, sHeight - sRect.top);
         } else {
             target.set(sWidth - sRect.bottom, sRect.left, sWidth - sRect.top, sRect.right);
+        }
+    }
+
+    /**
+     * Converts source rectangle from tile, which treats the image file as if it were in the correct flipping state,
+     * to the rectangle of the image that needs to be loaded.
+     */
+    @SuppressWarnings("SuspiciousNameCombination")
+    private void fileSRectFlip(Rect sRect, Rect target) {
+
+        target.set(sRect);
+
+        if (verticalFlip == -1.0f) {
+            target.set(sWidth - sRect.right, target.top, sWidth - sRect.left, target.bottom);
+        }
+
+        if (horizontalFlip == -1.0f) {
+            target.set(target.left, sHeight - sRect.bottom, target.right, sHeight - sRect.top);
         }
     }
 
