@@ -138,6 +138,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="1px"
                     android:background="#333333"/>
+
+            <TextView
+                android:id="@+id/flipping"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/buttonstate_transparent"
+                android:gravity="center_horizontal"
+                android:padding="10dp"
+                android:textSize="18sp"
+                android:text="Flipping"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="#333333"/>
+
         </LinearLayout>
 
         <LinearLayout

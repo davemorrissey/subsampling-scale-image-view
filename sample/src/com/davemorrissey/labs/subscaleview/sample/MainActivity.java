@@ -29,6 +29,7 @@ import com.davemorrissey.labs.subscaleview.sample.configuration.ConfigurationAct
 import com.davemorrissey.labs.subscaleview.sample.eventhandling.EventHandlingActivity;
 import com.davemorrissey.labs.subscaleview.sample.eventhandlingadvanced.AdvancedEventHandlingActivity;
 import com.davemorrissey.labs.subscaleview.sample.extension.ExtensionActivity;
+import com.davemorrissey.labs.subscaleview.sample.flipping.FlippingActivity;
 import com.davemorrissey.labs.subscaleview.sample.imagedisplay.ImageDisplayActivity;
 import com.davemorrissey.labs.subscaleview.sample.viewpager.ViewPagerActivity;
 
@@ -47,6 +48,7 @@ public class MainActivity extends Activity implements OnClickListener {
         findViewById(id.animation).setOnClickListener(this);
         findViewById(id.extension).setOnClickListener(this);
         findViewById(id.configuration).setOnClickListener(this);
+        findViewById(id.flipping).setOnClickListener(this);
 
         findViewById(id.github).setOnClickListener(this);
         findViewById(id.self).setOnClickListener(this);
@@ -77,6 +79,9 @@ public class MainActivity extends Activity implements OnClickListener {
             startActivity(intent);
         } else if (view.getId() == id.configuration) {
             Intent intent = new Intent(this, ConfigurationActivity.class);
+            startActivity(intent);
+        } else if (view.getId() == id.flipping) {
+            Intent intent = new Intent(this, FlippingActivity.class);
             startActivity(intent);
         } else if (view.getId() == id.github) {
             String url = "https://github.com/davemorrissey/subsampling-scale-image-view";
