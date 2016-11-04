@@ -46,6 +46,7 @@ import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewParent;
 
 import com.davemorrissey.labs.subscaleview.R.styleable;
 import com.davemorrissey.labs.subscaleview.decoder.CompatDecoderFactory;
@@ -616,7 +617,7 @@ public class SubsamplingScaleImageView extends View {
     public boolean onTouchEvent(@NonNull MotionEvent event) {
         // During non-interruptible anims, ignore all touch events
         if (anim != null && !anim.interruptible) {
-            getParent().requestDisallowInterceptTouchEvent(true);
+            requestDisallowInterceptTouchEvent(true);
             return true;
         } else {
             if (anim != null && anim.listener != null) {
@@ -662,7 +663,7 @@ public class SubsamplingScaleImageView extends View {
             case MotionEvent.ACTION_POINTER_1_DOWN:
             case MotionEvent.ACTION_POINTER_2_DOWN:
                 anim = null;
-                getParent().requestDisallowInterceptTouchEvent(true);
+                requestDisallowInterceptTouchEvent(true);
                 maxTouchCount = Math.max(maxTouchCount, touchCount);
                 if (touchCount >= 2) {
                     if (zoomEnabled) {
@@ -801,13 +802,13 @@ public class SubsamplingScaleImageView extends View {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
-                                getParent().requestDisallowInterceptTouchEvent(false);
+                                requestDisallowInterceptTouchEvent(false);
                             }
 
                             if (!panEnabled) {
                                 vTranslate.x = vTranslateStart.x;
                                 vTranslate.y = vTranslateStart.y;
-                                getParent().requestDisallowInterceptTouchEvent(false);
+                                requestDisallowInterceptTouchEvent(false);
                             }
 
                             refreshRequiredTiles(false);
@@ -862,6 +863,13 @@ public class SubsamplingScaleImageView extends View {
                 return true;
         }
         return false;
+    }
+
+    private void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        ViewParent parent = getParent();
+        if (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+        }
     }
 
     /**
