@@ -37,6 +37,7 @@ import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -1356,7 +1357,7 @@ public class SubsamplingScaleImageView extends View {
      * Once source image and view dimensions are known, creates a map of sample size to tile grid.
      */
     private void initialiseTileMap(Point maxTileDimensions) {
-        this.tileMap = new LinkedHashMap<Integer, List<Tile>>();
+        this.tileMap = new LinkedHashMap<>();
         int sampleSize = fullImageSampleSize;
         int xTiles = 1;
         int yTiles = 1;
@@ -1375,7 +1376,7 @@ public class SubsamplingScaleImageView extends View {
                 sTileHeight = sHeight()/yTiles;
                 subTileHeight = sTileHeight/sampleSize;
             }
-            List<Tile> tileGrid = new ArrayList<Tile>(xTiles * yTiles);
+            List<Tile> tileGrid = new ArrayList<>(xTiles * yTiles);
             for (int x = 0; x < xTiles; x++) {
                 for (int y = 0; y < yTiles; y++) {
                     Tile tile = new Tile();
@@ -1412,9 +1413,9 @@ public class SubsamplingScaleImageView extends View {
         private ImageRegionDecoder decoder;
         private Exception exception;
 
-        public TilesInitTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageRegionDecoder> decoderFactory, Uri source) {
-            this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
-            this.contextRef = new WeakReference<Context>(context);
+        TilesInitTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageRegionDecoder> decoderFactory, Uri source) {
+            this.viewRef = new WeakReference<>(view);
+            this.contextRef = new WeakReference<>(context);
             this.decoderFactoryRef = new WeakReference<DecoderFactory<? extends ImageRegionDecoder>>(decoderFactory);
             this.source = source;
         }
@@ -1431,7 +1432,7 @@ public class SubsamplingScaleImageView extends View {
                     Point dimensions = decoder.init(context, source);
                     int sWidth = dimensions.x;
                     int sHeight = dimensions.y;
-                    int exifOrientation = view.getExifOrientation(sourceUri);
+                    int exifOrientation = view.getExifOrientation(context, sourceUri);
                     if (view.sRegion != null) {
                         sWidth = view.sRegion.width();
                         sHeight = view.sRegion.height();
@@ -1496,10 +1497,10 @@ public class SubsamplingScaleImageView extends View {
         private final WeakReference<Tile> tileRef;
         private Exception exception;
 
-        public TileLoadTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Tile tile) {
-            this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
-            this.decoderRef = new WeakReference<ImageRegionDecoder>(decoder);
-            this.tileRef = new WeakReference<Tile>(tile);
+        TileLoadTask(SubsamplingScaleImageView view, ImageRegionDecoder decoder, Tile tile) {
+            this.viewRef = new WeakReference<>(view);
+            this.decoderRef = new WeakReference<>(decoder);
+            this.tileRef = new WeakReference<>(tile);
             tile.loading = true;
         }
 
@@ -1579,9 +1580,9 @@ public class SubsamplingScaleImageView extends View {
         private Bitmap bitmap;
         private Exception exception;
 
-        public BitmapLoadTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageDecoder> decoderFactory, Uri source, boolean preview) {
-            this.viewRef = new WeakReference<SubsamplingScaleImageView>(view);
-            this.contextRef = new WeakReference<Context>(context);
+        BitmapLoadTask(SubsamplingScaleImageView view, Context context, DecoderFactory<? extends ImageDecoder> decoderFactory, Uri source, boolean preview) {
+            this.viewRef = new WeakReference<>(view);
+            this.contextRef = new WeakReference<>(context);
             this.decoderFactoryRef = new WeakReference<DecoderFactory<? extends ImageDecoder>>(decoderFactory);
             this.source = source;
             this.preview = preview;
@@ -1596,7 +1597,7 @@ public class SubsamplingScaleImageView extends View {
                 SubsamplingScaleImageView subsamplingScaleImageView = viewRef.get();
                 if (context != null && decoderFactory != null && subsamplingScaleImageView != null) {
                     bitmap = decoderFactory.make().decode(context, source);
-                    return subsamplingScaleImageView.getExifOrientation(sourceUri);
+                    return subsamplingScaleImageView.getExifOrientation(context, sourceUri);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to load bitmap", e);
@@ -1683,13 +1684,14 @@ public class SubsamplingScaleImageView extends View {
      * Helper method for load tasks. Examines the EXIF info on the image file to determine the orientation.
      * This will only work for external files, not assets, resources or other URIs.
      */
-    private int getExifOrientation(String sourceUri) {
+    @AnyThread
+    private int getExifOrientation(Context context, String sourceUri) {
         int exifOrientation = ORIENTATION_0;
         if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
             Cursor cursor = null;
             try {
                 String[] columns = { MediaStore.Images.Media.ORIENTATION };
-                cursor = getContext().getContentResolver().query(Uri.parse(sourceUri), columns, null, null, null);
+                cursor = context.getContentResolver().query(Uri.parse(sourceUri), columns, null, null, null);
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
                         int orientation = cursor.getInt(0);
@@ -1797,9 +1799,9 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing {@link TILE_SIZE_AUTO} will re-enable the default behaviour.
+     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing {@link #TILE_SIZE_AUTO} will re-enable the default behaviour.
      *
-     * @param maxPixels
+     * @param maxPixels Maximum tile size X and Y in pixels.
      */
     public void setMaxTileSize(int maxPixels) {
         this.maxTileWidth = maxPixels;
@@ -1807,10 +1809,10 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing {@link TILE_SIZE_AUTO} will re-enable the default behaviour.
+     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing {@link #TILE_SIZE_AUTO} will re-enable the default behaviour.
      *
-     * @param maxPixelsX
-     * @param maxPixelsU
+     * @param maxPixelsX Maximum tile width.
+     * @param maxPixelsY Maximum tile height.
      */
     public void setMaxTileSize(int maxPixelsX, int maxPixelsY) {
         this.maxTileWidth = maxPixelsX;
@@ -1865,6 +1867,7 @@ public class SubsamplingScaleImageView extends View {
      * to the rectangle of the image that needs to be loaded.
      */
     @SuppressWarnings("SuspiciousNameCombination")
+    @AnyThread
     private void fileSRect(Rect sRect, Rect target) {
         if (getRequiredRotation() == 0) {
             target.set(sRect);
@@ -1880,6 +1883,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Determines the rotation to be applied to tiles, based on EXIF orientation or chosen setting.
      */
+    @AnyThread
     private int getRequiredRotation() {
         if (orientation == ORIENTATION_USE_EXIF) {
             return sOrientation;
@@ -2135,7 +2139,7 @@ public class SubsamplingScaleImageView extends View {
         if (regionDecoderClass == null) {
             throw new IllegalArgumentException("Decoder class cannot be set to null");
         }
-        this.regionDecoderFactory = new CompatDecoderFactory<ImageRegionDecoder>(regionDecoderClass);
+        this.regionDecoderFactory = new CompatDecoderFactory<>(regionDecoderClass);
     }
 
     /**
@@ -2161,7 +2165,7 @@ public class SubsamplingScaleImageView extends View {
         if (bitmapDecoderClass == null) {
             throw new IllegalArgumentException("Decoder class cannot be set to null");
         }
-        this.bitmapDecoderFactory = new CompatDecoderFactory<ImageDecoder>(bitmapDecoderClass);
+        this.bitmapDecoderFactory = new CompatDecoderFactory<>(bitmapDecoderClass);
     }
 
     /**
