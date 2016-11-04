@@ -128,6 +128,15 @@ public class SubsamplingScaleImageView extends View {
 
     private static final List<Integer> VALID_SCALE_TYPES = Arrays.asList(SCALE_TYPE_CENTER_CROP, SCALE_TYPE_CENTER_INSIDE, SCALE_TYPE_CUSTOM);
 
+    /** State change originated from animation. */
+    public static final int ORIGIN_ANIM = 1;
+    /** State change originated from touch gesture. */
+    public static final int ORIGIN_TOUCH = 2;
+    /** State change originated from a fling momentum anim. */
+    public static final int ORIGIN_FLING = 3;
+    /** State change originated from a double tap zoom anim. */
+    public static final int ORIGIN_DOUBLE_TAP_ZOOM = 4;
+
     // Bitmap (preview or full image)
     private Bitmap bitmap;
 
@@ -192,6 +201,7 @@ public class SubsamplingScaleImageView extends View {
     // Screen coordinate of top-left corner of source image
     private PointF vTranslate;
     private PointF vTranslateStart;
+    private PointF vTranslateBefore;
 
     // Source coordinate to center on, used when new position is set externally before view is ready
     private Float pendingScale;
@@ -244,6 +254,9 @@ public class SubsamplingScaleImageView extends View {
 
     // Event listener
     private OnImageEventListener onImageEventListener;
+
+    // Scale and center listener
+    private OnStateChangedListener onStateChangedListener;
 
     // Long click listener
     private OnLongClickListener onLongClickListener;
@@ -443,6 +456,7 @@ public class SubsamplingScaleImageView extends View {
         scaleStart = 0f;
         vTranslate = null;
         vTranslateStart = null;
+        vTranslateBefore = null;
         pendingScale = 0f;
         sPendingCenter = null;
         sRequestedCenter = null;
@@ -510,7 +524,7 @@ public class SubsamplingScaleImageView extends View {
                     PointF vTranslateEnd = new PointF(vTranslate.x + (velocityX * 0.25f), vTranslate.y + (velocityY * 0.25f));
                     float sCenterXEnd = ((getWidth()/2) - vTranslateEnd.x)/scale;
                     float sCenterYEnd = ((getHeight()/2) - vTranslateEnd.y)/scale;
-                    new AnimationBuilder(new PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withPanLimited(false).start();
+                    new AnimationBuilder(new PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withPanLimited(false).withOrigin(ORIGIN_FLING).start();
                     return true;
                 }
                 return super.onFling(e1, e2, velocityX, velocityY);
@@ -598,7 +612,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Handle touch events. One finger pans, and two finger pinch and zoom plus panning.
      */
-    @Override @SuppressWarnings("deprecation")
+    @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
         // During non-interruptible anims, ignore all touch events
         if (anim != null && !anim.interruptible) {
@@ -628,8 +642,20 @@ public class SubsamplingScaleImageView extends View {
         }
 
         if (vTranslateStart == null) { vTranslateStart = new PointF(0, 0); }
+        if (vTranslateBefore == null) { vTranslateBefore = new PointF(0, 0); }
         if (vCenterStart == null) { vCenterStart = new PointF(0, 0); }
 
+        // Store current values so we can send an event if they change
+        float scaleBefore = scale;
+        vTranslateBefore.set(vTranslate);
+
+        boolean handled = onTouchEventInternal(event);
+        sendStateChanged(scaleBefore, vTranslateBefore, ORIGIN_TOUCH);
+        return handled || super.onTouchEvent(event);
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean onTouchEventInternal(@NonNull MotionEvent event) {
         int touchCount = event.getPointerCount();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -835,7 +861,7 @@ public class SubsamplingScaleImageView extends View {
                 }
                 return true;
         }
-        return super.onTouchEvent(event);
+        return false;
     }
 
     /**
@@ -860,9 +886,9 @@ public class SubsamplingScaleImageView extends View {
         if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
             setScaleAndCenter(targetScale, sCenter);
         } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !panEnabled) {
-            new AnimationBuilder(targetScale, sCenter).withInterruptible(false).withDuration(doubleTapZoomDuration).start();
+            new AnimationBuilder(targetScale, sCenter).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start();
         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
-            new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).withDuration(doubleTapZoomDuration).start();
+            new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start();
         }
         invalidate();
     }
@@ -898,6 +924,10 @@ public class SubsamplingScaleImageView extends View {
 
         // If animating scale, calculate current scale and center with easing equations
         if (anim != null) {
+            // Store current values so we can send an event if they change
+            float scaleBefore = scale;
+            vTranslateBefore.set(vTranslate);
+
             long scaleElapsed = System.currentTimeMillis() - anim.time;
             boolean finished = scaleElapsed > anim.duration;
             scaleElapsed = Math.min(scaleElapsed, anim.duration);
@@ -912,6 +942,7 @@ public class SubsamplingScaleImageView extends View {
 
             // For translate anims, showing the image non-centered is never allowed, for scaling anims it is during the animation.
             fitToBounds(finished || (anim.scaleStart == anim.scaleEnd));
+            sendStateChanged(scaleBefore, vTranslateBefore, anim.origin);
             refreshRequiredTiles(finished);
             if (finished) {
                 if (anim.listener != null) {
@@ -1772,6 +1803,7 @@ public class SubsamplingScaleImageView extends View {
         private long duration = 500; // How long the anim takes
         private boolean interruptible = true; // Whether the anim can be interrupted by a touch
         private int easing = EASE_IN_OUT_QUAD; // Easing style
+        private int origin = ORIGIN_ANIM; // Animation origin (API, double tap or fling)
         private long time = System.currentTimeMillis(); // Start time
         private OnAnimationEventListener listener; // Event listener
 
@@ -2542,6 +2574,24 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Add a listener for pan and zoom events.
+     */
+    public void setOnStateChangedListener(OnStateChangedListener onStateChangedListener) {
+        this.onStateChangedListener = onStateChangedListener;
+    }
+
+    private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
+        if (onStateChangedListener != null) {
+            if (scale != oldScale) {
+                onStateChangedListener.onScaleChanged(scale, origin);
+            }
+            if (!vTranslate.equals(oldVTranslate)) {
+                onStateChangedListener.onCenterChanged(getCenter(), origin);
+            }
+        }
+    }
+
+    /**
      * Creates a panning animation builder, that when started will animate the image to place the given coordinates of
      * the image in the center of the screen. If doing this would move the image beyond the edges of the screen, the
      * image is instead animated to move the center point as near to the center of the screen as is allowed - it's
@@ -2593,6 +2643,7 @@ public class SubsamplingScaleImageView extends View {
         private final PointF vFocus;
         private long duration = 500;
         private int easing = EASE_IN_OUT_QUAD;
+        private int origin = ORIGIN_ANIM;
         private boolean interruptible = true;
         private boolean panLimited = true;
         private OnAnimationEventListener listener;
@@ -2676,6 +2727,14 @@ public class SubsamplingScaleImageView extends View {
         }
 
         /**
+         * Only for internal use. Indicates what caused the animation.
+         */
+        private AnimationBuilder withOrigin(int origin) {
+            this.origin = origin;
+            return this;
+        }
+
+        /**
          * Starts the animation.
          */
         public void start() {
@@ -2706,6 +2765,7 @@ public class SubsamplingScaleImageView extends View {
             anim.duration = duration;
             anim.interruptible = interruptible;
             anim.easing = easing;
+            anim.origin = origin;
             anim.time = System.currentTimeMillis();
             anim.listener = listener;
 
@@ -2830,6 +2890,41 @@ public class SubsamplingScaleImageView extends View {
         @Override public void onImageLoadError(Exception e) { }
         @Override public void onTileLoadError(Exception e) { }
         @Override public void onPreviewReleased() { }
+
+    }
+
+    /**
+     * An event listener, allowing activities to be notified of pan and zoom events. Initialisation
+     * and calls made by your code do not trigger events; touch events and animations do. Methods in
+     * this listener will be called on the UI thread and may be called very frequently - your
+     * implementation should return quickly.
+     */
+    public interface OnStateChangedListener {
+
+        /**
+         * The scale has changed. Use with {@link #getMaxScale()} and {@link #getMinScale()} to determine
+         * whether the image is fully zoomed in or out.
+         * @param newScale The new scale.
+         * @param origin Where the event originated from - one of {@link #ORIGIN_ANIM}, {@link #ORIGIN_TOUCH}.
+         */
+        void onScaleChanged(float newScale, int origin);
+
+        /**
+         * The source center has been changed. This can be a result of panning or zooming.
+         * @param newCenter The new source center point.
+         * @param origin Where the event originated from - one of {@link #ORIGIN_ANIM}, {@link #ORIGIN_TOUCH}.
+         */
+        void onCenterChanged(PointF newCenter, int origin);
+
+    }
+
+    /**
+     * Default implementation of {@link OnStateChangedListener}. This does nothing in any method.
+     */
+    public static class DefaultOnStateChangedListener implements OnStateChangedListener {
+
+        @Override public void onCenterChanged(PointF newCenter, int origin) { }
+        @Override public void onScaleChanged(float newScale, int origin) { }
 
     }
 
