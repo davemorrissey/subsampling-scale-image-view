@@ -1059,7 +1059,7 @@ public class SubsamplingScaleImageView extends View {
 
             if (tileBgPaint != null) {
                 if (sRect == null) { sRect = new RectF(); }
-                sRect.set(0f, 0f, sWidth, sHeight);
+                sRect.set(0f, 0f, bitmapIsPreview ? bitmap.getWidth() : sWidth, bitmapIsPreview ? bitmap.getHeight() : sHeight);
                 matrix.mapRect(sRect);
                 canvas.drawRect(sRect, tileBgPaint);
             }
