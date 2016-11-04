@@ -25,16 +25,6 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
 
 [![Get it on Google Play](https://developer.android.com/images/brand/en_generic_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
 
-#### Hall of fame
-
-**Are you using this library in your app? Let me know and I'll add it to this list.**
-
-| [![Fourth Mate](https://lh3.ggpht.com/2ALnL-05ILKLwP9U8Dfy7n4iI54OlXeZG-rHf31FP5l8Bup9wws9wnSlyX56ShgzlQ=w100)](https://play.google.com/store/apps/details?id=com.sleetworks.serenity.android) | [![Sync for reddit](https://lh5.ggpht.com/eOcmQUHHFCXM5uiajTkTsak5sIB5eTLKXaKSGGGWi8TJ3edYtqz8EtvjlOto5eFYvoLb=w100)](https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync) | [![Journey](https://lh3.ggpht.com/Mz6YqxKsLfVbjYVHj_3nfUxLe5Yvl9W4KO2sKnwud6hZl5mnGitm55PnILT2jx4Hafv6=w100)](https://play.google.com/store/apps/details?id=com.journey.app) | <a href="https://f-droid.org/repository/browse/?fdid=org.floens.chan"><img src="https://floens.github.io/Clover/images/logo.png" width="100px" height="100px"></a> | [![Tag Gallery](https://lh5.ggpht.com/mKch3_fgPYswBPmZ-qEvp91_fPKdbvN2UubCvUTDqy1sAaLJBzfFYETb-sJgPfCvDg=w100)](https://play.google.com/store/apps/details?id=me.snapdiary.us.taggallery) |
-|---|---|---|---|---|
-| **Fourth Mate** | **Sync for reddit** | **Journal** | **Clover** | **Tag Gallery** |
-| [![nycTrans.it](https://lh5.ggpht.com/eDe_bnb2KVXd6fwjJDroWYfEs7Qy-ity93s4LnOwei3S8AGZIeJy8wwmjllt1TKciD4=w100)](https://play.google.com/store/apps/details?id=com.nyctrans.it) | [![RR File Locker](https://lh4.ggpht.com/taUucj91wLM_uLq-XMLo-9Urk4SeQYW1WO4oquJ_ynyJPrX7S0j0xoQ8k6q66ZElFg=w100)](https://play.google.com/store/apps/details?id=com.redrabbitsw.android.locker) | [![TransitMe NYC](https://lh3.googleusercontent.com/aErQHPHTn6TeqmGRHybIZoEE7uF1MwTXTN4upuIsMpJurwWGuF_9tAhaxspMvTBdGaqG=w100)](https://play.google.com/store/apps/details?id=com.transitme.app) | [![Mr Whipped Comics](https://lh3.googleusercontent.com/1Wtvc4dM8ZBeUWB1dFqjrn_mrwq12xVbsux9QMXQrPL3VdZi2v6OuFQ7N0k5iT7tQw=w100)](https://play.google.com/store/apps/details?id=com.pst.mrwhipped) | [![Ornithopedia](https://lh3.ggpht.com/Y20EJCUVUJYNa6JcBuhl1bdSlcnoi4VlNcZcKnyR0Ip7WsfZ4rJxjAJII5D8bKuQeTRc=w100)](https://play.google.com/store/apps/details?id=org.ornithopedia.Europe) |
-| **nycTrans.it** | **RR File Locker** | **TransitMe NYC** | **Mr Whipped Comics** | **Ornithopedia** |
-
 ## Features
 
 #### Image display
@@ -98,7 +88,7 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
 
     </LinearLayout>
 
-**3)** Now, in your fragment or activity, set the image resource, asset name or file path.
+**3a)** Now, in your fragment or activity, set the image resource, asset name or file path.
 
     SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
     imageView.setImage(ImageSource.resource(R.drawable.monkey));
@@ -107,6 +97,11 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
     // ... or ...
     imageView.setImage(ImageSource.uri("/sdcard/DCIM/DSCM00123.JPG"));
 
+**3b)** Or, if you have a `Bitmap` object in memory, load it into the view. This is unsuitable for large images because it bypasses subsampling - you may get an `OutOfMemoryError`.
+
+   SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
+   imageView.setImage(ImageSource.bitmap(bitmap));
+
 ## About
 
-Copyright 2015 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it, and send a link to your project on GitHub or app in Google Play if you'd like me to add it to this page.
+Copyright 2016 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it!
