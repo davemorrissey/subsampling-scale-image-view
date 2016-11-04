@@ -99,8 +99,8 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
 
 **3b)** Or, if you have a `Bitmap` object in memory, load it into the view. This is unsuitable for large images because it bypasses subsampling - you may get an `OutOfMemoryError`.
 
-   SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-   imageView.setImage(ImageSource.bitmap(bitmap));
+    SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
+    imageView.setImage(ImageSource.bitmap(bitmap));
 
 ## About
 
