@@ -1528,7 +1528,9 @@ public class SubsamplingScaleImageView extends View {
         this.sHeight = sHeight;
         this.sOrientation = sOrientation;
         checkReady();
-        checkImageLoaded();
+        if (!checkImageLoaded() && maxTileWidth > 0 && maxTileHeight > 0 && getWidth() > 0 && getHeight() > 0) {
+            initialiseBaseLayer(new Point(maxTileWidth, maxTileHeight));
+        }
         invalidate();
         requestLayout();
     }
