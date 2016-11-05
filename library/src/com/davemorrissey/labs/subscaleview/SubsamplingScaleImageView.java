@@ -2998,4 +2998,12 @@ public class SubsamplingScaleImageView extends View {
 
     }
 
+		/**
+     * Check if the current instance of SubsamplingScaleImageView has an image set
+     * @return If an image is currently set
+     */
+    public boolean hasImageSet(){
+        return uri!=null || bitmap!=null;
+    }
+
 }
