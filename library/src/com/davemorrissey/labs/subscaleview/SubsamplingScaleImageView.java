@@ -2629,6 +2629,14 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
+     * Check if an image has been set. The image may not have been loaded and displayed yet.
+     * @return If an image is currently set.
+     */
+    public boolean hasImage() {
+        return uri != null || bitmap != null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -2996,14 +3004,6 @@ public class SubsamplingScaleImageView extends View {
         @Override public void onCenterChanged(PointF newCenter, int origin) { }
         @Override public void onScaleChanged(float newScale, int origin) { }
 
-    }
-
-		/**
-     * Check if the current instance of SubsamplingScaleImageView has an image set
-     * @return If an image is currently set
-     */
-    public boolean hasImageSet(){
-        return uri!=null || bitmap!=null;
     }
 
 }
