@@ -936,6 +936,7 @@ public class SubsamplingScaleImageView extends View {
         if (anim != null) {
             // Store current values so we can send an event if they change
             float scaleBefore = scale;
+            if (vTranslateBefore == null) { vTranslateBefore = new PointF(0, 0); }
             vTranslateBefore.set(vTranslate);
 
             long scaleElapsed = System.currentTimeMillis() - anim.time;
