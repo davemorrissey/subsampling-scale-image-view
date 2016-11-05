@@ -240,10 +240,11 @@ public class SubsamplingScaleImageView extends View {
 
     // Current quickscale state
     private final float quickScaleThreshold;
-    private PointF quickScaleCenter;
     private float quickScaleLastDistance;
-    private PointF quickScaleLastPoint;
     private boolean quickScaleMoved;
+    private PointF quickScaleVLastPoint;
+    private PointF quickScaleSCenter;
+    private PointF quickScaleVStart;
 
     // Scale and center animation tracking
     private Anim anim;
@@ -469,10 +470,11 @@ public class SubsamplingScaleImageView extends View {
         fullImageSampleSize = 0;
         vCenterStart = null;
         vDistStart = 0;
-        quickScaleCenter = null;
         quickScaleLastDistance = 0f;
-        quickScaleLastPoint = null;
         quickScaleMoved = false;
+        quickScaleSCenter = null;
+        quickScaleVLastPoint = null;
+        quickScaleVStart = null;
         anim = null;
         satTemp = null;
         matrix = null;
@@ -552,9 +554,10 @@ public class SubsamplingScaleImageView extends View {
                         scaleStart = scale;
                         isQuickScaling = true;
                         isZooming = true;
-                        quickScaleCenter = viewToSourceCoord(vCenterStart);
                         quickScaleLastDistance = -1F;
-                        quickScaleLastPoint = new PointF(quickScaleCenter.x, quickScaleCenter.y);
+                        quickScaleSCenter = viewToSourceCoord(vCenterStart);
+                        quickScaleVStart = new PointF(e.getX(), e.getY());
+                        quickScaleVLastPoint = new PointF(quickScaleSCenter.x, quickScaleSCenter.y);
                         quickScaleMoved = false;
                         // We need to get events in onTouchEvent after this.
                         return false;
@@ -704,6 +707,7 @@ public class SubsamplingScaleImageView extends View {
                             isPanning = true;
                             consumed = true;
 
+                            double previousScale = scale;
                             scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
 
                             if (scale <= minScale()) {
@@ -721,6 +725,13 @@ public class SubsamplingScaleImageView extends View {
                                 float vTopNow = vTopStart * (scale/scaleStart);
                                 vTranslate.x = vCenterEndX - vLeftNow;
                                 vTranslate.y = vCenterEndY - vTopNow;
+                                if ((previousScale * sHeight() < getHeight() && scale * sHeight() >= getHeight()) || (previousScale * sWidth() < getWidth() && scale * sWidth() >= getWidth())) {
+                                    fitToBounds(true);
+                                    vCenterStart.set(vCenterEndX, vCenterEndY);
+                                    vTranslateStart.set(vTranslate);
+                                    scaleStart = scale;
+                                    vDistStart = vDistEnd;
+                                }
                             } else if (sRequestedCenter != null) {
                                 // With a center specified from code, zoom around that point.
                                 vTranslate.x = (getWidth()/2) - (scale * sRequestedCenter.x);
@@ -737,13 +748,15 @@ public class SubsamplingScaleImageView extends View {
                     } else if (isQuickScaling) {
                         // One finger zoom
                         // Stole Google's Magical Formula™ to make sure it feels the exact same
-                        float dist = Math.abs(vCenterStart.y - event.getY()) * 2 + quickScaleThreshold;
+                        float dist = Math.abs(quickScaleVStart.y - event.getY()) * 2 + quickScaleThreshold;
 
-                        if (quickScaleLastDistance == -1F) quickScaleLastDistance = dist;
-                        boolean isUpwards = event.getY() > quickScaleLastPoint.y;
-                        quickScaleLastPoint.set(0, event.getY());
+                        if (quickScaleLastDistance == -1f) {
+                            quickScaleLastDistance = dist;
+                        }
+                        boolean isUpwards = event.getY() > quickScaleVLastPoint.y;
+                        quickScaleVLastPoint.set(0, event.getY());
 
-                        float spanDiff = (Math.abs(1 - (dist / quickScaleLastDistance)) * 0.5F);
+                        float spanDiff = Math.abs(1 - (dist / quickScaleLastDistance)) * 0.5f;
 
                         if (spanDiff > 0.03f || quickScaleMoved) {
                             quickScaleMoved = true;
@@ -753,6 +766,7 @@ public class SubsamplingScaleImageView extends View {
                                 multiplier = isUpwards ? (1 + spanDiff) : (1 - spanDiff);
                             }
 
+                            double previousScale = scale;
                             scale = Math.max(minScale(), Math.min(maxScale, scale * multiplier));
 
                             if (panEnabled) {
@@ -762,6 +776,13 @@ public class SubsamplingScaleImageView extends View {
                                 float vTopNow = vTopStart * (scale/scaleStart);
                                 vTranslate.x = vCenterStart.x - vLeftNow;
                                 vTranslate.y = vCenterStart.y - vTopNow;
+                                if ((previousScale * sHeight() < getHeight() && scale * sHeight() >= getHeight()) || (previousScale * sWidth() < getWidth() && scale * sWidth() >= getWidth())) {
+                                    fitToBounds(true);
+                                    vCenterStart.set(sourceToViewCoord(quickScaleSCenter));
+                                    vTranslateStart.set(vTranslate);
+                                    scaleStart = scale;
+                                    dist = 0;
+                                }
                             } else if (sRequestedCenter != null) {
                                 // With a center specified from code, zoom around that point.
                                 vTranslate.x = (getWidth()/2) - (scale * sRequestedCenter.x);
@@ -830,7 +851,7 @@ public class SubsamplingScaleImageView extends View {
                 if (isQuickScaling) {
                     isQuickScaling = false;
                     if (!quickScaleMoved) {
-                        doubleTapZoom(quickScaleCenter, vCenterStart);
+                        doubleTapZoom(quickScaleSCenter, vCenterStart);
                     }
                 }
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
@@ -1021,23 +1042,6 @@ public class SubsamplingScaleImageView extends View {
                 }
             }
 
-            if (debug) {
-                canvas.drawText("Scale: " + String.format(Locale.ENGLISH, "%.2f", scale), 5, 15, debugPaint);
-                canvas.drawText("Translate: " + String.format(Locale.ENGLISH, "%.2f", vTranslate.x) + ":" + String.format(Locale.ENGLISH, "%.2f", vTranslate.y), 5, 35, debugPaint);
-                PointF center = getCenter();
-                canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), 5, 55, debugPaint);
-
-                if (anim != null) {
-                    PointF vCenterStart = sourceToViewCoord(anim.sCenterStart);
-                    PointF vCenterEndRequested = sourceToViewCoord(anim.sCenterEndRequested);
-                    PointF vCenterEnd = sourceToViewCoord(anim.sCenterEnd);
-                    canvas.drawCircle(vCenterStart.x, vCenterStart.y, 10, debugPaint);
-                    canvas.drawCircle(vCenterEndRequested.x, vCenterEndRequested.y, 20, debugPaint);
-                    canvas.drawCircle(vCenterEnd.x, vCenterEnd.y, 25, debugPaint);
-                    canvas.drawCircle(getWidth() / 2, getHeight() / 2, 30, debugPaint);
-                }
-            }
-
         } else if (bitmap != null) {
 
             float xScale = scale, yScale = scale;
@@ -1068,6 +1072,40 @@ public class SubsamplingScaleImageView extends View {
             }
             canvas.drawBitmap(bitmap, matrix, bitmapPaint);
 
+        }
+
+        if (debug) {
+            canvas.drawText("Scale: " + String.format(Locale.ENGLISH, "%.2f", scale), 5, 15, debugPaint);
+            canvas.drawText("Translate: " + String.format(Locale.ENGLISH, "%.2f", vTranslate.x) + ":" + String.format(Locale.ENGLISH, "%.2f", vTranslate.y), 5, 35, debugPaint);
+            PointF center = getCenter();
+            canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), 5, 55, debugPaint);
+            debugPaint.setStrokeWidth(2f);
+            if (anim != null) {
+                PointF vCenterStart = sourceToViewCoord(anim.sCenterStart);
+                PointF vCenterEndRequested = sourceToViewCoord(anim.sCenterEndRequested);
+                PointF vCenterEnd = sourceToViewCoord(anim.sCenterEnd);
+                canvas.drawCircle(vCenterStart.x, vCenterStart.y, 10, debugPaint);
+                debugPaint.setColor(Color.RED);
+                canvas.drawCircle(vCenterEndRequested.x, vCenterEndRequested.y, 20, debugPaint);
+                debugPaint.setColor(Color.BLUE);
+                canvas.drawCircle(vCenterEnd.x, vCenterEnd.y, 25, debugPaint);
+                debugPaint.setColor(Color.CYAN);
+                canvas.drawCircle(getWidth() / 2, getHeight() / 2, 30, debugPaint);
+            }
+            if (vCenterStart != null) {
+                debugPaint.setColor(Color.RED);
+                canvas.drawCircle(vCenterStart.x, vCenterStart.y, 20, debugPaint);
+            }
+            if (quickScaleSCenter != null) {
+                debugPaint.setColor(Color.BLUE);
+                canvas.drawCircle(sourceToViewX(quickScaleSCenter.x), sourceToViewY(quickScaleSCenter.y), 35, debugPaint);
+            }
+            if (quickScaleVStart != null) {
+                debugPaint.setColor(Color.CYAN);
+                canvas.drawCircle(quickScaleVStart.x, quickScaleVStart.y, 30, debugPaint);
+            }
+            debugPaint.setColor(Color.MAGENTA);
+            debugPaint.setStrokeWidth(1f);
         }
     }
 
