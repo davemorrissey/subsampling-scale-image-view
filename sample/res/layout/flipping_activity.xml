@@ -13,13 +13,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/flip_image"
-        android:text="Vertical Flip"/>
+        android:text="Vertical axis Flip"/>
 
     <Button
         android:id="@+id/horizontal_flip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/vertical_flip"
-        android:text="Horizontal Flip"/>
+        android:text="Horizontal axis Flip"/>
 
 </RelativeLayout>

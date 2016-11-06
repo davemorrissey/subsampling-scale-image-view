@@ -1554,7 +1554,7 @@ public class SubsamplingScaleImageView extends View {
                         }
                         Bitmap result = decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
                         Matrix matrix = new Matrix();
-                        matrix.preScale(horizontalFlip, verticalFlip);
+                        matrix.preScale(verticalFlip, horizontalFlip);
                         return Bitmap.createBitmap(result, 0, 0, result.getWidth(), result.getHeight(), matrix, true);
                     }
                 } else if (tile != null) {
@@ -1640,7 +1640,7 @@ public class SubsamplingScaleImageView extends View {
                 if (context != null && decoderFactory != null && subsamplingScaleImageView != null) {
                     bitmap = decoderFactory.make().decode(context, source);
                     Matrix matrix = new Matrix();
-                    matrix.preScale(horizontalFlip, verticalFlip);
+                    matrix.preScale(verticalFlip, horizontalFlip);
                     bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
                     return subsamplingScaleImageView.getExifOrientation(sourceUri);
                 }

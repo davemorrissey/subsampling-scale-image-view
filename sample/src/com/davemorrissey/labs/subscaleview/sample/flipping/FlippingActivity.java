@@ -19,13 +19,13 @@ public class FlippingActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.flipping_activity);
         final SubsamplingScaleImageView imageView = (SubsamplingScaleImageView) findViewById(R.id.flip_image);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
+        imageView.setImage(ImageSource.asset("card.png"));
 
         findViewById(R.id.horizontal_flip).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 imageView.setFlipping(SubsamplingScaleImageView.Flipping.HORIZONTAL);
-                imageView.setImage(ImageSource.asset("squirrel.jpg"));
+                imageView.setImage(ImageSource.asset("card.png"));
             }
         });
 
@@ -33,7 +33,7 @@ public class FlippingActivity extends Activity {
             @Override
             public void onClick(View view) {
                 imageView.setFlipping(SubsamplingScaleImageView.Flipping.VERTICAL);
-                imageView.setImage(ImageSource.asset("squirrel.jpg"));
+                imageView.setImage(ImageSource.asset("card.png"));
             }
         });
     }
