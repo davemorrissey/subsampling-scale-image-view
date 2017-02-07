@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
           package="com.davemorrissey.labs.subscaleview.sample"
-          android:versionCode="3"
-          android:versionName="3.0.0"
+          android:versionCode="4"
+          android:versionName="3.1.0"
           android:hardwareAccelerated="true">
-<uses-sdk android:minSdkVersion="11" android:targetSdkVersion="14"/>
+<uses-sdk android:minSdkVersion="11" android:targetSdkVersion="23"/>
+<uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
 <application android:label="Scale Image View Demo" android:theme="@style/demoTheme" android:icon="@drawable/launcher">
     <activity android:name=".MainActivity" android:label="Scale View Demo">
         <intent-filter>
