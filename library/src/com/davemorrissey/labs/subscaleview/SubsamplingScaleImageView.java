@@ -828,7 +828,7 @@ public class SubsamplingScaleImageView extends View {
                                 requestDisallowInterceptTouchEvent(false);
                             }
 
-                            if (!panEnabled) {
+                            if (!panEnabled || (vTranslate.x == vTranslateStart.x && dy <= 10)) {
                                 vTranslate.x = vTranslateStart.x;
                                 vTranslate.y = vTranslateStart.y;
                                 requestDisallowInterceptTouchEvent(false);
