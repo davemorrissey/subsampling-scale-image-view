@@ -9,21 +9,58 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:background="#333">
+        <ImageView
+                android:id="@+id/previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/buttonstate_transparent"
+                android:visibility="invisible"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:src="@drawable/previous"/>
+
+        <ImageView
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/buttonstate_transparent"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:src="@drawable/next"/>
 
         <TextView
                 android:id="@+id/note"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
+                android:layout_toLeftOf="@id/next"
+                android:layout_toRightOf="@id/previous"
+                android:layout_centerVertical="true"
                 android:padding="10dp"
                 android:textSize="14sp"
-                android:textColor="#FFFFFF"
-                android:text="This gallery has two images in a ViewPager. Swipe to move to the next image. If you're zoomed in on an image, you need to pan to the right of it, then swipe again to activate the pager."/>
+                android:textColor="#FFFFFF"/>
 
     </RelativeLayout>
 
     <android.support.v4.view.ViewPager
             xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/pager"
+            android:id="@+id/horizontal_pager"
+            android:visibility="gone"
+            android:layout_above="@id/text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    <com.davemorrissey.labs.subscaleview.sample.viewpager.VerticalViewPager
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/vertical_pager"
+            android:visibility="gone"
             android:layout_above="@id/text"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

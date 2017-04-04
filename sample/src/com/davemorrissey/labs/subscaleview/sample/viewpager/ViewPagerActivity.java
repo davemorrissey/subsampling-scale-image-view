@@ -21,17 +21,28 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import com.davemorrissey.labs.subscaleview.sample.R;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
 
-public class ViewPagerActivity extends FragmentActivity {
+import java.util.Arrays;
+import java.util.List;
+
+public class ViewPagerActivity extends FragmentActivity implements OnClickListener {
 
     private static final String[] IMAGES = { "ness.jpg", "squirrel.jpg" };
 
-    private ViewPager page;
+    private static final String BUNDLE_POSITION = "position";
+
+    private int position;
+
+    private List<Note> notes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,17 +50,53 @@ public class ViewPagerActivity extends FragmentActivity {
         setContentView(layout.view_pager);
         getActionBar().setTitle("View pager gallery");
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        PagerAdapter pagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        page = (ViewPager)findViewById(R.id.pager);
-        page.setAdapter(pagerAdapter);
+        findViewById(R.id.next).setOnClickListener(this);
+        findViewById(R.id.previous).setOnClickListener(this);
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_POSITION)) {
+            position = savedInstanceState.getInt(BUNDLE_POSITION);
+        }
+        notes = Arrays.asList(
+                new Note("Horizontal", "This gallery has two images in a ViewPager. Swipe to move to the next image. If you're zoomed in on an image, you need to pan to the right of it, then swipe again to activate the pager."),
+                new Note("Vertical", "Vertical view pagers are also supported. Swipe up to move to the next image. If you're zoomed in on an image, you need to pan to the bottom of it, then swipe again to activate the pager.")
+        );
+
+        updateNotes();
+
+        ViewPager horizontalPager = (ViewPager)findViewById(R.id.horizontal_pager);
+        horizontalPager.setAdapter(new ScreenSlidePagerAdapter(getSupportFragmentManager()));
+        ViewPager verticalPager = (ViewPager)findViewById(R.id.vertical_pager);
+        verticalPager.setAdapter(new ScreenSlidePagerAdapter(getSupportFragmentManager()));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(BUNDLE_POSITION, position);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == R.id.next) {
+            position++;
+            updateNotes();
+        } else if (view.getId() == R.id.previous) {
+            position--;
+            updateNotes();
+        } else if (view.getId() == R.id.imageView) {
+            Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        if (page.getCurrentItem() == 0) {
+        ViewPager viewPager = (ViewPager)findViewById(R.id.horizontal_pager);
+        if (position == 1) {
+            viewPager = (ViewPager)findViewById(R.id.vertical_pager);
+        }
+        if (viewPager.getCurrentItem() == 0) {
             super.onBackPressed();
         } else {
-            page.setCurrentItem(page.getCurrentItem() - 1);
+            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
         }
     }
 
@@ -77,5 +124,30 @@ public class ViewPagerActivity extends FragmentActivity {
         }
     }
 
+    private void updateNotes() {
+        if (position > notes.size() - 1) {
+            return;
+        }
+        if (position == 0) {
+            findViewById(R.id.horizontal_pager).setVisibility(View.VISIBLE);
+            findViewById(R.id.vertical_pager).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.horizontal_pager).setVisibility(View.GONE);
+            findViewById(R.id.vertical_pager).setVisibility(View.VISIBLE);
+        }
+        getActionBar().setSubtitle(notes.get(position).subtitle);
+        ((TextView)findViewById(R.id.note)).setText(notes.get(position).text);
+        findViewById(R.id.next).setVisibility(position >= notes.size() - 1 ? View.INVISIBLE : View.VISIBLE);
+        findViewById(R.id.previous).setVisibility(position <= 0 ? View.INVISIBLE : View.VISIBLE);
+    }
+
+    private static final class Note {
+        private final String text;
+        private final String subtitle;
+        private Note(String subtitle, String text) {
+            this.subtitle = subtitle;
+            this.text = text;
+        }
+    }
 
 }
