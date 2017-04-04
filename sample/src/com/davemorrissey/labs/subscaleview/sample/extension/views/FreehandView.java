@@ -25,6 +25,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
     private int strokeWidth;
 
     private List<PointF> sPoints;
+    private List<List<PointF>> pointHistory;
+    private Path vPath;
+    private Paint paint;
 
     public FreehandView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -52,7 +56,10 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
     private void initialise() {
         setOnTouchListener(this);
         float density = getResources().getDisplayMetrics().densityDpi;
-        strokeWidth = (int)(density/60f);
+        strokeWidth = (int) (density / 60f);
+        vPath = new Path();
+        pointHistory = new ArrayList<List<PointF>>();
+        paint = new Paint();
     }
 
     @Override
@@ -106,6 +113,8 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
                 invalidate();
+                savePointHistory();
+                sPoints = null;
                 drawing = false;
                 vPrevious = null;
                 vStart = null;
@@ -123,11 +132,25 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
             return;
         }
 
-        Paint paint = new Paint();
-        paint.setAntiAlias(true);
+        if (pointHistory.size() > 0) {
+            for (List<PointF> hPoints : pointHistory) {
+                vPath.rewind();
+                PointF vPrev = sourceToViewCoord(hPoints.get(0).x, hPoints.get(0).y);
+                vPath.moveTo(vPrev.x, vPrev.y);
+                for (int i = 1; i < hPoints.size(); i++) {
+                    PointF vPoint = sourceToViewCoord(hPoints.get(i).x, hPoints.get(i).y);
+                    vPath.quadTo(vPrev.x, vPrev.y, (vPoint.x + vPrev.x) / 2, (vPoint.y + vPrev.y) / 2);
+                    vPrev = vPoint;
+                }
+                setUpFirstPaintStyle();
+                canvas.drawPath(vPath, paint);
+                setUpSecondPaintStyle();
+                canvas.drawPath(vPath, paint);
+            }
+        }
 
         if (sPoints != null && sPoints.size() >= 2) {
-            Path vPath = new Path();
+            vPath.rewind();
             PointF vPrev = sourceToViewCoord(sPoints.get(0).x, sPoints.get(0).y);
             vPath.moveTo(vPrev.x, vPrev.y);
             for (int i = 1; i < sPoints.size(); i++) {
@@ -135,20 +158,34 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
                 vPath.quadTo(vPrev.x, vPrev.y, (vPoint.x + vPrev.x) / 2, (vPoint.y + vPrev.y) / 2);
                 vPrev = vPoint;
             }
-            paint.setStyle(Style.STROKE);
-            paint.setStrokeCap(Cap.ROUND);
-            paint.setStrokeWidth(strokeWidth * 2);
-            paint.setColor(Color.BLACK);
+            setUpFirstPaintStyle();
             canvas.drawPath(vPath, paint);
-            paint.setStrokeWidth(strokeWidth);
-            paint.setColor(Color.argb(255, 51, 181, 229));
+            setUpSecondPaintStyle();
             canvas.drawPath(vPath, paint);
         }
+    }
 
+    private void savePointHistory() {
+        if (sPoints != null && sPoints.size() >= 2) {
+            pointHistory.add(sPoints);
+        }
+    }
+
+    private void setUpFirstPaintStyle() {
+        paint.setAntiAlias(true);
+        paint.setStyle(Style.STROKE);
+        paint.setStrokeCap(Cap.ROUND);
+        paint.setStrokeWidth(strokeWidth * 2);
+        paint.setColor(Color.BLACK);
+    }
+
+    private void setUpSecondPaintStyle() {
+        paint.setStrokeWidth(strokeWidth);
+        paint.setColor(Color.argb(255, 51, 181, 229));
     }
 
     public void reset() {
-        this.sPoints = null;
+        this.pointHistory = new ArrayList<List<PointF>>();
         invalidate();
     }
 
