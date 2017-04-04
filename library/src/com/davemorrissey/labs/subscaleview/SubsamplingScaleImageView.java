@@ -817,17 +817,18 @@ public class SubsamplingScaleImageView extends View {
                             float lastY = vTranslate.y;
                             fitToBounds(true);
                             boolean atXEdge = lastX != vTranslate.x;
+                            boolean atYEdge = lastY != vTranslate.y;
                             boolean edgeXSwipe = atXEdge && dx > dy && !isPanning;
+                            boolean edgeYSwipe = atYEdge && dy > dx && !isPanning;
                             boolean yPan = lastY == vTranslate.y && dy > offset * 3;
-                            if (!edgeXSwipe && (!atXEdge || yPan || isPanning)) {
+                            if (!edgeXSwipe && !edgeYSwipe && (!atXEdge || !atYEdge || yPan || isPanning)) {
                                 isPanning = true;
-                            } else if (dx > offset) {
+                            } else if (dx > offset || dy > offset) {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0;
                                 handler.removeMessages(MESSAGE_LONG_CLICK);
                                 requestDisallowInterceptTouchEvent(false);
-                            }
-
+                            } 
                             if (!panEnabled) {
                                 vTranslate.x = vTranslateStart.x;
                                 vTranslate.y = vTranslateStart.y;
