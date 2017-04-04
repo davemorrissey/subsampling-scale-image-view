@@ -282,6 +282,7 @@ public class SubsamplingScaleImageView extends View {
     //The logical density of the display
     private float density;
 
+    private boolean resetScaleAndCenterAfterSizeChanged = false;
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -584,6 +585,8 @@ public class SubsamplingScaleImageView extends View {
             this.pendingScale = scale;
             this.sPendingCenter = sCenter;
         }
+
+        if (resetScaleAndCenterAfterSizeChanged) resetScaleAndCenter();
     }
 
     /**
@@ -2349,6 +2352,17 @@ public class SubsamplingScaleImageView extends View {
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         float averageDpi = (metrics.xdpi + metrics.ydpi)/2;
         setMinScale(averageDpi / dpi);
+    }
+
+    /**
+     * Sometimes it is inconvenient to reset the scale and center if the view's size changed.
+     * Furthermore, the incorrect timing of calling the method resetScaleAndCenter() will make
+     * no effect in specific situations.
+     *
+     * @param reset Whether to reset scale and center after the view's size changed.
+     */
+    public void setResetScaleAndCenterAfterSizeChanged(boolean reset) {
+        this.resetScaleAndCenterAfterSizeChanged = reset;
     }
 
     /**
