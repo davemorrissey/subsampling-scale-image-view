@@ -2519,14 +2519,14 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Returns true if double tap & swipe to zoom is enabled.
+     * Returns true if double tap &amp; swipe to zoom is enabled.
      */
     public final boolean isQuickScaleEnabled() {
         return quickScaleEnabled;
     }
 
     /**
-     * Enable or disable double tap & swipe to zoom.
+     * Enable or disable double tap &amp; swipe to zoom.
      */
     public final void setQuickScaleEnabled(boolean quickScaleEnabled) {
         this.quickScaleEnabled = quickScaleEnabled;

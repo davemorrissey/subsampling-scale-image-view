@@ -1,0 +1,105 @@
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+def isReleaseBuild() {
+    return version.contains("SNAPSHOT") == false
+}
+
+def getMavenRepositoryUrl() {
+    return hasProperty('repositoryUrl') ? property('repositoryUrl') : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+}
+
+def getMavenRepositoryUsername() {
+    return hasProperty('sonatypeUsername') ? property('sonatypeUsername') : ""
+}
+
+def getMavenRepositoryPassword() {
+    return hasProperty('sonatypePassword') ? property('sonatypePassword') : ""
+}
+
+afterEvaluate { project ->
+    task androidJavadoc(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += files(android.bootClasspath)
+    }
+
+    task androidJavadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from androidJavadoc.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+
+    android.libraryVariants.all { variant ->
+        def name = variant.name.capitalize()
+        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
+            from variant.javaCompile.destinationDir
+        }
+    }
+
+    artifacts {
+        archives androidJavadocJar
+        archives androidSourcesJar
+        archives jarRelease
+    }
+
+    signing {
+        required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+        sign configurations.archives
+    }
+
+    uploadArchives {
+        configuration = configurations.archives
+        repositories.mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
+
+            repository(url: getMavenRepositoryUrl()) {
+                authentication(
+                        userName: getMavenRepositoryUsername(),
+                        password: getMavenRepositoryPassword())
+            }
+
+            pom.project {
+                name 'SubsamplingScaleImageView'
+                packaging 'aar'
+                description 'Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.'
+                url 'https://github.com/davemorrissey/subsampling-scale-image-view'
+
+                scm {
+                    url 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+                    connection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+                    developerConnection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'davemorrissey'
+                        name 'Dave Morrissey'
+                    }
+                }
+            }
+        }
+    }
+
+    task installArchives(type: Upload) {
+        configuration = configurations.archives
+        repositories {
+            mavenDeployer {
+                repository url: "file://${System.properties['user.home']}/.m2/repository"
+            }
+        }
+    }
+}
