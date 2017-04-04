@@ -8,6 +8,10 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.txt'
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
