@@ -160,7 +160,7 @@ public class SubsamplingScaleImageView extends View {
     private boolean debug;
 
     // Image orientation setting
-    private int orientation = ORIENTATION_0;
+    private int orientation = ORIENTATION_USE_EXIF;
 
     // Max scale allowed (prevent infinite zoom)
     private float maxScale = 2F;
