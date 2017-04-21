@@ -2660,13 +2660,11 @@ public class SubsamplingScaleImageView extends View {
     }
 
     private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
-        if (onStateChangedListener != null) {
-            if (scale != oldScale) {
-                onStateChangedListener.onScaleChanged(scale, origin);
-            }
-            if (!vTranslate.equals(oldVTranslate)) {
-                onStateChangedListener.onCenterChanged(getCenter(), origin);
-            }
+        if (onStateChangedListener != null && scale != oldScale) {
+            onStateChangedListener.onScaleChanged(scale, origin);
+        }
+        if (onStateChangedListener != null && !vTranslate.equals(oldVTranslate)) {
+            onStateChangedListener.onCenterChanged(getCenter(), origin);
         }
     }
 
