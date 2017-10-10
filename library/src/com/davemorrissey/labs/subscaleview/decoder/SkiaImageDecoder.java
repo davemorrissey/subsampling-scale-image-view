@@ -24,12 +24,25 @@ public class SkiaImageDecoder implements ImageDecoder {
     private static final String ASSET_PREFIX = FILE_PREFIX + "/android_asset/";
     private static final String RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://";
 
+    private final Bitmap.Config bitmapConfig;
+
+    public SkiaImageDecoder() {
+        this(null);
+    }
+
+    public SkiaImageDecoder(Bitmap.Config bitmapConfig) {
+        if (bitmapConfig == null)
+            this.bitmapConfig = Bitmap.Config.RGB_565;
+        else
+            this.bitmapConfig = bitmapConfig;
+    }
+
     @Override
     public Bitmap decode(Context context, Uri uri) throws Exception {
         String uriString = uri.toString();
         BitmapFactory.Options options = new BitmapFactory.Options();
         Bitmap bitmap;
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        options.inPreferredConfig = bitmapConfig;
         if (uriString.startsWith(RESOURCE_PREFIX)) {
             Resources res;
             String packageName = uri.getAuthority();
