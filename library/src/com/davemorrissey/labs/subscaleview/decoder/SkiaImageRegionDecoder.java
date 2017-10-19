@@ -28,6 +28,19 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
     private static final String ASSET_PREFIX = FILE_PREFIX + "/android_asset/";
     private static final String RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://";
 
+    private final Bitmap.Config bitmapConfig;
+
+    public SkiaImageRegionDecoder() {
+        this(null);
+    }
+
+    public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
+        if (bitmapConfig == null)
+            this.bitmapConfig = Bitmap.Config.RGB_565;
+        else
+            this.bitmapConfig = bitmapConfig;
+    }
+
     @Override
     public Point init(Context context, Uri uri) throws Exception {
         String uriString = uri.toString();
@@ -80,7 +93,7 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
         synchronized (decoderLock) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = sampleSize;
-            options.inPreferredConfig = Config.RGB_565;
+            options.inPreferredConfig = bitmapConfig;
             Bitmap bitmap = decoder.decodeRegion(sRect, options);
             if (bitmap == null) {
                 throw new RuntimeException("Skia image decoder returned null bitmap - image format may not be supported");
