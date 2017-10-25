@@ -1,16 +1,63 @@
-apply plugin: 'com.android.library'
+apply plugin: 'android-library'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
-version = '3.7.0'
+version = '3.7.1'
+
+signing {
+    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+
+        pom.project {
+            name 'SubsamplingScaleImageView'
+            packaging 'aar'
+            description 'Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.'
+            url 'https://github.com/davemorrissey/subsampling-scale-image-view'
+
+            scm {
+                url 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+                connection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+                developerConnection 'scm:git@github.com:davemorrissey/subsampling-scale-image-view.git'
+            }
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'davemorrissey'
+                    name 'Dave Morrissey'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'com.android.support:support-annotations:25.0.0'
+}
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
-
-    defaultConfig {
-        consumerProguardFiles 'proguard-rules.txt'
-    }
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
 
     sourceSets {
         main {
@@ -36,10 +83,3 @@ android {
         release.setRoot('build-types/release')
     }
 }
-
-dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile 'com.android.support:support-annotations:25.3.0'
-}
-
-apply from: rootProject.file('release.gradle')
