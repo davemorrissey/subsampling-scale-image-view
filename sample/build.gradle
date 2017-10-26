@@ -9,8 +9,7 @@ allprojects {
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 26
 
     sourceSets {
         main {
@@ -38,10 +37,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile project(':library')
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'rapid.decoder:library:0.3.0'
-    compile 'rapid.decoder:jpeg-decoder:0.3.0'
-    compile 'rapid.decoder:png-decoder:0.3.0'
+    implementation project(':library')
+    implementation 'com.android.support:support-v4:26.1.0'
+    implementation 'rapid.decoder:library:0.3.0'
+    implementation 'rapid.decoder:jpeg-decoder:0.3.0'
+    implementation 'rapid.decoder:png-decoder:0.3.0'
 }
