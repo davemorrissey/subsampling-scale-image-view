@@ -1,47 +1,21 @@
 apply plugin: 'com.android.application'
 
-allprojects {
-    repositories {
-        maven {
-            url 'https://github.com/suckgamony/RapidDecoder/raw/master/repository'
-        }
-    }
-}
-
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 26
 
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['src']
-            aidl.srcDirs = ['src']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
-        }
-
-        // Move the tests to tests/java, tests/res, etc...
-        instrumentTest.setRoot('tests')
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
+    defaultConfig {
+        applicationId "com.davemorrissey.labs.subscaleview.sample"
+        minSdkVersion 14
+        targetSdkVersion 26
+        versionCode 4
+        versionName "3.1.0"
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile project(':library')
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'rapid.decoder:library:0.3.0'
-    compile 'rapid.decoder:jpeg-decoder:0.3.0'
-    compile 'rapid.decoder:png-decoder:0.3.0'
+    implementation project(':library')
+    implementation 'com.android.support:support-v4:26.1.0'
+    implementation 'rapid.decoder:library:0.3.0'
+    implementation 'rapid.decoder:jpeg-decoder:0.3.0'
+    implementation 'rapid.decoder:png-decoder:0.3.0'
 }

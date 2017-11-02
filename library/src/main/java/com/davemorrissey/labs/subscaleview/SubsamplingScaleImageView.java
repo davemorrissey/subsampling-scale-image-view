@@ -33,7 +33,6 @@ import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -1836,7 +1835,7 @@ public class SubsamplingScaleImageView extends View {
     }
 
     private void execute(AsyncTask<Void, Void, ?> asyncTask) {
-        if (parallelLoadingEnabled && VERSION.SDK_INT >= 11) {
+        if (parallelLoadingEnabled) {
             try {
                 Field executorField = AsyncTask.class.getField("THREAD_POOL_EXECUTOR");
                 Executor executor = (Executor)executorField.get(null);
@@ -1930,13 +1929,11 @@ public class SubsamplingScaleImageView extends View {
     private Point getMaxBitmapDimensions(Canvas canvas) {
         int maxWidth = 2048;
         int maxHeight = 2048;
-        if (VERSION.SDK_INT >= 14) {
-            try {
-                maxWidth = (Integer)Canvas.class.getMethod("getMaximumBitmapWidth").invoke(canvas);
-                maxHeight = (Integer)Canvas.class.getMethod("getMaximumBitmapHeight").invoke(canvas);
-            } catch (Exception e) {
-                // Return default
-            }
+        try {
+            maxWidth = (Integer)Canvas.class.getMethod("getMaximumBitmapWidth").invoke(canvas);
+            maxHeight = (Integer)Canvas.class.getMethod("getMaximumBitmapHeight").invoke(canvas);
+        } catch (Exception e) {
+            // Return default
         }
         return new Point(Math.min(maxWidth, maxTileWidth), Math.min(maxHeight, maxTileHeight));
     }
