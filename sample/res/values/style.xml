@@ -1,13 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="demoTheme" parent="@android:style/Theme.Holo">
-        <item name="android:actionBarStyle">@style/demoActionBar</item>
+    <style name="sampleTheme" parent="@android:style/Theme.Holo">
+        <item name="android:actionBarStyle">@style/sampleActionBar</item>
         <item name="android:windowBackground">@color/background</item>
     </style>
 
-    <style name="demoActionBar" parent="@android:style/Widget.Holo.ActionBar">
+    <style name="sampleActionBar" parent="@android:style/Widget.Holo.ActionBar">
         <item name="android:background">@color/actionBarBackground</item>
+    </style>
+
+    <style name="indexDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1px</item>
+        <item name="android:background">#333333</item>
+    </style>
+
+    <style name="indexLink">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/buttonstate_transparent</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="fill">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="mainPanel">
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_above">@+id/footer</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="footer">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:background">#333</item>
+    </style>
+
+    <style name="footerNote">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+
+    <style name="footerButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:background">@drawable/buttonstate_transparent</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:src">@drawable/previous</item>
+    </style>
+
+    <style name="previousButton" parent="@style/footerButton">
+        <item name="android:layout_alignParentStart">true</item>
+        <item name="android:src">@drawable/previous</item>
+    </style>
+
+    <style name="nextButton" parent="@style/footerButton">
+        <item name="android:layout_alignParentEnd">true</item>
+        <item name="android:src">@drawable/next</item>
     </style>
 
 </resources>

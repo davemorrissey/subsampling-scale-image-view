@@ -50,7 +50,7 @@ public class ViewPagerFragment extends Fragment {
             }
         }
         if (asset != null) {
-            SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+            SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
             imageView.setImage(ImageSource.asset(asset));
         }
 

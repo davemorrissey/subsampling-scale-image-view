@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
@@ -34,22 +33,15 @@ public class ImageDisplayRegionFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.imagedisplay_region_fragment, container, false);
-        final SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
+        final SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
         imageView.setOrientation(SubsamplingScaleImageView.ORIENTATION_90);
         imageView.setImage(ImageSource.asset("card.png").region(new Rect(0, 0, 3778, 2834)));
-        rootView.findViewById(id.previous).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ImageDisplayActivity)getActivity()).previous();
-            }
+        rootView.findViewById(id.previous).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { ((ImageDisplayActivity) ImageDisplayRegionFragment.this.getActivity()).previous(); }
         });
-        rootView.findViewById(id.rotate).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                imageView.setOrientation((imageView.getOrientation() + 90) % 360);
-            }
+        rootView.findViewById(id.rotate).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { imageView.setOrientation((imageView.getOrientation() + 90) % 360); }
         });
-
         return rootView;
     }
 

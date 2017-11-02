@@ -16,98 +16,37 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview.sample.basicfeatures;
 
-import android.app.Activity;
 import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.TextView;
+import android.support.annotation.Nullable;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.davemorrissey.labs.subscaleview.sample.AbstractPagesActivity;
+import com.davemorrissey.labs.subscaleview.sample.Page;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
-import com.davemorrissey.labs.subscaleview.sample.R.layout;
-import com.davemorrissey.labs.subscaleview.sample.imagedisplay.decoders.RapidImageRegionDecoder;
 
 import java.util.Arrays;
-import java.util.List;
 
-public class BasicFeaturesActivity extends Activity implements OnClickListener {
+import static com.davemorrissey.labs.subscaleview.sample.R.string.*;
+import static com.davemorrissey.labs.subscaleview.sample.R.layout.*;
 
-    private static final String BUNDLE_POSITION = "position";
+public class BasicFeaturesActivity extends AbstractPagesActivity {
 
-    private int position;
-
-    private List<Note> notes;
+    public BasicFeaturesActivity() {
+        super(basic_title, pages_activity, Arrays.asList(
+                new Page(basic_p1_subtitle, basic_p1_text),
+                new Page(basic_p2_subtitle, basic_p2_text),
+                new Page(basic_p3_subtitle, basic_p3_text),
+                new Page(basic_p4_subtitle, basic_p4_text),
+                new Page(basic_p5_subtitle, basic_p5_text)
+        ));
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(layout.notes_activity);
-        getActionBar().setTitle("Basic features");
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        findViewById(id.next).setOnClickListener(this);
-        findViewById(id.previous).setOnClickListener(this);
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_POSITION)) {
-            position = savedInstanceState.getInt(BUNDLE_POSITION);
-        }
-        notes = Arrays.asList(
-                new Note("Pinch to zoom", "Use a two finger pinch to zoom in and out. The zoom is centred on the pinch gesture, and you can pan at the same time."),
-                new Note("Quick scale", "Double tap and swipe up or down to zoom in or out. The zoom is centred where you tapped."),
-                new Note("Drag", "Use one finger to drag the image around."),
-                new Note("Fling", "If you drag quickly and let go, fling momentum keeps the image moving."),
-                new Note("Double tap", "Double tap the image to zoom in to that spot. Double tap again to zoom out.")
-        );
-
-        initialiseImage();
-        updateNotes();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(BUNDLE_POSITION, position);
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view.getId() == id.next) {
-            position++;
-            updateNotes();
-        } else if (view.getId() == id.previous) {
-            position--;
-            updateNotes();
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        finish();
-        return true;
-    }
-
-    private void initialiseImage() {
-        SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
-    }
-
-    private void updateNotes() {
-        if (position > notes.size() - 1) {
-            return;
-        }
-        getActionBar().setSubtitle(notes.get(position).subtitle);
-        ((TextView)findViewById(id.note)).setText(notes.get(position).text);
-        findViewById(id.next).setVisibility(position >= notes.size() - 1 ? View.INVISIBLE : View.VISIBLE);
-        findViewById(id.previous).setVisibility(position <= 0 ? View.INVISIBLE : View.VISIBLE);
-    }
-
-    private static final class Note {
-        private final String text;
-        private final String subtitle;
-        private Note(String subtitle, String text) {
-            this.subtitle = subtitle;
-            this.text = text;
-        }
+        SubsamplingScaleImageView view = findViewById(id.imageView);
+        view.setImage(ImageSource.asset("pony.jpg"));
     }
 
 }

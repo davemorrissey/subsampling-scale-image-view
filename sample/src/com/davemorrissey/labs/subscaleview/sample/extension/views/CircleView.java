@@ -27,6 +27,10 @@ public class CircleView extends SubsamplingScaleImageView {
 
     private int strokeWidth;
 
+    private final PointF sCenter = new PointF();
+    private final PointF vCenter = new PointF();
+    private final Paint paint = new Paint();
+
     public CircleView(Context context) {
         this(context, null);
     }
@@ -50,11 +54,10 @@ public class CircleView extends SubsamplingScaleImageView {
             return;
         }
 
-        PointF sCenter = new PointF(getSWidth()/2, getSHeight()/2);
-        PointF vCenter = sourceToViewCoord(sCenter);
+        sCenter.set(getSWidth()/2, getSHeight()/2);
+        sourceToViewCoord(sCenter, vCenter);
         float radius = (getScale() * getSWidth()) * 0.25f;
 
-        Paint paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStyle(Style.STROKE);
         paint.setStrokeCap(Cap.ROUND);

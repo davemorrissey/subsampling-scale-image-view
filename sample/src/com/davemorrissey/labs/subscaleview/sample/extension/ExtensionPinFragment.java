@@ -21,11 +21,9 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.R.layout;
 import com.davemorrissey.labs.subscaleview.sample.extension.views.PinView;
@@ -35,13 +33,10 @@ public class ExtensionPinFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.extension_pin_fragment, container, false);
-        rootView.findViewById(id.next).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ExtensionActivity)getActivity()).next();
-            }
+        rootView.findViewById(id.next).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { ((ExtensionActivity) ExtensionPinFragment.this.getActivity()).next(); }
         });
-        PinView imageView = (PinView)rootView.findViewById(id.imageView);
+        PinView imageView = rootView.findViewById(id.imageView);
         imageView.setImage(ImageSource.asset("squirrel.jpg"));
         imageView.setPin(new PointF(1718f, 581f));
         return rootView;

@@ -32,6 +32,10 @@ import java.util.List;
 
 public class FreehandView extends SubsamplingScaleImageView implements OnTouchListener {
 
+    private final Paint paint = new Paint();
+    private final Path vPath = new Path();
+    private final PointF vPoint = new PointF();
+    private PointF vPrev = new PointF();
     private PointF vPrevious;
     private PointF vStart;
     private boolean drawing = false;
@@ -67,16 +71,15 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
         }
         boolean consumed = false;
         int touchCount = event.getPointerCount();
-        switch (event.getAction()) {
+        switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_1_DOWN:
-                vStart = new PointF(event.getX(), event.getY());
-                vPrevious = new PointF(event.getX(), event.getY());
-                break;
-            case MotionEvent.ACTION_POINTER_2_DOWN:
-                // Abort any current drawing, user is zooming
-                vStart = null;
-                vPrevious = null;
+                if (event.getActionIndex() == 0) {
+                    vStart = new PointF(event.getX(), event.getY());
+                    vPrevious = new PointF(event.getX(), event.getY());
+                } else {
+                    vStart = null;
+                    vPrevious = null;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 PointF sCurrentF = viewToSourceCoord(event.getX(), event.getY());
@@ -88,7 +91,7 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
                     float vDY = Math.abs(event.getY() - vPrevious.y);
                     if (vDX >= strokeWidth * 5 || vDY >= strokeWidth * 5) {
                         if (sPoints == null) {
-                            sPoints = new ArrayList<PointF>();
+                            sPoints = new ArrayList<>();
                             sPoints.add(sStart);
                         }
                         sPoints.add(sCurrent);
@@ -123,15 +126,14 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
             return;
         }
 
-        Paint paint = new Paint();
         paint.setAntiAlias(true);
 
         if (sPoints != null && sPoints.size() >= 2) {
-            Path vPath = new Path();
-            PointF vPrev = sourceToViewCoord(sPoints.get(0).x, sPoints.get(0).y);
+            vPath.reset();
+            sourceToViewCoord(sPoints.get(0).x, sPoints.get(0).y, vPrev);
             vPath.moveTo(vPrev.x, vPrev.y);
             for (int i = 1; i < sPoints.size(); i++) {
-                PointF vPoint = sourceToViewCoord(sPoints.get(i).x, sPoints.get(i).y);
+                sourceToViewCoord(sPoints.get(i).x, sPoints.get(i).y, vPoint);
                 vPath.quadTo(vPrev.x, vPrev.y, (vPoint.x + vPrev.x) / 2, (vPoint.y + vPrev.y) / 2);
                 vPrev = vPoint;
             }

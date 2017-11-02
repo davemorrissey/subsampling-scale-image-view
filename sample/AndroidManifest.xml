@@ -5,11 +5,11 @@
           android:versionCode="4"
           android:versionName="3.1.0"
           android:hardwareAccelerated="true">
-<uses-sdk android:minSdkVersion="11" android:targetSdkVersion="23"/>
+<uses-sdk android:minSdkVersion="17" android:targetSdkVersion="26"/>
 <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
-<application android:label="Scale Image View Demo" android:theme="@style/demoTheme" android:icon="@drawable/launcher">
+<application android:label="@string/app.name" android:theme="@style/sampleTheme" android:icon="@drawable/launcher" android:allowBackup="false">
     <activity android:name=".MainActivity" android:label="Scale View Demo">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>

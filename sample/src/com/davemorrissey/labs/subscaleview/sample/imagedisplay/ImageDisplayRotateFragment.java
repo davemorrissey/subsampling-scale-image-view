@@ -20,7 +20,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
@@ -30,33 +29,21 @@ import com.davemorrissey.labs.subscaleview.sample.R.layout;
 
 public class ImageDisplayRotateFragment extends Fragment {
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.imagedisplay_rotate_fragment, container, false);
-        final SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
+        final SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
+        imageView.setImage(ImageSource.asset("eagle.jpg"));
         imageView.setOrientation(90);
-        rootView.findViewById(id.previous).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ImageDisplayActivity)getActivity()).previous();
-            }
+        rootView.findViewById(id.previous).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { ((ImageDisplayActivity) ImageDisplayRotateFragment.this.getActivity()).previous(); }
         });
-        rootView.findViewById(id.next).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ImageDisplayActivity)getActivity()).next();
-            }
+        rootView.findViewById(id.next).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { ((ImageDisplayActivity) ImageDisplayRotateFragment.this.getActivity()).next(); }
         });
-        rootView.findViewById(id.rotate).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                imageView.setOrientation((imageView.getOrientation() + 90) % 360);
-            }
+        rootView.findViewById(id.rotate).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { imageView.setOrientation((imageView.getOrientation() + 90) % 360); }
         });
-
         return rootView;
     }
 

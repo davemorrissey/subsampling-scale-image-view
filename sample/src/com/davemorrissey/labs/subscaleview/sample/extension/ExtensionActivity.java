@@ -16,88 +16,51 @@ limitations under the License.
 
 package com.davemorrissey.labs.subscaleview.sample.extension;
 
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.MenuItem;
-import android.widget.Toast;
+
+import com.davemorrissey.labs.subscaleview.sample.AbstractFragmentsActivity;
+import com.davemorrissey.labs.subscaleview.sample.Page;
 import com.davemorrissey.labs.subscaleview.sample.R.id;
-import com.davemorrissey.labs.subscaleview.sample.R.layout;
+import com.davemorrissey.labs.subscaleview.sample.imagedisplay.ImageDisplayActivity;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class ExtensionActivity extends FragmentActivity {
+import static com.davemorrissey.labs.subscaleview.sample.R.layout.fragments_activity;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p1_subtitle;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p1_text;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p2_subtitle;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p2_text;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p3_subtitle;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_p3_text;
+import static com.davemorrissey.labs.subscaleview.sample.R.string.extension_title;
 
-    private static final String BUNDLE_POSITION = "position";
+public class ExtensionActivity extends AbstractFragmentsActivity {
 
-    private int position;
-
-    private List<Page> pages;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(layout.extension_activity);
-        getActionBar().setTitle("Extension");
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_POSITION)) {
-            position = savedInstanceState.getInt(BUNDLE_POSITION);
-        }
-        pages = Arrays.asList(
-                new Page("Location pin", ExtensionPinFragment.class),
-                new Page("Overlaid circle", ExtensionCircleFragment.class),
-                new Page("Freehand drawing", ExtensionFreehandFragment.class)
-        );
-
-        updatePage();
+    private static final List<Class<? extends Fragment>> FRAGMENTS = Arrays.asList(
+            ExtensionPinFragment.class,
+            ExtensionCircleFragment.class,
+            ExtensionFreehandFragment.class
+    );
+    
+    public ExtensionActivity() {
+        super(extension_title, fragments_activity, Arrays.asList(
+                new Page(extension_p1_subtitle, extension_p1_text),
+                new Page(extension_p2_subtitle, extension_p2_text),
+                new Page(extension_p3_subtitle, extension_p3_text)
+        ));
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(BUNDLE_POSITION, position);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        finish();
-        return true;
-    }
-
-    public void next() {
-        position++;
-        updatePage();
-    }
-
-    public void previous() {
-        position--;
-        updatePage();
-    }
-
-    private void updatePage() {
-        if (position > pages.size() - 1) {
-            return;
-        }
-        getActionBar().setSubtitle(pages.get(position).subtitle);
+    protected void onPageChanged(int page) {
         try {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(id.frame, (Fragment)pages.get(position).clazz.newInstance())
+                    .replace(id.frame, FRAGMENTS.get(page).newInstance())
                     .commit();
         } catch (Exception e) {
-            Log.e("something", "Failed to load fragment", e);
-            Toast.makeText(this, "Whoops, couldn't load the fragment!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private static final class Page {
-        private final String subtitle;
-        private final Class<?> clazz;
-        private Page(String subtitle, Class<?> clazz) {
-            this.subtitle = subtitle;
-            this.clazz = clazz;
+            Log.e(ImageDisplayActivity.class.getName(), "Failed to load fragment", e);
         }
     }
 

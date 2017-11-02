@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app.name">Scale Image View Demo</string>
+
+    <string name="main.title">Subsampling Scale Image View</string>
+
+    <string name="main.attribution">by Dave Morrissey</string>
+    <string name="main.avatar">Avatar</string>
+    <string name="main.viewongithub">View on GitHub</string>
+
+    <string name="button.animate">Animate</string>
+    <string name="button.next">Next</string>
+    <string name="button.previous">Previous</string>
+    <string name="button.rotate">Rotate</string>
+    <string name="button.reset">Reset</string>
+
+    <string name="basic.link">Basic features</string>
+    <string name="basic.title">Basic features</string>
+    <string name="basic.p1.subtitle">Pinch to zoom</string>
+    <string name="basic.p1.text">
+        Use a two finger pinch to zoom in and out. The zoom is centred on the pinch gesture, and you can pan at the same time.
+    </string>
+    <string name="basic.p2.subtitle">Quick scale</string>
+    <string name="basic.p2.text">
+        Double tap and swipe up or down to zoom in or out. The zoom is centred where you tapped.
+    </string>
+    <string name="basic.p3.subtitle">Drag</string>
+    <string name="basic.p3.text">Use one finger to drag the image around.</string>
+    <string name="basic.p4.subtitle">Fling</string>
+    <string name="basic.p4.text">
+        If you drag quickly and let go, fling momentum keeps the image moving.
+    </string>
+    <string name="basic.p5.subtitle">Double tap</string>
+    <string name="basic.p5.text">
+        Double tap the image to zoom in to that spot. Double tap again to zoom out.
+    </string>
+
+    <string name="display.link">Image display</string>
+    <string name="display.title">Image display</string>
+    <string name="display.p1.subtitle">Large images</string>
+    <string name="display.p1.text">
+        This image is 7,557 x 5,669 pixels. On most devices it will be subsampled, and higher quality tiles are loaded as you zoom in.
+    </string>
+    <string name="display.p2.subtitle">Rotation</string>
+    <string name="display.p2.text">
+        This image has been rotated 90 degrees. Tap the button to rotate it. EXIF rotation is supported for external files.
+    </string>
+    <string name="display.p3.subtitle">Display region</string>
+    <string name="display.p3.text">Set the region to display instead of the whole image.</string>
+
+    <string name="event.link">Event handling</string>
+    <string name="event.title">Event handling</string>
+    <string name="event.p1.subtitle">Simple events</string>
+    <string name="event.p1.text">
+        Touch handling by the image view doesn\'t prevent normal events from working.
+    </string>
+    <string name="event.p2.subtitle">OnClickListener</string>
+    <string name="event.p2.text">
+        This view has an OnClickListener. Tap once to activate the click.
+    </string>
+    <string name="event.p3.subtitle">OnLongClickListener</string>
+    <string name="event.p3.text">
+        This view has an OnLongClickListener. Press and hold to activate it.
+    </string>
+
+    <string name="advancedevent.link">Advanced event handling</string>
+    <string name="advancedevent.title">Advanced event handling</string>
+    <string name="advancedevent.p1.subtitle">Overriding gestures</string>
+    <string name="advancedevent.p1.text">Some gestures can be overridden with your own
+        GestureDetector without affecting the image view. This allows you to get the coordinates of
+        the event.
+    </string>
+    <string name="advancedevent.p2.subtitle">onSingleTapConfirmed</string>
+    <string name="advancedevent.p2.text">onSingleTapConfirmed has been overridden. Tap the image to
+        see coordinates.
+    </string>
+    <string name="advancedevent.p3.subtitle">onDoubleTap</string>
+    <string name="advancedevent.p3.text">onDoubleTap has been overridden. Tap the image to see
+        coordinates. This overrides the default zoom in behaviour.
+    </string>
+    <string name="advancedevent.p4.subtitle">onLongPress</string>
+    <string name="advancedevent.p4.text">onLongPress has been overridden. Press and hold the image
+        to see coordinates.
+    </string>
+    <string name="advancedevent.p5.subtitle">Other events</string>
+    <string name="advancedevent.p5.text">You can override any event you want, but customising swipe,
+        fling and zoom gestures will stop the view working normally.
+    </string>
+
+
+    <string name="pager.link">View pager galleries</string>
+    <string name="pager.title">View pager gallery</string>
+    <string name="pager.p1.subtitle">Horizontal</string>
+    <string name="pager.p1.text">
+        This gallery has two images in a ViewPager. Swipe to move to the
+        next image. If you\'re zoomed in on an image, you need to pan to the right of it, then swipe
+        again to activate the pager.
+    </string>
+    <string name="pager.p2.subtitle">Vertical</string>
+    <string name="pager.p2.text">
+        Vertical view pagers are also supported. Swipe up to move to the
+        next image. If you\'re zoomed in on an image, you need to pan to the bottom of it, then
+        swipe again to activate the pager.
+    </string>
+
+    <string name="animation.link">Animation</string>
+    <string name="animation.title">Animation</string>
+    <string name="animation.p1.subtitle">A demo</string>
+    <string name="animation.p1.text">
+        Tap the play button. The image will scale and zoom to a random point, shown by a marker.
+    </string>
+    <string name="animation.p2.subtitle">Limited pan</string>
+    <string name="animation.p2.text">
+        If the target point is near the edge of the image, it will be moved as near to the center as possible.
+    </string>
+    <string name="animation.p3.subtitle">Unlimited pan</string>
+    <string name="animation.p3.text">
+        With unlimited or center-limited pan, the target point can always be animated to the center.
+    </string>
+    <string name="animation.p4.subtitle">Customisation</string>
+    <string name="animation.p4.text">
+        Duration and easing are configurable. You can also make animations non-interruptible.
+    </string>
+
+    <string name="extension.link">Extension</string>
+    <string name="extension.title">Extension</string>
+    <string name="extension.p1.subtitle">Location pin</string>
+    <string name="extension.p1.text">
+        This view class extends the image view, and adds a pin anchored to a point on the image.
+    </string>
+    <string name="extension.p2.subtitle">Overlaid circle</string>
+    <string name="extension.p2.text">
+        A slightly more advanced example, this shows a circle that will
+        move and scale with the image. (Due to a limitation in Android, this circle may disappear
+        when it\'s larger than 2048px.)
+    </string>
+    <string name="extension.p3.subtitle">Freehand drawing</string>
+    <string name="extension.p3.text">
+        This subclass adds event detection. Draw a freehand line; it
+        will move with the image. (Due to a limitation in Android, your drawing may disappear when
+        it\'s larger than 2048px.)
+    </string>
+
+    <string name="configuration.link">Configuration</string>
+    <string name="configuration.title">Configuration</string>
+    <string name="configuration.p1.subtitle">Maximum scale</string>
+    <string name="configuration.p1.text">
+        The maximum scale has been set to 50dpi. You can zoom in until the image is very pixellated.
+    </string>
+    <string name="configuration.p2.subtitle">Minimum tile DPI</string>
+    <string name="configuration.p2.text">
+        The minimum tile DPI has been set to 50dpi, to reduce
+        memory usage. The next layer of tiles will not be loaded until the image is very pixellated.
+    </string>
+    <string name="configuration.p3.subtitle">Pan disabled</string>
+    <string name="configuration.p3.text">
+        Dragging has been disabled. You can only zoom in to the centre point.
+    </string>
+    <string name="configuration.p4.subtitle">Zoom disabled</string>
+    <string name="configuration.p4.text">
+        Zooming has been disabled. You can drag the image around.
+    </string>
+    <string name="configuration.p5.subtitle">Double tap style</string>
+    <string name="configuration.p5.text">
+        On double tap, the tapped point is now zoomed to the center of the screen instead of remaining in the same place.
+    </string>
+    <string name="configuration.p6.subtitle">Double tap style</string>
+    <string name="configuration.p6.text">On double tap, the zoom now happens immediately.</string>
+    <string name="configuration.p7.subtitle">Double tap scale</string>
+    <string name="configuration.p7.text">The double tap zoom scale has been set to 240dpi.</string>
+    <string name="configuration.p8.subtitle">Pan limit center</string>
+    <string name="configuration.p8.text">
+        The pan limit has been changed to PAN_LIMIT_CENTER. Panning stops when a corner reaches the centre of the screen.
+    </string>
+    <string name="configuration.p9.subtitle">Pan limit outside</string>
+    <string name="configuration.p9.text">
+        The pan limit has been changed to PAN_LIMIT_OUTSIDE. Panning stops when the image is just off screen.
+    </string>
+    <string name="configuration.p10.subtitle">Debug</string>
+    <string name="configuration.p10.text">
+        Debug has been enabled. This shows the tile boundaries and sizes.
+    </string>
+
+</resources>

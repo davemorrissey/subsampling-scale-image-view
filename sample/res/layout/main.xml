@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" style="@style/fill">
+
     <LinearLayout android:orientation="vertical"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content">
@@ -14,130 +13,24 @@
                 android:layout_marginBottom="10dp"
                 android:orientation="vertical">
 
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/basicFeatures" android:text="@string/basic.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/imageDisplay" android:text="@string/display.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/eventHandling" android:text="@string/event.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/advancedEventHandling" android:text="@string/advancedevent.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/viewPagerGalleries" android:text="@string/pager.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/animation" android:text="@string/animation.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/extension" android:text="@string/extension.link"/>
+            <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/configuration" android:text="@string/configuration.link"/>
+            <View style="@style/indexDivider"/>
 
-            <TextView
-                    android:id="@+id/basicFeatures"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Basic features"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/imageDisplay"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Image display"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/eventHandling"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Event handling"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/advancedEventHandling"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Advanced event handling"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/viewPagerGalleries"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="View pager galleries"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/animation"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Animation"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/extension"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Extension"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
-
-            <TextView
-                    android:id="@+id/configuration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/buttonstate_transparent"
-                    android:gravity="center_horizontal"
-                    android:padding="10dp"
-                    android:textSize="18sp"
-                    android:text="Configuration"/>
-
-            <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#333333"/>
         </LinearLayout>
 
         <LinearLayout
@@ -153,7 +46,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:src="@drawable/daffy"/>
+                    android:src="@drawable/daffy"
+                    android:contentDescription="@string/main.avatar"/>
 
             <TextView
                     android:layout_width="wrap_content"
@@ -162,7 +56,7 @@
                     android:gravity="center_horizontal"
                     android:textSize="13sp"
                     android:textColor="#777777"
-                    android:text="by Dave Morrissey"/>
+                    android:text="@string/main.attribution"/>
 
         </LinearLayout>
 
@@ -175,7 +69,7 @@
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:textSize="16sp"
-                android:text="View on GitHub"/>
+                android:text="@string/main.viewongithub"/>
 
     </LinearLayout>
 </ScrollView>

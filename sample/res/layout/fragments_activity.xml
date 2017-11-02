@@ -1,0 +1,5 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/fill">
+
+    <FrameLayout android:id="@+id/frame" style="@style/fill"/>
+
+</RelativeLayout>

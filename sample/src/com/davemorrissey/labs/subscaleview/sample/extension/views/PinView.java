@@ -25,6 +25,8 @@ import com.davemorrissey.labs.subscaleview.sample.R.drawable;
 
 public class PinView extends SubsamplingScaleImageView {
 
+    private final Paint paint = new Paint();
+    private final PointF vPin = new PointF();
     private PointF sPin;
     private Bitmap pin;
 
@@ -41,10 +43,6 @@ public class PinView extends SubsamplingScaleImageView {
         this.sPin = sPin;
         initialise();
         invalidate();
-    }
-
-    public PointF getPin() {
-        return sPin;
     }
 
     private void initialise() {
@@ -64,11 +62,10 @@ public class PinView extends SubsamplingScaleImageView {
             return;
         }
 
-        Paint paint = new Paint();
         paint.setAntiAlias(true);
 
         if (sPin != null && pin != null) {
-            PointF vPin = sourceToViewCoord(sPin);
+            sourceToViewCoord(sPin, vPin);
             float vX = vPin.x - (pin.getWidth()/2);
             float vY = vPin.y - pin.getHeight();
             canvas.drawBitmap(pin, vX, vY, paint);
