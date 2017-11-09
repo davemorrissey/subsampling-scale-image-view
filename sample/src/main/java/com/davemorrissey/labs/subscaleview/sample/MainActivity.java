@@ -25,6 +25,7 @@ import android.view.View;
 
 import com.davemorrissey.labs.subscaleview.sample.R.id;
 import com.davemorrissey.labs.subscaleview.sample.animation.AnimationActivity;
+import com.davemorrissey.labs.subscaleview.sample.autozoom.AutoZoomActivity;
 import com.davemorrissey.labs.subscaleview.sample.basicfeatures.BasicFeaturesActivity;
 import com.davemorrissey.labs.subscaleview.sample.configuration.ConfigurationActivity;
 import com.davemorrissey.labs.subscaleview.sample.eventhandling.EventHandlingActivity;
@@ -51,6 +52,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(id.animation).setOnClickListener(this);
         findViewById(id.extension).setOnClickListener(this);
         findViewById(id.configuration).setOnClickListener(this);
+        findViewById(id.autozoom).setOnClickListener(this);
         findViewById(id.github).setOnClickListener(this);
         findViewById(id.self).setOnClickListener(this);
     }
@@ -66,6 +68,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case id.animation: startActivity(AnimationActivity.class); break;
             case id.extension: startActivity(ExtensionActivity.class); break;
             case id.configuration: startActivity(ConfigurationActivity.class); break;
+            case id.autozoom: startActivity(AutoZoomActivity.class); break;
             case id.github: openGitHub(); break;
             case id.self: openSelf(); break;
         }
