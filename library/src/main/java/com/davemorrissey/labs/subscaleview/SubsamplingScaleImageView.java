@@ -1529,6 +1529,10 @@ public class SubsamplingScaleImageView extends View {
                     int sHeight = dimensions.y;
                     int exifOrientation = view.getExifOrientation(context, sourceUri);
                     if (view.sRegion != null) {
+                        view.sRegion.left = Math.max(0, view.sRegion.left);
+                        view.sRegion.top = Math.max(0, view.sRegion.top);
+                        view.sRegion.right = Math.min(sWidth, view.sRegion.right);
+                        view.sRegion.bottom = Math.min(sHeight, view.sRegion.bottom);
                         sWidth = view.sRegion.width();
                         sHeight = view.sRegion.height();
                     }
@@ -2015,6 +2019,50 @@ public class SubsamplingScaleImageView extends View {
     private float viewToSourceY(float vy) {
         if (vTranslate == null) { return Float.NaN; }
         return (vy - vTranslate.y)/scale;
+    }
+
+    /**
+     * Converts a rectangle within the view to the corresponding rectangle from the source file, taking
+     * into account the current scale, translation, orientation and clipped region. This can be used
+     * to decode a bitmap from the source file.
+     *
+     * This method will only work when the image has fully initialised, after {@link #isReady()} returns
+     * true. It is not guaranteed to work with preloaded bitmaps.
+     *
+     * The result is written to the fRect argument. Re-use a single instance for efficiency.
+     */
+    public void viewToFileRect(Rect vRect, Rect fRect) {
+        if (vTranslate == null || !readySent) {
+            return;
+        }
+        fRect.set(
+                (int)viewToSourceX(vRect.left),
+                (int)viewToSourceY(vRect.top),
+                (int)viewToSourceX(vRect.right),
+                (int)viewToSourceY(vRect.bottom));
+        fileSRect(fRect, fRect);
+        fRect.set(
+                Math.max(0, fRect.left),
+                Math.max(0, fRect.top),
+                Math.min(sWidth, fRect.right),
+                Math.min(sHeight, fRect.bottom)
+        );
+        if (sRegion != null) {
+            fRect.offset(sRegion.left, sRegion.top);
+        }
+    }
+
+    /**
+     * Find the area of the source file that is currently visible on screen, taking into account the
+     * current scale, translation, orientation and clipped region. This is a convenience method; see
+     * {@link #viewToFileRect(Rect, Rect)}.
+     */
+    public void visibleFileRect(Rect fRect) {
+        if (vTranslate == null || !readySent) {
+            return;
+        }
+        fRect.set(0, 0, getWidth(), getHeight());
+        viewToFileRect(fRect, fRect);
     }
 
     /**
