@@ -266,7 +266,8 @@ public class SubsamplingScaleImageView extends View {
 
     // Paint objects created once and reused for efficiency
     private Paint bitmapPaint;
-    private Paint debugPaint;
+    private Paint debugTextPaint;
+    private Paint debugLinePaint;
     private Paint tileBgPaint;
 
     // Volatile fields used to reduce object creation
@@ -1039,13 +1040,13 @@ public class SubsamplingScaleImageView extends View {
                             matrix.setPolyToPoly(srcArray, 0, dstArray, 0, 4);
                             canvas.drawBitmap(tile.bitmap, matrix, bitmapPaint);
                             if (debug) {
-                                canvas.drawRect(tile.vRect, debugPaint);
+                                canvas.drawRect(tile.vRect, debugLinePaint);
                             }
                         } else if (tile.loading && debug) {
-                            canvas.drawText("LOADING", tile.vRect.left + 5, tile.vRect.top + 35, debugPaint);
+                            canvas.drawText("LOADING", tile.vRect.left + px(5), tile.vRect.top + px(35), debugTextPaint);
                         }
                         if (tile.visible && debug) {
-                            canvas.drawText("ISS " + tile.sampleSize + " RECT " + tile.sRect.top + "," + tile.sRect.left + "," + tile.sRect.bottom + "," + tile.sRect.right, tile.vRect.left + 5, tile.vRect.top + 15, debugPaint);
+                            canvas.drawText("ISS " + tile.sampleSize + " RECT " + tile.sRect.top + "," + tile.sRect.left + "," + tile.sRect.bottom + "," + tile.sRect.right, tile.vRect.left + px(5), tile.vRect.top + px(15), debugTextPaint);
                         }
                     }
                 }
@@ -1084,37 +1085,35 @@ public class SubsamplingScaleImageView extends View {
         }
 
         if (debug) {
-            canvas.drawText("Scale: " + String.format(Locale.ENGLISH, "%.2f", scale), 5, 15, debugPaint);
-            canvas.drawText("Translate: " + String.format(Locale.ENGLISH, "%.2f", vTranslate.x) + ":" + String.format(Locale.ENGLISH, "%.2f", vTranslate.y), 5, 35, debugPaint);
+            canvas.drawText("Scale: " + String.format(Locale.ENGLISH, "%.2f", scale) + " (" + String.format(Locale.ENGLISH, "%.2f", minScale()) + " - " + String.format(Locale.ENGLISH, "%.2f", maxScale) + ")", px(5), px(15), debugTextPaint);
+            canvas.drawText("Translate: " + String.format(Locale.ENGLISH, "%.2f", vTranslate.x) + ":" + String.format(Locale.ENGLISH, "%.2f", vTranslate.y), px(5), px(30), debugTextPaint);
             PointF center = getCenter();
-            canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), 5, 55, debugPaint);
-            debugPaint.setStrokeWidth(2f);
+            canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), px(5), px(45), debugTextPaint);
             if (anim != null) {
                 PointF vCenterStart = sourceToViewCoord(anim.sCenterStart);
                 PointF vCenterEndRequested = sourceToViewCoord(anim.sCenterEndRequested);
                 PointF vCenterEnd = sourceToViewCoord(anim.sCenterEnd);
-                canvas.drawCircle(vCenterStart.x, vCenterStart.y, 10, debugPaint);
-                debugPaint.setColor(Color.RED);
-                canvas.drawCircle(vCenterEndRequested.x, vCenterEndRequested.y, 20, debugPaint);
-                debugPaint.setColor(Color.BLUE);
-                canvas.drawCircle(vCenterEnd.x, vCenterEnd.y, 25, debugPaint);
-                debugPaint.setColor(Color.CYAN);
-                canvas.drawCircle(getWidth() / 2, getHeight() / 2, 30, debugPaint);
+                canvas.drawCircle(vCenterStart.x, vCenterStart.y, px(10), debugLinePaint);
+                debugLinePaint.setColor(Color.RED);
+                canvas.drawCircle(vCenterEndRequested.x, vCenterEndRequested.y, px(20), debugLinePaint);
+                debugLinePaint.setColor(Color.BLUE);
+                canvas.drawCircle(vCenterEnd.x, vCenterEnd.y, px(25), debugLinePaint);
+                debugLinePaint.setColor(Color.CYAN);
+                canvas.drawCircle(getWidth() / 2, getHeight() / 2, px(30), debugLinePaint);
             }
             if (vCenterStart != null) {
-                debugPaint.setColor(Color.RED);
-                canvas.drawCircle(vCenterStart.x, vCenterStart.y, 20, debugPaint);
+                debugLinePaint.setColor(Color.RED);
+                canvas.drawCircle(vCenterStart.x, vCenterStart.y, px(20), debugLinePaint);
             }
             if (quickScaleSCenter != null) {
-                debugPaint.setColor(Color.BLUE);
-                canvas.drawCircle(sourceToViewX(quickScaleSCenter.x), sourceToViewY(quickScaleSCenter.y), 35, debugPaint);
+                debugLinePaint.setColor(Color.BLUE);
+                canvas.drawCircle(sourceToViewX(quickScaleSCenter.x), sourceToViewY(quickScaleSCenter.y), px(35), debugLinePaint);
             }
-            if (quickScaleVStart != null) {
-                debugPaint.setColor(Color.CYAN);
-                canvas.drawCircle(quickScaleVStart.x, quickScaleVStart.y, 30, debugPaint);
+            if (quickScaleVStart != null && isQuickScaling) {
+                debugLinePaint.setColor(Color.CYAN);
+                canvas.drawCircle(quickScaleVStart.x, quickScaleVStart.y, px(30), debugLinePaint);
             }
-            debugPaint.setColor(Color.MAGENTA);
-            debugPaint.setStrokeWidth(1f);
+            debugLinePaint.setColor(Color.MAGENTA);
         }
     }
 
@@ -1199,11 +1198,15 @@ public class SubsamplingScaleImageView extends View {
             bitmapPaint.setFilterBitmap(true);
             bitmapPaint.setDither(true);
         }
-        if (debugPaint == null && debug) {
-            debugPaint = new Paint();
-            debugPaint.setTextSize(18);
-            debugPaint.setColor(Color.MAGENTA);
-            debugPaint.setStyle(Style.STROKE);
+        if ((debugTextPaint == null || debugLinePaint == null) && debug) {
+            debugTextPaint = new Paint();
+            debugTextPaint.setTextSize(px(12));
+            debugTextPaint.setColor(Color.MAGENTA);
+            debugTextPaint.setStyle(Style.FILL);
+            debugLinePaint = new Paint();
+            debugLinePaint.setColor(Color.MAGENTA);
+            debugLinePaint.setStyle(Style.STROKE);
+            debugLinePaint.setStrokeWidth(px(1));
         }
     }
 
@@ -1993,7 +1996,8 @@ public class SubsamplingScaleImageView extends View {
     public void recycle() {
         reset(true);
         bitmapPaint = null;
-        debugPaint = null;
+        debugTextPaint = null;
+        debugLinePaint = null;
         tileBgPaint = null;
     }
 
@@ -2220,6 +2224,13 @@ public class SubsamplingScaleImageView extends View {
         if (debug) {
             Log.d(TAG, String.format(message, args));
         }
+    }
+
+    /**
+     * For debug overlays. Scale pixel value according to screen density.
+     */
+    private int px(int px) {
+        return (int)(density * px);
     }
 
     /**
