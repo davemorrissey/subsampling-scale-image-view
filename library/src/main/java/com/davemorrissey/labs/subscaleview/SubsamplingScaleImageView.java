@@ -122,8 +122,10 @@ public class SubsamplingScaleImageView extends View {
     public static final int SCALE_TYPE_CENTER_CROP = 2;
     /** Scale the image so that both dimensions of the image will be equal to or less than the maxScale and equal to or larger than minScale. The image is then centered in the view. */
     public static final int SCALE_TYPE_CUSTOM = 3;
+    /** Scale the image so that both dimensions of the image will be equal to or larger than the corresponding dimension of the view. The top left is shown. */
+    public static final int SCALE_TYPE_START = 4;
 
-    private static final List<Integer> VALID_SCALE_TYPES = Arrays.asList(SCALE_TYPE_CENTER_CROP, SCALE_TYPE_CENTER_INSIDE, SCALE_TYPE_CUSTOM);
+    private static final List<Integer> VALID_SCALE_TYPES = Arrays.asList(SCALE_TYPE_CENTER_CROP, SCALE_TYPE_CENTER_INSIDE, SCALE_TYPE_CUSTOM, SCALE_TYPE_START);
 
     /** State change originated from animation. */
     public static final int ORIGIN_ANIM = 1;
@@ -1441,7 +1443,7 @@ public class SubsamplingScaleImageView extends View {
         fitToBounds(center, satTemp);
         scale = satTemp.scale;
         vTranslate.set(satTemp.vTranslate);
-        if (init) {
+        if (init && minimumScaleType != SCALE_TYPE_START) {
             vTranslate.set(vTranslateForSCenter(sWidth()/2, sHeight()/2, scale));
         }
     }
@@ -2195,7 +2197,7 @@ public class SubsamplingScaleImageView extends View {
     private float minScale() {
         int vPadding = getPaddingBottom() + getPaddingTop();
         int hPadding = getPaddingLeft() + getPaddingRight();
-        if (minimumScaleType == SCALE_TYPE_CENTER_CROP) {
+        if (minimumScaleType == SCALE_TYPE_CENTER_CROP || minimumScaleType == SCALE_TYPE_START) {
             return Math.max((getWidth() - hPadding) / (float) sWidth(), (getHeight() - vPadding) / (float) sHeight());
         } else if (minimumScaleType == SCALE_TYPE_CUSTOM && minScale > 0) {
             return minScale;
