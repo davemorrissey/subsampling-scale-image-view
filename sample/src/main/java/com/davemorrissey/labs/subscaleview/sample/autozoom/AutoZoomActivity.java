@@ -33,8 +33,11 @@ import static com.davemorrissey.labs.subscaleview.sample.R.string.autozoom_title
 
 public class AutoZoomActivity extends AbstractPagesActivity {
 
+    private SubsamplingScaleImageView view;
+
     public AutoZoomActivity() {
         super(autozoom_title, pages_activity, Arrays.asList(
+                new Page(autozoom_p1_text, autozoom_p1_text),
                 new Page(autozoom_p1_text, autozoom_p1_text)
         ));
     }
@@ -42,7 +45,16 @@ public class AutoZoomActivity extends AbstractPagesActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SubsamplingScaleImageView view = findViewById(R.id.imageView);
-        view.setImage(ImageSource.asset("long_image.jpg"));
+        view = findViewById(R.id.imageView);
+    }
+
+    @Override
+    protected void onPageChanged(int page) {
+        super.onPageChanged(page);
+        if(page == 0) {
+            view.setImage(ImageSource.asset("long_image2.jpg"));
+        } else {
+            view.setImage(ImageSource.asset("long_image.jpg"));
+        }
     }
 }
