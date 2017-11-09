@@ -967,7 +967,7 @@ public class SubsamplingScaleImageView extends View {
         preDraw();
 
         // If animating scale, calculate current scale and center with easing equations
-        if (anim != null) {
+        if (anim != null && anim.vFocusStart != null) {
             // Store current values so we can send an event if they change
             float scaleBefore = scale;
             if (vTranslateBefore == null) { vTranslateBefore = new PointF(0, 0); }
