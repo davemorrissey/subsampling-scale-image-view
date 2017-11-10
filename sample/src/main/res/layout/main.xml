@@ -30,6 +30,8 @@
             <View style="@style/indexDivider"/>
             <TextView style="@style/indexLink" android:id="@+id/configuration" android:text="@string/configuration.link"/>
             <View style="@style/indexDivider"/>
+            <TextView style="@style/indexLink" android:id="@+id/autozoom" android:text="@string/autozoom.link"/>
+            <View style="@style/indexDivider"/>
 
         </LinearLayout>
 

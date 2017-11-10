@@ -181,4 +181,11 @@
         Debug has been enabled. This shows the tile boundaries and sizes.
     </string>
 
+    <string name="autozoom.link">AutoZoom</string>
+    <string name="autozoom.title">AutoZoom</string>
+    <string name="autozoom.p1.subtitle">AutoZoom</string>
+    <string name="autozoom.p1.text">
+        Zooming the width of the image to the width of the screen.
+    </string>
+
 </resources>

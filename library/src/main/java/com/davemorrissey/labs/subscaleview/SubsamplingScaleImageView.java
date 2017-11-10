@@ -282,6 +282,9 @@ public class SubsamplingScaleImageView extends View {
     //The logical density of the display
     private float density;
 
+    //Auto zoom, zooming the width of the image to the width of the screen
+    private boolean autoZoom = true;
+
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -326,6 +329,9 @@ public class SubsamplingScaleImageView extends View {
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_tileBackgroundColor)) {
                 setTileBackgroundColor(typedAttr.getColor(styleable.SubsamplingScaleImageView_tileBackgroundColor, Color.argb(0, 0, 0, 0)));
+            }
+            if (typedAttr.hasValue(R.styleable.SubsamplingScaleImageView_autoZoom)) {
+                setAutoZoom(typedAttr.getBoolean(R.styleable.SubsamplingScaleImageView_autoZoom, true));
             }
             typedAttr.recycle();
         }
@@ -2496,7 +2502,24 @@ public class SubsamplingScaleImageView extends View {
      * allows a subclass to receive this event without using a listener.
      */
     protected void onReady() {
+        if(autoZoom && sWidth > 0) {
+            int vPadding = getPaddingBottom() + getPaddingTop();
+            int hPadding = getPaddingLeft() + getPaddingRight();
+            int width = getWidth() - hPadding;
+            int height = getHeight() - vPadding;
+            float scaleWidth = width * 1.0f / sWidth;
+            float scaleHeight = height * 1.0f / sHeight;
+            minScale = Math.min(scaleWidth, scaleHeight);
+            if(minScale > 1) {
+                minScale /= 2;
+            }
+            minimumScaleType = SCALE_TYPE_CUSTOM;
+            maxScale = Math.max(scaleWidth, scaleHeight) * 3;
+            PointF center = new PointF(0, 0);
 
+            SubsamplingScaleImageView.AnimationBuilder animationBuilder = animateScaleAndCenter(scaleWidth, center);
+            animationBuilder.withDuration(300).start();
+        }
     }
 
     /**
@@ -2590,6 +2613,20 @@ public class SubsamplingScaleImageView extends View {
      */
     public final boolean isPanEnabled() {
         return panEnabled;
+    }
+
+    /**
+     * Returns true if autoZoom is true
+     */
+    public boolean isAutoZoom() {
+        return autoZoom;
+    }
+
+    /**
+     * Set auto zoom when load image is onReady
+     */
+    public void setAutoZoom(boolean autoZoom) {
+        this.autoZoom = autoZoom;
     }
 
     /**
