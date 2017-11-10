@@ -38,6 +38,7 @@ public class AutoZoomActivity extends AbstractPagesActivity {
     public AutoZoomActivity() {
         super(autozoom_title, pages_activity, Arrays.asList(
                 new Page(autozoom_p1_text, autozoom_p1_text),
+                new Page(autozoom_p1_text, autozoom_p1_text),
                 new Page(autozoom_p1_text, autozoom_p1_text)
         ));
     }
@@ -52,9 +53,11 @@ public class AutoZoomActivity extends AbstractPagesActivity {
     protected void onPageChanged(int page) {
         super.onPageChanged(page);
         if(page == 0) {
-            view.setImage(ImageSource.asset("long_image2.jpg"));
-        } else {
+            view.setImage(ImageSource.asset("small_image.png"));
+        } else if(page == 1) {
             view.setImage(ImageSource.asset("long_image.jpg"));
+        } else {
+            view.setImage(ImageSource.asset("long_image2.jpg"));
         }
     }
 }

@@ -2464,11 +2464,20 @@ public class SubsamplingScaleImageView extends View {
     protected void onReady() {
         if(autoZoom && sWidth > 0) {
             int vPadding = getPaddingBottom() + getPaddingTop();
-            int width = getWidth() - vPadding;
-            float scale = width * 1.0f / sWidth;
+            int hPadding = getPaddingLeft() + getPaddingRight();
+            int width = getWidth() - hPadding;
+            int height = getHeight() - vPadding;
+            float scaleWidth = width * 1.0f / sWidth;
+            float scaleHeight = height * 1.0f / sHeight;
+            minScale = Math.min(scaleWidth, scaleHeight);
+            if(minScale > 1) {
+                minScale /= 2;
+            }
+            minimumScaleType = SCALE_TYPE_CUSTOM;
+            maxScale = Math.max(scaleWidth, scaleHeight) * 3;
             PointF center = new PointF(0, 0);
 
-            SubsamplingScaleImageView.AnimationBuilder animationBuilder = animateScaleAndCenter(scale, center);
+            SubsamplingScaleImageView.AnimationBuilder animationBuilder = animateScaleAndCenter(scaleWidth, center);
             animationBuilder.withDuration(300).start();
         }
     }
