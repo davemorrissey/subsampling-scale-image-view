@@ -12,9 +12,23 @@ android {
     }
 }
 
+configurations {
+    javadocs
+}
+
 dependencies {
+    javadocs 'com.android.support:support-annotations:27.0.1'
+    javadocs 'com.android.support:exifinterface:26.1.0'
     implementation 'com.android.support:support-annotations:27.0.1'
     implementation 'com.android.support:exifinterface:26.1.0'
+}
+
+task javadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.compile
+    classpath += configurations.javadocs
 }
 
 apply from: rootProject.file('release.gradle')
