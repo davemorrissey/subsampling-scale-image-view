@@ -28,11 +28,15 @@ Version 3.x.x includes breaking changes. Please view the [migration guide](https
 
 Version 3.8.0 includes a default behaviour change. Image quality is now capped at 320dpi (approximately retina quality) instead of matching the screen's density, which results in high memory use and poor performance when displaying large images on very high density screens. The difference in quality is usually unnoticeable, especially with photos. Use `setMinimumTileDpi(int)` to override the default.
 
-**Support for SDK 10-13 has been dropped. The minimum SDK is now 14.**
+Support for SDK 10-13 has been dropped. The minimum SDK is now 14.
 
 #### Download the sample app
 
 [![Get it on Google Play](https://developer.android.com/images/brand/en_generic_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
+
+#### Demo
+
+![Demo](docs/images/demo.gif)
 
 ## Features
 
