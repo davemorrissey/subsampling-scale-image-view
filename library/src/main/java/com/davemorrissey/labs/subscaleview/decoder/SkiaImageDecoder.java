@@ -32,7 +32,7 @@ public class SkiaImageDecoder implements ImageDecoder {
 
     public SkiaImageDecoder(Bitmap.Config bitmapConfig) {
         if (bitmapConfig == null)
-            this.bitmapConfig = Bitmap.Config.RGB_565;
+            this.bitmapConfig = Bitmap.Config.ARGB_8888;
         else
             this.bitmapConfig = bitmapConfig;
     }

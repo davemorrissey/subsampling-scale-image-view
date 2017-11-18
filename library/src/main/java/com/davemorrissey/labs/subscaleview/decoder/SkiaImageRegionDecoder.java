@@ -36,7 +36,7 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
 
     public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
         if (bitmapConfig == null)
-            this.bitmapConfig = Bitmap.Config.RGB_565;
+            this.bitmapConfig = Config.ARGB_8888;
         else
             this.bitmapConfig = bitmapConfig;
     }

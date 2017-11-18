@@ -44,7 +44,8 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.View;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.ViewParent;
 
 import com.davemorrissey.labs.subscaleview.R.styleable;
@@ -62,6 +63,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <p>
@@ -81,7 +83,7 @@ import java.util.Map;
  * </p>
  */
 @SuppressWarnings("unused")
-public class SubsamplingScaleImageView extends View {
+public class SubsamplingScaleImageView extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final String TAG = SubsamplingScaleImageView.class.getSimpleName();
 
@@ -289,6 +291,87 @@ public class SubsamplingScaleImageView extends View {
     //The logical density of the display
     private float density;
 
+    private SurfaceViewThread surfaceViewThread;
+
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        surfaceViewThread = new SurfaceViewThread(surfaceHolder, this);
+        surfaceViewThread.start();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+        surfaceViewThread.setDirty();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        if (surfaceViewThread != null) {
+            surfaceViewThread.abort();
+            try {
+                surfaceViewThread.join();
+            } catch (Exception e) {
+                // Nothing
+            }
+        }
+    }
+
+    private void invalidateSurfaceView() {
+        if (surfaceViewThread != null) {
+            surfaceViewThread.setDirty();
+        }
+    }
+
+    private static class SurfaceViewThread extends Thread {
+        private final SurfaceHolder surfaceHolder;
+        private final SubsamplingScaleImageView view;
+        private final AtomicBoolean run = new AtomicBoolean(true);
+        private final AtomicBoolean dirty = new AtomicBoolean(true);
+
+        private final Paint rectPaint;
+        private final Rect rect;
+
+        SurfaceViewThread(SurfaceHolder surfaceHolder, SubsamplingScaleImageView view) {
+            this.surfaceHolder = surfaceHolder;
+            this.view = view;
+            this.rectPaint = new Paint();
+            this.rectPaint.setStyle(Style.FILL);
+            this.rectPaint.setColor(Color.BLACK);
+            this.rect = new Rect();
+        }
+
+        private void abort() {
+            this.run.set(false);
+        }
+
+        private void setDirty() {
+            this.dirty.set(true);
+        }
+
+        @Override
+        public void run() {
+            super.run();
+            while (run.get()) {
+                if (dirty.getAndSet(false)) {
+                    Canvas canvas = surfaceHolder.lockCanvas();
+                    if (canvas != null) {
+                        rect.set(0, 0, canvas.getWidth(), canvas.getHeight());
+                        canvas.drawRect(rect, rectPaint);
+                        view.doDraw(canvas);
+                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    }
+                }
+                if (run.get() && !dirty.get()) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (Exception e) {
+                        // Nothing
+                    }
+                }
+            }
+        }
+    }
+
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -339,6 +422,7 @@ public class SubsamplingScaleImageView extends View {
         }
 
         quickScaleThreshold = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, context.getResources().getDisplayMetrics());
+        getHolder().addCallback(this);
     }
 
     public SubsamplingScaleImageView(Context context) {
@@ -356,7 +440,7 @@ public class SubsamplingScaleImageView extends View {
         }
         this.orientation = orientation;
         reset(false);
-        invalidate();
+        invalidateSurfaceView();
         requestLayout();
     }
 
@@ -715,6 +799,7 @@ public class SubsamplingScaleImageView extends View {
                 return true;
             case MotionEvent.ACTION_MOVE:
                 boolean consumed = false;
+                boolean dirty = false;
                 if (maxTouchCount > 0) {
                     if (touchCount >= 2) {
                         // Calculate new distance between touch points, to scale and pan relative to start values.
@@ -726,6 +811,7 @@ public class SubsamplingScaleImageView extends View {
                             isZooming = true;
                             isPanning = true;
                             consumed = true;
+                            dirty = true;
 
                             double previousScale = scale;
                             scale = Math.min(maxScale, (vDistEnd / vDistStart) * scaleStart);
@@ -819,6 +905,7 @@ public class SubsamplingScaleImageView extends View {
                         fitToBounds(true);
                         refreshRequiredTiles(false);
 
+                        dirty = true;
                         consumed = true;
                     } else if (!isZooming) {
                         // One finger pan - translate the image. We do this calculation even with pan disabled so click
@@ -830,6 +917,8 @@ public class SubsamplingScaleImageView extends View {
                         float offset = density * 5;
                         if (dx > offset || dy > offset || isPanning) {
                             consumed = true;
+                            float initX = vTranslate.x;
+                            float initY = vTranslate.y;
                             vTranslate.x = vTranslateStart.x + (event.getX() - vCenterStart.x);
                             vTranslate.y = vTranslateStart.y + (event.getY() - vCenterStart.y);
 
@@ -854,14 +943,17 @@ public class SubsamplingScaleImageView extends View {
                                 vTranslate.y = vTranslateStart.y;
                                 requestDisallowInterceptTouchEvent(false);
                             }
+                            dirty = (vTranslate.x != initX) || (vTranslate.y != initY);
 
                             refreshRequiredTiles(false);
                         }
                     }
                 }
+                if (dirty) {
+                    invalidateSurfaceView();
+                }
                 if (consumed) {
                     handler.removeMessages(MESSAGE_LONG_CLICK);
-                    invalidate();
                     return true;
                 }
                 break;
@@ -942,16 +1034,14 @@ public class SubsamplingScaleImageView extends View {
         } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
             new AnimationBuilder(targetScale, sCenter, vFocus).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start();
         }
-        invalidate();
+        invalidateSurfaceView();
     }
 
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
      * the scaling and tiling required. Once the view is setup, tiles are displayed as they are loaded.
      */
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+    private void doDraw(Canvas canvas) {
         createPaints();
 
         // If image or view dimensions are not known yet, abort.
@@ -1007,7 +1097,7 @@ public class SubsamplingScaleImageView extends View {
                 }
                 anim = null;
             }
-            invalidate();
+            invalidateSurfaceView();
         }
 
         if (tileMap != null && isBaseLayerReady()) {
@@ -1597,7 +1687,7 @@ public class SubsamplingScaleImageView extends View {
         if (!checkImageLoaded() && maxTileWidth > 0 && maxTileWidth != TILE_SIZE_AUTO && maxTileHeight > 0 && maxTileHeight != TILE_SIZE_AUTO && getWidth() > 0 && getHeight() > 0) {
             initialiseBaseLayer(new Point(maxTileWidth, maxTileHeight));
         }
-        invalidate();
+        invalidateSurfaceView();
         requestLayout();
     }
 
@@ -1680,7 +1770,7 @@ public class SubsamplingScaleImageView extends View {
             bitmapIsPreview = false;
             bitmapIsCached = false;
         }
-        invalidate();
+        invalidateSurfaceView();
     }
 
     /**
@@ -1762,7 +1852,7 @@ public class SubsamplingScaleImageView extends View {
         }
         bitmapIsPreview = true;
         if (checkReady()) {
-            invalidate();
+            invalidateSurfaceView();
             requestLayout();
         }
     }
@@ -1793,7 +1883,7 @@ public class SubsamplingScaleImageView extends View {
         boolean ready = checkReady();
         boolean imageLoaded = checkImageLoaded();
         if (ready || imageLoaded) {
-            invalidate();
+            invalidateSurfaceView();
             requestLayout();
         }
     }
@@ -1906,7 +1996,7 @@ public class SubsamplingScaleImageView extends View {
             this.orientation = state.getOrientation();
             this.pendingScale = state.getScale();
             this.sPendingCenter = state.getCenter();
-            invalidate();
+            invalidateSurfaceView();
         }
     }
 
@@ -2414,7 +2504,7 @@ public class SubsamplingScaleImageView extends View {
         this.panLimit = panLimit;
         if (isReady()) {
             fitToBounds(true);
-            invalidate();
+            invalidateSurfaceView();
         }
     }
 
@@ -2429,7 +2519,7 @@ public class SubsamplingScaleImageView extends View {
         this.minimumScaleType = scaleType;
         if (isReady()) {
             fitToBounds(true);
-            invalidate();
+            invalidateSurfaceView();
         }
     }
 
@@ -2505,7 +2595,7 @@ public class SubsamplingScaleImageView extends View {
         this.minimumTileDpi = (int)Math.min(averageDpi, minimumTileDpi);
         if (isReady()) {
             reset(false);
-            invalidate();
+            invalidateSurfaceView();
         }
     }
 
@@ -2538,7 +2628,7 @@ public class SubsamplingScaleImageView extends View {
         this.pendingScale = scale;
         this.sPendingCenter = sCenter;
         this.sRequestedCenter = sCenter;
-        invalidate();
+        invalidateSurfaceView();
     }
 
     /**
@@ -2553,7 +2643,7 @@ public class SubsamplingScaleImageView extends View {
         } else {
             this.sPendingCenter = new PointF(0, 0);
         }
-        invalidate();
+        invalidateSurfaceView();
     }
 
     /**
@@ -2692,7 +2782,7 @@ public class SubsamplingScaleImageView extends View {
             vTranslate.y = (getHeight()/2) - (scale * (sHeight()/2));
             if (isReady()) {
                 refreshRequiredTiles(true);
-                invalidate();
+                invalidateSurfaceView();
             }
         }
     }
@@ -2709,7 +2799,7 @@ public class SubsamplingScaleImageView extends View {
             tileBgPaint.setStyle(Style.FILL);
             tileBgPaint.setColor(tileBgColor);
         }
-        invalidate();
+        invalidateSurfaceView();
     }
 
     /**
@@ -3007,7 +3097,7 @@ public class SubsamplingScaleImageView extends View {
                 );
             }
 
-            invalidate();
+            invalidateSurfaceView();
         }
 
     }
