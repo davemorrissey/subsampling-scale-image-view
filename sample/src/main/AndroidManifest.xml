@@ -9,7 +9,7 @@
 <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
-<application android:label="@string/app.name" android:theme="@style/sampleTheme" android:icon="@drawable/launcher" android:allowBackup="false">
+<application android:label="@string/app.name" android:theme="@style/sampleTheme" android:icon="@mipmap/ic_launcher" android:allowBackup="false">
     <activity android:name=".MainActivity" android:label="Scale View Demo">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>
