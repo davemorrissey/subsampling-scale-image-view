@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app.name">Scale Image View Demo</string>
+    <string name="app.name">SSIV Test App</string>
 
     <string name="main.title">Subsampling Scale Image View</string>
 

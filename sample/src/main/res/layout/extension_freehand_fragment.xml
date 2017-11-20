@@ -20,6 +20,6 @@
 
     </RelativeLayout>
 
-    <com.davemorrissey.labs.subscaleview.sample.extension.views.FreehandView style="@style/mainPanel" android:id="@+id/imageView"/>
+    <com.davemorrissey.labs.subscaleview.test.extension.views.FreehandView style="@style/mainPanel" android:id="@+id/imageView"/>
 
 </RelativeLayout>
