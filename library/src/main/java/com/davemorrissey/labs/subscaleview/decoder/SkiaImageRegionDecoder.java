@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.*;
-import android.graphics.Bitmap.Config;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -35,10 +34,11 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
     }
 
     public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
-        if (bitmapConfig == null)
+        if (bitmapConfig == null) {
             this.bitmapConfig = Bitmap.Config.RGB_565;
-        else
+        } else {
             this.bitmapConfig = bitmapConfig;
+        }
     }
 
     @Override
