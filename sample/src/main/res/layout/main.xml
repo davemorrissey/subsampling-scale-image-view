@@ -33,33 +33,6 @@
 
         </LinearLayout>
 
-        <LinearLayout
-                android:id="@+id/self"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/buttonstate_transparent"
-                android:padding="10dp"
-                android:orientation="vertical">
-
-            <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:src="@drawable/daffy"
-                    android:contentDescription="@string/main.avatar"/>
-
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:gravity="center_horizontal"
-                    android:textSize="13sp"
-                    android:textColor="#777777"
-                    android:text="@string/main.attribution"/>
-
-        </LinearLayout>
-
         <Button
                 android:id="@+id/github"
                 android:layout_width="wrap_content"

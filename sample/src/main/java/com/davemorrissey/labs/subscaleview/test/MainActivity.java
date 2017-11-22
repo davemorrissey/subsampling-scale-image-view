@@ -52,7 +52,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(id.extension).setOnClickListener(this);
         findViewById(id.configuration).setOnClickListener(this);
         findViewById(id.github).setOnClickListener(this);
-        findViewById(id.self).setOnClickListener(this);
     }
 
     @Override
@@ -67,7 +66,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case id.extension: startActivity(ExtensionActivity.class); break;
             case id.configuration: startActivity(ConfigurationActivity.class); break;
             case id.github: openGitHub(); break;
-            case id.self: openSelf(); break;
         }
     }
 
@@ -79,12 +77,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void openGitHub() {
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.setData(Uri.parse("https://github.com/davemorrissey/subsampling-scale-image-view"));
-        startActivity(i);
-    }
-
-    private void openSelf() {
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse("http://www.davemorrissey.com"));
         startActivity(i);
     }
 

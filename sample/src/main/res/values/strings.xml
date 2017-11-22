@@ -4,8 +4,6 @@
 
     <string name="main.title">Subsampling Scale Image View</string>
 
-    <string name="main.attribution">by Dave Morrissey</string>
-    <string name="main.avatar">Avatar</string>
     <string name="main.viewongithub">View on GitHub</string>
 
     <string name="button.animate">Animate</string>
