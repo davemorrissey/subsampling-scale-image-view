@@ -46,6 +46,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * <p>
@@ -220,7 +222,7 @@ public class SubsamplingScaleImageView extends View {
 
     // Tile and image decoding
     private ImageRegionDecoder decoder;
-    private final Object decoderLock = new Object();
+    private final ReadWriteLock decoderLock = new ReentrantReadWriteLock(true);
     private DecoderFactory<? extends ImageDecoder> bitmapDecoderFactory = new CompatDecoderFactory<ImageDecoder>(SkiaImageDecoder.class);
     private DecoderFactory<? extends ImageRegionDecoder> regionDecoderFactory = new CompatDecoderFactory<ImageRegionDecoder>(SkiaImageRegionDecoder.class);
 
@@ -474,11 +476,14 @@ public class SubsamplingScaleImageView extends View {
         sRect = null;
         if (newImage) {
             uri = null;
-            if (decoder != null) {
-                synchronized (decoderLock) {
+            decoderLock.writeLock().lock();
+            try {
+                if (decoder != null) {
                     decoder.recycle();
                     decoder = null;
                 }
+            } finally {
+                decoderLock.writeLock().unlock();
             }
             if (bitmap != null && !bitmapIsCached) {
                 bitmap.recycle();
@@ -1609,13 +1614,20 @@ public class SubsamplingScaleImageView extends View {
                 Tile tile = tileRef.get();
                 if (decoder != null && tile != null && view != null && decoder.isReady() && tile.visible) {
                     view.debug("TileLoadTask.doInBackground, tile.sRect=%s, tile.sampleSize=%d", tile.sRect, tile.sampleSize);
-                    synchronized (view.decoderLock) {
-                        // Update tile's file sRect according to rotation
-                        view.fileSRect(tile.sRect, tile.fileSRect);
-                        if (view.sRegion != null) {
-                            tile.fileSRect.offset(view.sRegion.left, view.sRegion.top);
+                    view.decoderLock.readLock().lock();
+                    try {
+                        if (decoder.isReady()) {
+                            // Update tile's file sRect according to rotation
+                            view.fileSRect(tile.sRect, tile.fileSRect);
+                            if (view.sRegion != null) {
+                                tile.fileSRect.offset(view.sRegion.left, view.sRegion.top);
+                            }
+                            return decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
+                        } else {
+                            tile.loading = false;
                         }
-                        return decoder.decodeRegion(tile.fileSRect, tile.sampleSize);
+                    } finally {
+                        view.decoderLock.readLock().unlock();
                     }
                 } else if (tile != null) {
                     tile.loading = false;
