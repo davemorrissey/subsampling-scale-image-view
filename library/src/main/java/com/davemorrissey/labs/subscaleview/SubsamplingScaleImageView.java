@@ -46,6 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -173,8 +174,8 @@ public class SubsamplingScaleImageView extends View {
     private int maxTileWidth = TILE_SIZE_AUTO;
     private int maxTileHeight = TILE_SIZE_AUTO;
 
-    // Whether to use the thread pool executor to load tiles
-    private boolean parallelLoadingEnabled;
+    // An executor service for loading of images
+    private Executor executor = AsyncTask.SERIAL_EXECUTOR;
 
     // Gesture detection settings
     private boolean panEnabled = true;
@@ -1846,11 +1847,7 @@ public class SubsamplingScaleImageView extends View {
     }
 
     private void execute(AsyncTask<Void, Void, ?> asyncTask) {
-        if (parallelLoadingEnabled) {
-            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        } else {
-            asyncTask.execute();
-        }
+        asyncTask.executeOnExecutor(executor);
     }
 
     private static class Tile {
@@ -2750,13 +2747,29 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * Toggle parallel loading. When enabled, tiles are loaded using the thread pool executor.
-     * Parallel loading may use more memory and there is a possibility that it will make the tile
-     * loading unreliable, but it reduces the chances of an app's background processes blocking loading.
-     * @param parallelLoadingEnabled Whether to run AsyncTasks using a thread pool executor.
+     * <p>
+     * Provide an {@link Executor} to be used for loading images. By default, {@link AsyncTask#SERIAL_EXECUTOR}
+     * is used, and this can cause slow loading when this executor is being used for other tasks e.g.
+     * loading data from the network. You can use {@link AsyncTask#THREAD_POOL_EXECUTOR} to reduce
+     * the likelihood of contention, or supply an {@link Executor} of your own to avoid any contention.
+     * It is strongly recommended to use a single executor instance for the life of your application,
+     * not one per view instance.
+     * </p><p>
+     * <b>Warning:</b> If you are using a custom implementation of {@link ImageRegionDecoder}, and you
+     * supply an executor with more than one thread, you must make sure your implementation supports
+     * multi-threaded bitmap decoding or has appropriate internal synchronization. Android's
+     * {@link android.graphics.BitmapRegionDecoder} uses an internal lock so it is thread safe but
+     * there is no advantage to using multiple threads.
+     * </p><p>
+     * <b>Note:</b> Using an executor with multiple threads may increase memory usage.
+     * </p>
+     * @param executor an {@link Executor} for image loading.
      */
-    public void setParallelLoadingEnabled(boolean parallelLoadingEnabled) {
-        this.parallelLoadingEnabled = parallelLoadingEnabled;
+    public void setExecutor(Executor executor) {
+        if (executor == null) {
+            throw new NullPointerException("Executor must not be null");
+        }
+        this.executor = executor;
     }
 
     /**
