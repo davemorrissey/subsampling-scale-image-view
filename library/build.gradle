@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
-version = '3.8.0'
+version = '3.9.0.ALPHA'
 
 android {
     compileSdkVersion 26
