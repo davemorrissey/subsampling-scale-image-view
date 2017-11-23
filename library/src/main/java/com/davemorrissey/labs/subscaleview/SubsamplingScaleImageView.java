@@ -177,6 +177,9 @@ public class SubsamplingScaleImageView extends View {
     // An executor service for loading of images
     private Executor executor = AsyncTask.SERIAL_EXECUTOR;
 
+    // Whether tiles should be loaded while gestures and animations are still in progress
+    private boolean eagerLoadingEnabled = false;
+
     // Gesture detection settings
     private boolean panEnabled = true;
     private boolean zoomEnabled = true;
@@ -753,7 +756,7 @@ public class SubsamplingScaleImageView extends View {
                             }
 
                             fitToBounds(true);
-                            refreshRequiredTiles(false);
+                            refreshRequiredTiles(eagerLoadingEnabled);
                         }
                     } else if (isQuickScaling) {
                         // One finger zoom
@@ -807,7 +810,7 @@ public class SubsamplingScaleImageView extends View {
                         quickScaleLastDistance = dist;
 
                         fitToBounds(true);
-                        refreshRequiredTiles(false);
+                        refreshRequiredTiles(eagerLoadingEnabled);
 
                         consumed = true;
                     } else if (!isZooming) {
@@ -845,7 +848,7 @@ public class SubsamplingScaleImageView extends View {
                                 requestDisallowInterceptTouchEvent(false);
                             }
 
-                            refreshRequiredTiles(false);
+                            refreshRequiredTiles(eagerLoadingEnabled);
                         }
                     }
                 }
@@ -2770,6 +2773,18 @@ public class SubsamplingScaleImageView extends View {
             throw new NullPointerException("Executor must not be null");
         }
         this.executor = executor;
+    }
+
+    /**
+     * Enable or disable eager loading of tiles that appear on screen during gestures or animations,
+     * while the gesture or animation is still in progress. By default this is off; the view will
+     * wait until the image is not panning or zooming before loading the tiles then required.
+     * Enabling it will increase CPU and memory usage and result in the loading of tiles during a
+     * gesture that are immediately discarded later, causing low frame rates on slower devices.
+     * @param eagerLoadingEnabled true to enable loading during gestures
+     */
+    public void setEagerLoadingEnabled(boolean eagerLoadingEnabled) {
+        this.eagerLoadingEnabled = eagerLoadingEnabled;
     }
 
     /**
