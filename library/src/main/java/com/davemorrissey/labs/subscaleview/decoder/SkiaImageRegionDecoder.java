@@ -11,17 +11,24 @@ import android.text.TextUtils;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Default implementation of {@link com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder}
  * using Android's {@link android.graphics.BitmapRegionDecoder}, based on the Skia library. This
  * works well in most circumstances and has reasonable performance due to the cached decoder instance,
  * however it has some problems with grayscale, indexed and CMYK images.
+ *
+ * A {@link ReadWriteLock} is used to delegate responsibility for multi threading behaviour to the
+ * {@link BitmapRegionDecoder} instance, whilst allowing this class to block until no tiles are being
+ * loaded before recycling the decoder. In practice, {@link BitmapRegionDecoder} is single threaded
+ * so this has no real impact on performance.
  */
 public class SkiaImageRegionDecoder implements ImageRegionDecoder {
 
     private BitmapRegionDecoder decoder;
-    private final Object decoderLock = new Object();
+    private final ReadWriteLock decoderLock = new ReentrantReadWriteLock(true);
 
     private static final String FILE_PREFIX = "file://";
     private static final String ASSET_PREFIX = FILE_PREFIX + "/android_asset/";
@@ -90,25 +97,42 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
 
     @Override
     public Bitmap decodeRegion(Rect sRect, int sampleSize) {
-        synchronized (decoderLock) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = sampleSize;
-            options.inPreferredConfig = bitmapConfig;
-            Bitmap bitmap = decoder.decodeRegion(sRect, options);
-            if (bitmap == null) {
-                throw new RuntimeException("Skia image decoder returned null bitmap - image format may not be supported");
+        decoderLock.readLock().lock();
+        try {
+            if (decoder != null && !decoder.isRecycled()) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = sampleSize;
+                options.inPreferredConfig = bitmapConfig;
+                Bitmap bitmap = decoder.decodeRegion(sRect, options);
+                if (bitmap == null) {
+                    throw new RuntimeException("Skia image decoder returned null bitmap - image format may not be supported");
+                }
+                return bitmap;
+            } else {
+                throw new IllegalStateException("Cannot decode region after decoder has been recycled");
             }
-            return bitmap;
+        } finally {
+            decoderLock.readLock().unlock();
         }
     }
 
     @Override
     public boolean isReady() {
-        return decoder != null && !decoder.isRecycled();
+        decoderLock.readLock().lock();
+        try {
+            return decoder != null && !decoder.isRecycled();
+        } finally {
+            decoderLock.readLock().unlock();
+        }
     }
 
     @Override
     public void recycle() {
-        decoder.recycle();
+        decoderLock.writeLock().lock();
+        try {
+            decoder.recycle();
+        } finally {
+            decoderLock.writeLock().unlock();
+        }
     }
 }
