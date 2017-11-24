@@ -272,13 +272,8 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
      * true if the pool has at least one decoder available.
      */
     @Override
-    public boolean isReady() {
-        decoderLock.readLock().lock();
-        try {
-            return decoderPool != null && !decoderPool.isEmpty();
-        } finally {
-            decoderLock.readLock().unlock();
-        }
+    public synchronized boolean isReady() {
+        return decoderPool != null && !decoderPool.isEmpty();
     }
 
     /**
@@ -286,7 +281,7 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
      * and destroy the pool. Elsewhere, when a read lock is acquired, we must check the pool is not null.
      */
     @Override
-    public void recycle() {
+    public synchronized void recycle() {
         decoderLock.writeLock().lock();
         try {
             if (decoderPool != null) {
