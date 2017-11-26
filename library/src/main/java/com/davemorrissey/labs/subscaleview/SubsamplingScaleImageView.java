@@ -279,6 +279,8 @@ public class SubsamplingScaleImageView extends View {
     //The logical density of the display
     private float density;
 
+    // A global preference for bitmap format, available to decoder classes that respect it
+    private static Bitmap.Config preferredBitmapConfig;
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -333,6 +335,26 @@ public class SubsamplingScaleImageView extends View {
 
     public SubsamplingScaleImageView(Context context) {
         this(context, null);
+    }
+
+    /**
+     * Get the current preferred configuration for decoding bitmaps. {@link ImageDecoder} and {@link ImageRegionDecoder}
+     * instances can read this and use it when decoding images.
+     * @return the preferred bitmap configuration, or null if none has been set.
+     */
+    public static Bitmap.Config getPreferredBitmapConfig() {
+        return preferredBitmapConfig;
+    }
+
+    /**
+     * Set a global preferred bitmap config shared by all view instances and applied to new instances
+     * initialised after the call is made. This is a hint only; the bundled {@link ImageDecoder} and
+     * {@link ImageRegionDecoder} classes all respect this (except when they were constructed with
+     * an instance-specific config) but custom decoder classes will not.
+     * @param preferredBitmapConfig the bitmap configuration to be used by future instances of the view. Pass null to restore the default.
+     */
+    public static void setPreferredBitmapConfig(Bitmap.Config preferredBitmapConfig) {
+        SubsamplingScaleImageView.preferredBitmapConfig = preferredBitmapConfig;
     }
 
     /**

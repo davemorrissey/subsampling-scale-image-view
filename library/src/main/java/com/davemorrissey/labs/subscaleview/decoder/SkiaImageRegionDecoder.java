@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -43,10 +45,13 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
     }
 
     public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
-        if (bitmapConfig == null) {
-            this.bitmapConfig = Bitmap.Config.RGB_565;
-        } else {
+        Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
+        if (bitmapConfig != null) {
             this.bitmapConfig = bitmapConfig;
+        } else if (globalBitmapConfig != null) {
+            this.bitmapConfig = globalBitmapConfig;
+        } else {
+            this.bitmapConfig = Bitmap.Config.RGB_565;
         }
     }
 
