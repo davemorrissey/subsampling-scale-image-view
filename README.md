@@ -32,7 +32,7 @@ Support for SDK 10-13 has been dropped. The minimum SDK is now 14.
 
 #### Download the sample app
 
-[![Get it on Google Play](https://developer.android.com/images/brand/en_generic_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
+[![Get it on Google Play](docs/images/google_play.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
 
 #### Demo
 
