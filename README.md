@@ -34,6 +34,8 @@ Support for SDK 10-13 has been dropped. The minimum SDK is now 14.
 
 [![Get it on Google Play](docs/images/google_play.png)](https://play.google.com/store/apps/details?id=com.davemorrissey.labs.subscaleview.sample)
 
+[Kotlin Sample App on GitHub](https://github.com/davemorrissey/ssiv-kotlin-sample)
+
 #### Demo
 
 ![Demo](docs/images/demo.gif)
