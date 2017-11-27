@@ -175,7 +175,7 @@ public class SubsamplingScaleImageView extends View {
     private int maxTileHeight = TILE_SIZE_AUTO;
 
     // An executor service for loading of images
-    private Executor executor = AsyncTask.SERIAL_EXECUTOR;
+    private Executor executor = AsyncTask.THREAD_POOL_EXECUTOR;
 
     // Whether tiles should be loaded while gestures and animations are still in progress
     private boolean eagerLoadingEnabled = false;
@@ -2773,20 +2773,18 @@ public class SubsamplingScaleImageView extends View {
 
     /**
      * <p>
-     * Provide an {@link Executor} to be used for loading images. By default, {@link AsyncTask#SERIAL_EXECUTOR}
-     * is used, and this can cause slow loading when this executor is being used for other tasks e.g.
-     * loading data from the network. You can use {@link AsyncTask#THREAD_POOL_EXECUTOR} to reduce
-     * the likelihood of contention, or supply an {@link Executor} of your own to avoid any contention.
-     * It is strongly recommended to use a single executor instance for the life of your application,
-     * not one per view instance.
+     * Provide an {@link Executor} to be used for loading images. By default, {@link AsyncTask#THREAD_POOL_EXECUTOR}
+     * is used to minimise contention with other background work the app is doing. You can also choose
+     * to use {@link AsyncTask#SERIAL_EXECUTOR} if you want to limit concurrent background tasks.
+     * Alternatively you can supply an {@link Executor} of your own to avoid any contention. It is
+     * strongly recommended to use a single executor instance for the life of your application, not
+     * one per view instance.
      * </p><p>
      * <b>Warning:</b> If you are using a custom implementation of {@link ImageRegionDecoder}, and you
      * supply an executor with more than one thread, you must make sure your implementation supports
-     * multi-threaded bitmap decoding or has appropriate internal synchronization. Android's
+     * multi-threaded bitmap decoding or has appropriate internal synchronization. From SDK 21, Android's
      * {@link android.graphics.BitmapRegionDecoder} uses an internal lock so it is thread safe but
      * there is no advantage to using multiple threads.
-     * </p><p>
-     * <b>Note:</b> Using an executor with multiple threads may increase memory usage.
      * </p>
      * @param executor an {@link Executor} for image loading.
      */
