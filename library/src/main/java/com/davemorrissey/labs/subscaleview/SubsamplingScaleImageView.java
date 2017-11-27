@@ -178,7 +178,7 @@ public class SubsamplingScaleImageView extends View {
     private Executor executor = AsyncTask.THREAD_POOL_EXECUTOR;
 
     // Whether tiles should be loaded while gestures and animations are still in progress
-    private boolean eagerLoadingEnabled = false;
+    private boolean eagerLoadingEnabled = true;
 
     // Gesture detection settings
     private boolean panEnabled = true;
@@ -2797,11 +2797,12 @@ public class SubsamplingScaleImageView extends View {
 
     /**
      * Enable or disable eager loading of tiles that appear on screen during gestures or animations,
-     * while the gesture or animation is still in progress. By default this is off; the view will
-     * wait until the image is not panning or zooming before loading the tiles then required.
-     * Enabling it will increase CPU and memory usage and result in the loading of tiles during a
-     * gesture that are immediately discarded later, causing low frame rates on slower devices.
-     * @param eagerLoadingEnabled true to enable loading during gestures
+     * while the gesture or animation is still in progress. By default this is enabled to improve
+     * responsiveness, but it can result in tiles being loaded and discarded more rapidly than
+     * necessary and reduce the animation frame rate on old/cheap devices. Disable this on older
+     * devices if you see poor performance. Tiles will then be loaded only when gestures and animations
+     * are completed.
+     * @param eagerLoadingEnabled true to enable loading during gestures, false to delay loading until gestures end
      */
     public void setEagerLoadingEnabled(boolean eagerLoadingEnabled) {
         this.eagerLoadingEnabled = eagerLoadingEnabled;
