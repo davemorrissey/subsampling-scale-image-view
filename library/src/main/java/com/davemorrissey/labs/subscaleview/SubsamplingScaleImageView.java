@@ -59,9 +59,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Tiles are no larger than the max supported bitmap size, so with large images tiling may be used even when zoomed out.
  * </p><p>
  * v prefixes - coordinates, translations and distances measured in screen (view) pixels
- * <br/>
+ * <br>
  * s prefixes - coordinates, translations and distances measured in rotated and cropped source image pixels (scaled)
- * <br/>
+ * <br>
  * f prefixes - coordinates, translations and distances measured in original unrotated, uncropped source file pixels
  * </p><p>
  * <a href="https://github.com/davemorrissey/subsampling-scale-image-view">View project on GitHub</a>
