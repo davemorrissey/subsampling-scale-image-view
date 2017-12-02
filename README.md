@@ -20,15 +20,9 @@ The view optionally uses subsampling and tiles to support very large images - a 
 * [Extension](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/10.-Extension)
 * [Reference (JavaDocs)](http://davemorrissey.github.io/subsampling-scale-image-view/javadoc/)
 
-#### 2.x.x to 3.x.x migration
+#### Migration guides
 
-Version 3.x.x includes breaking changes. Please view the [migration guide](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/X.--2.x.x-to-3.x.x-migration).
-
-#### 3.8.0 migration
-
-Version 3.8.0 includes a default behaviour change. Image quality is now capped at 320dpi (approximately retina quality) instead of matching the screen's density, which results in high memory use and poor performance when displaying large images on very high density screens. The difference in quality is usually unnoticeable, especially with photos. Use `setMinimumTileDpi(int)` to override the default.
-
-Support for SDK 10-13 has been dropped. The minimum SDK is now 14.
+Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions can be found [in the wiki](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/X.--Release-notes).
 
 #### Download the sample app
 
@@ -88,7 +82,7 @@ Support for SDK 10-13 has been dropped. The minimum SDK is now 14.
 
 ## Quick start
 
-**1)** Add `com.davemorrissey.labs:subsampling-scale-image-view:3.8.0` as a dependency in your build.gradle file.
+**1)** Add `com.davemorrissey.labs:subsampling-scale-image-view:3.9.0` as a dependency in your build.gradle file.
 
 **2)** Add the view to your layout XML.
 
