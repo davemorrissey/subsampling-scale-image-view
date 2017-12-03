@@ -8,6 +8,7 @@ import android.content.res.Resources;
 import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.Keep;
 import android.text.TextUtils;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
@@ -40,10 +41,13 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
 
     private final Bitmap.Config bitmapConfig;
 
+    @Keep
+    @SuppressWarnings("unused")
     public SkiaImageRegionDecoder() {
         this(null);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
         Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
         if (bitmapConfig != null) {
@@ -95,7 +99,7 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
                 decoder = BitmapRegionDecoder.newInstance(inputStream, false);
             } finally {
                 if (inputStream != null) {
-                    try { inputStream.close(); } catch (Exception e) { }
+                    try { inputStream.close(); } catch (Exception e) { /* Ignore */ }
                 }
             }
         }
