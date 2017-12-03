@@ -128,7 +128,8 @@ var activeTableTab = "activeTableTab";
 <td class="colFirst"><code>android.graphics.Bitmap</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">decodeRegion</a></span>(android.graphics.Rect&nbsp;sRect,
             int&nbsp;sampleSize)</code>
-<div class="block">Decode a region of the image with the given sample size.</div>
+<div class="block">
+ Decode a region of the image with the given sample size.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -174,11 +175,14 @@ var activeTableTab = "activeTableTab";
 <pre>android.graphics.Point&nbsp;init(android.content.Context&nbsp;context,
                             android.net.Uri&nbsp;uri)
                      throws java.lang.Exception</pre>
-<div class="block">Initialise the decoder. When possible, initial setup work once in this method. This method
- must return the dimensions of the image. The URI can be in one of the following formats:
- File: file:///scard/picture.jpg
- Asset: file:///android_asset/picture.png
- Resource: android.resource://com.example.app/drawable/picture</div>
+<div class="block">Initialise the decoder. When possible, perform initial setup work once in this method. The
+ dimensions of the image must be returned. The URI can be in one of the following formats:
+ <br>
+ File: <code>file:///scard/picture.jpg</code>
+ <br>
+ Asset: <code>file:///android_asset/picture.png</code>
+ <br>
+ Resource: <code>android.resource://com.example.app/drawable/picture</code></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>context</code> - Application context. A reference may be held, but must be cleared on recycle.</dd>
@@ -198,10 +202,17 @@ var activeTableTab = "activeTableTab";
 <h4>decodeRegion</h4>
 <pre>android.graphics.Bitmap&nbsp;decodeRegion(android.graphics.Rect&nbsp;sRect,
                                      int&nbsp;sampleSize)</pre>
-<div class="block">Decode a region of the image with the given sample size. This method is called off the UI thread so it can safely
- load the image on the current thread. It is called from an <code>AsyncTask</code> running in a single
- threaded executor, and while a synchronization lock is held on this object, so will never be called concurrently
- even if the decoder implementation supports it.</div>
+<div class="block"><p>
+ Decode a region of the image with the given sample size. This method is called off the UI
+ thread so it can safely load the image on the current thread. It is called from
+ <code>AsyncTask</code>s running in an executor that may have multiple threads, so
+ implementations must be thread safe. Adding <code>synchronized</code> to the method signature
+ is the simplest way to achieve this, but bear in mind the <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#recycle--"><code>recycle()</code></a> method can be
+ called concurrently.
+ </p><p>
+ See <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html" title="class in com.davemorrissey.labs.subscaleview.decoder"><code>SkiaImageRegionDecoder</code></a> and <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaPooledImageRegionDecoder.html" title="class in com.davemorrissey.labs.subscaleview.decoder"><code>SkiaPooledImageRegionDecoder</code></a> for examples of
+ internal locking and synchronization.
+ </p></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>sRect</code> - Source image rectangle to decode.</dd>

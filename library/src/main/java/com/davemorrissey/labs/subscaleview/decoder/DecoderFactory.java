@@ -3,7 +3,7 @@ package com.davemorrissey.labs.subscaleview.decoder;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Interface for decoder (and region decoder) factories.
+ * Interface for {@link ImageDecoder} and {@link ImageRegionDecoder} factories.
  * @param <T> the class of decoder that will be produced.
  */
 public interface DecoderFactory<T> {

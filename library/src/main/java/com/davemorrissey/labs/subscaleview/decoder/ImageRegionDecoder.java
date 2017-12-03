@@ -13,11 +13,14 @@ import android.net.Uri;
 public interface ImageRegionDecoder {
 
     /**
-     * Initialise the decoder. When possible, initial setup work once in this method. This method
-     * must return the dimensions of the image. The URI can be in one of the following formats:
-     * File: file:///scard/picture.jpg
-     * Asset: file:///android_asset/picture.png
-     * Resource: android.resource://com.example.app/drawable/picture
+     * Initialise the decoder. When possible, perform initial setup work once in this method. The
+     * dimensions of the image must be returned. The URI can be in one of the following formats:
+     * <br>
+     * File: <code>file:///scard/picture.jpg</code>
+     * <br>
+     * Asset: <code>file:///android_asset/picture.png</code>
+     * <br>
+     * Resource: <code>android.resource://com.example.app/drawable/picture</code>
      * @param context Application context. A reference may be held, but must be cleared on recycle.
      * @param uri URI of the image.
      * @return Dimensions of the image.
@@ -26,10 +29,17 @@ public interface ImageRegionDecoder {
     Point init(Context context, Uri uri) throws Exception;
 
     /**
-     * Decode a region of the image with the given sample size. This method is called off the UI thread so it can safely
-     * load the image on the current thread. It is called from an {@link android.os.AsyncTask} running in a single
-     * threaded executor, and while a synchronization lock is held on this object, so will never be called concurrently
-     * even if the decoder implementation supports it.
+     * <p>
+     * Decode a region of the image with the given sample size. This method is called off the UI
+     * thread so it can safely load the image on the current thread. It is called from
+     * {@link android.os.AsyncTask}s running in an executor that may have multiple threads, so
+     * implementations must be thread safe. Adding <code>synchronized</code> to the method signature
+     * is the simplest way to achieve this, but bear in mind the {@link #recycle()} method can be
+     * called concurrently.
+     * </p><p>
+     * See {@link SkiaImageRegionDecoder} and {@link SkiaPooledImageRegionDecoder} for examples of
+     * internal locking and synchronization.
+     * </p>
      * @param sRect Source image rectangle to decode.
      * @param sampleSize Sample size.
      * @return The decoded region. It is safe to return null if decoding fails.

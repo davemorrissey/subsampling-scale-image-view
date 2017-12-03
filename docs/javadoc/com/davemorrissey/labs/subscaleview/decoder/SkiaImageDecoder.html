@@ -221,21 +221,23 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
                                       android.net.Uri&nbsp;uri)
                                throws java.lang.Exception</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageDecoder.html#decode-android.content.Context-android.net.Uri-">ImageDecoder</a></code></span></div>
-<div class="block">Decode an image. When possible, initial setup work once in this method. This method
- must return the dimensions of the image. The URI can be in one of the following formats:
- File: file:///scard/picture.jpg
- Asset: file:///android_asset/picture.png
- Resource: android.resource://com.example.app/drawable/picture</div>
+<div class="block">Decode an image. The URI can be in one of the following formats:
+ <br>
+ File: <code>file:///scard/picture.jpg</code>
+ <br>
+ Asset: <code>file:///android_asset/picture.png</code>
+ <br>
+ Resource: <code>android.resource://com.example.app/drawable/picture</code></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageDecoder.html#decode-android.content.Context-android.net.Uri-">decode</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageDecoder.html" title="interface in com.davemorrissey.labs.subscaleview.decoder">ImageDecoder</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>context</code> - Application context. A reference may be held, but must be cleared on recycle.</dd>
-<dd><code>uri</code> - URI of the image.</dd>
+<dd><code>context</code> - Application context</dd>
+<dd><code>uri</code> - URI of the image</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>Dimensions of the image.</dd>
+<dd>the decoded bitmap</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.Exception</code> - if initialisation fails.</dd>
+<dd><code>java.lang.Exception</code> - if decoding fails.</dd>
 </dl>
 </li>
 </ul>
