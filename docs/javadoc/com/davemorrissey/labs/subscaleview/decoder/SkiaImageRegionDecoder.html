@@ -95,7 +95,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
-<li>java.lang.Object</li>
+<li><a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
 <li>com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder</li>
@@ -112,16 +112,16 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">SkiaImageRegionDecoder</span>
-extends java.lang.Object
+extends <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
 implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html" title="interface in com.davemorrissey.labs.subscaleview.decoder">ImageRegionDecoder</a></pre>
 <div class="block">Default implementation of <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html" title="interface in com.davemorrissey.labs.subscaleview.decoder"><code>ImageRegionDecoder</code></a>
- using Android's <code>BitmapRegionDecoder</code>, based on the Skia library. This
+ using Android's <a href="https://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html?is-external=true" title="class or interface in android.graphics"><code>BitmapRegionDecoder</code></a>, based on the Skia library. This
  works well in most circumstances and has reasonable performance due to the cached decoder instance,
  however it has some problems with grayscale, indexed and CMYK images.
 
- A <code>ReadWriteLock</code> is used to delegate responsibility for multi threading behaviour to the
- <code>BitmapRegionDecoder</code> instance on SDK &gt;= 21, whilst allowing this class to block until no
- tiles are being loaded before recycling the decoder. In practice, <code>BitmapRegionDecoder</code> is
+ A <a href="https://developer.android.com/reference/java/util/concurrent/locks/ReadWriteLock.html?is-external=true" title="class or interface in java.util.concurrent.locks"><code>ReadWriteLock</code></a> is used to delegate responsibility for multi threading behaviour to the
+ <a href="https://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html?is-external=true" title="class or interface in android.graphics"><code>BitmapRegionDecoder</code></a> instance on SDK &gt;= 21, whilst allowing this class to block until no
+ tiles are being loaded before recycling the decoder. In practice, <a href="https://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html?is-external=true" title="class or interface in android.graphics"><code>BitmapRegionDecoder</code></a> is
  synchronized internally so this has no real impact on performance.</div>
 </li>
 </ul>
@@ -144,7 +144,7 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#SkiaImageRegionDecoder--">SkiaImageRegionDecoder</a></span>()</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#SkiaImageRegionDecoder-android.graphics.Bitmap.Config-">SkiaImageRegionDecoder</a></span>(android.graphics.Bitmap.Config&nbsp;bitmapConfig)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#SkiaImageRegionDecoder-android.graphics.Bitmap.Config-">SkiaImageRegionDecoder</a></span>(<a href="https://developer.android.com/reference/android/graphics/Bitmap.Config.html?is-external=true" title="class or interface in android.graphics">Bitmap.Config</a>&nbsp;bitmapConfig)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -162,17 +162,17 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>android.graphics.Bitmap</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">decodeRegion</a></span>(android.graphics.Rect&nbsp;sRect,
+<td class="colFirst"><code><a href="https://developer.android.com/reference/android/graphics/Bitmap.html?is-external=true" title="class or interface in android.graphics">Bitmap</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">decodeRegion</a></span>(<a href="https://developer.android.com/reference/android/graphics/Rect.html?is-external=true" title="class or interface in android.graphics">Rect</a>&nbsp;sRect,
             int&nbsp;sampleSize)</code>
 <div class="block">
  Decode a region of the image with the given sample size.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>android.graphics.Point</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#init-android.content.Context-android.net.Uri-">init</a></span>(android.content.Context&nbsp;context,
-    android.net.Uri&nbsp;uri)</code>
+<td class="colFirst"><code><a href="https://developer.android.com/reference/android/graphics/Point.html?is-external=true" title="class or interface in android.graphics">Point</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/SkiaImageRegionDecoder.html#init-android.content.Context-android.net.Uri-">init</a></span>(<a href="https://developer.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content">Context</a>&nbsp;context,
+    <a href="https://developer.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net">Uri</a>&nbsp;uri)</code>
 <div class="block">Initialise the decoder.</div>
 </td>
 </tr>
@@ -193,8 +193,8 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
 </a>
-<h3>Methods inherited from class&nbsp;java.lang.Object</h3>
-<code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#clone--" title="class or interface in java.lang">clone</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#finalize--" title="class or interface in java.lang">finalize</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
 </ul>
 </li>
 </ul>
@@ -225,7 +225,7 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <ul class="blockListLast">
 <li class="blockList">
 <h4>SkiaImageRegionDecoder</h4>
-<pre>public&nbsp;SkiaImageRegionDecoder(android.graphics.Bitmap.Config&nbsp;bitmapConfig)</pre>
+<pre>public&nbsp;SkiaImageRegionDecoder(<a href="https://developer.android.com/reference/android/graphics/Bitmap.Config.html?is-external=true" title="class or interface in android.graphics">Bitmap.Config</a>&nbsp;bitmapConfig)</pre>
 </li>
 </ul>
 </li>
@@ -242,9 +242,9 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <ul class="blockList">
 <li class="blockList">
 <h4>init</h4>
-<pre>public&nbsp;android.graphics.Point&nbsp;init(android.content.Context&nbsp;context,
-                                   android.net.Uri&nbsp;uri)
-                            throws java.lang.Exception</pre>
+<pre>public&nbsp;<a href="https://developer.android.com/reference/android/graphics/Point.html?is-external=true" title="class or interface in android.graphics">Point</a>&nbsp;init(<a href="https://developer.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content">Context</a>&nbsp;context,
+                  <a href="https://developer.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net">Uri</a>&nbsp;uri)
+           throws <a href="https://developer.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#init-android.content.Context-android.net.Uri-">ImageRegionDecoder</a></code></span></div>
 <div class="block">Initialise the decoder. When possible, perform initial setup work once in this method. The
  dimensions of the image must be returned. The URI can be in one of the following formats:
@@ -263,7 +263,7 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Dimensions of the image.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.Exception</code> - if initialisation fails.</dd>
+<dd><code><a href="https://developer.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code> - if initialisation fails.</dd>
 </dl>
 </li>
 </ul>
@@ -273,13 +273,13 @@ implements <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/I
 <ul class="blockList">
 <li class="blockList">
 <h4>decodeRegion</h4>
-<pre>public&nbsp;android.graphics.Bitmap&nbsp;decodeRegion(android.graphics.Rect&nbsp;sRect,
-                                            int&nbsp;sampleSize)</pre>
+<pre>public&nbsp;<a href="https://developer.android.com/reference/android/graphics/Bitmap.html?is-external=true" title="class or interface in android.graphics">Bitmap</a>&nbsp;decodeRegion(<a href="https://developer.android.com/reference/android/graphics/Rect.html?is-external=true" title="class or interface in android.graphics">Rect</a>&nbsp;sRect,
+                           int&nbsp;sampleSize)</pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">ImageRegionDecoder</a></code></span></div>
 <div class="block"><p>
  Decode a region of the image with the given sample size. This method is called off the UI
  thread so it can safely load the image on the current thread. It is called from
- <code>AsyncTask</code>s running in an executor that may have multiple threads, so
+ <a href="https://developer.android.com/reference/android/os/AsyncTask.html?is-external=true" title="class or interface in android.os"><code>AsyncTask</code></a>s running in an executor that may have multiple threads, so
  implementations must be thread safe. Adding <code>synchronized</code> to the method signature
  is the simplest way to achieve this, but bear in mind the <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#recycle--"><code>ImageRegionDecoder.recycle()</code></a> method can be
  called concurrently.

@@ -31,6 +31,7 @@ task javadoc(type: Javadoc) {
     classpath += configurations.compile
     classpath += configurations.javadocs
     options.noTimestamp = true
+    options.links = ['https://developer.android.com/reference/']
 }
 
 apply from: rootProject.file('release.gradle')

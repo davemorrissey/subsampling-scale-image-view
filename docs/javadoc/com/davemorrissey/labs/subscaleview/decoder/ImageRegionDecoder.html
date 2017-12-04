@@ -104,7 +104,7 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public interface <span class="typeNameLabel">ImageRegionDecoder</span></pre>
-<div class="block">Interface for image decoding classes, allowing the default <code>BitmapRegionDecoder</code>
+<div class="block">Interface for image decoding classes, allowing the default <a href="https://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html?is-external=true" title="class or interface in android.graphics"><code>BitmapRegionDecoder</code></a>
  based on the Skia library to be replaced with a custom class.</div>
 </li>
 </ul>
@@ -125,17 +125,17 @@ var activeTableTab = "activeTableTab";
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>android.graphics.Bitmap</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">decodeRegion</a></span>(android.graphics.Rect&nbsp;sRect,
+<td class="colFirst"><code><a href="https://developer.android.com/reference/android/graphics/Bitmap.html?is-external=true" title="class or interface in android.graphics">Bitmap</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#decodeRegion-android.graphics.Rect-int-">decodeRegion</a></span>(<a href="https://developer.android.com/reference/android/graphics/Rect.html?is-external=true" title="class or interface in android.graphics">Rect</a>&nbsp;sRect,
             int&nbsp;sampleSize)</code>
 <div class="block">
  Decode a region of the image with the given sample size.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>android.graphics.Point</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#init-android.content.Context-android.net.Uri-">init</a></span>(android.content.Context&nbsp;context,
-    android.net.Uri&nbsp;uri)</code>
+<td class="colFirst"><code><a href="https://developer.android.com/reference/android/graphics/Point.html?is-external=true" title="class or interface in android.graphics">Point</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#init-android.content.Context-android.net.Uri-">init</a></span>(<a href="https://developer.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content">Context</a>&nbsp;context,
+    <a href="https://developer.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net">Uri</a>&nbsp;uri)</code>
 <div class="block">Initialise the decoder.</div>
 </td>
 </tr>
@@ -172,9 +172,9 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>init</h4>
-<pre>android.graphics.Point&nbsp;init(android.content.Context&nbsp;context,
-                            android.net.Uri&nbsp;uri)
-                     throws java.lang.Exception</pre>
+<pre><a href="https://developer.android.com/reference/android/graphics/Point.html?is-external=true" title="class or interface in android.graphics">Point</a>&nbsp;init(<a href="https://developer.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content">Context</a>&nbsp;context,
+           <a href="https://developer.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net">Uri</a>&nbsp;uri)
+    throws <a href="https://developer.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
 <div class="block">Initialise the decoder. When possible, perform initial setup work once in this method. The
  dimensions of the image must be returned. The URI can be in one of the following formats:
  <br>
@@ -190,7 +190,7 @@ var activeTableTab = "activeTableTab";
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>Dimensions of the image.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.Exception</code> - if initialisation fails.</dd>
+<dd><code><a href="https://developer.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></code> - if initialisation fails.</dd>
 </dl>
 </li>
 </ul>
@@ -200,12 +200,12 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>decodeRegion</h4>
-<pre>android.graphics.Bitmap&nbsp;decodeRegion(android.graphics.Rect&nbsp;sRect,
-                                     int&nbsp;sampleSize)</pre>
+<pre><a href="https://developer.android.com/reference/android/graphics/Bitmap.html?is-external=true" title="class or interface in android.graphics">Bitmap</a>&nbsp;decodeRegion(<a href="https://developer.android.com/reference/android/graphics/Rect.html?is-external=true" title="class or interface in android.graphics">Rect</a>&nbsp;sRect,
+                    int&nbsp;sampleSize)</pre>
 <div class="block"><p>
  Decode a region of the image with the given sample size. This method is called off the UI
  thread so it can safely load the image on the current thread. It is called from
- <code>AsyncTask</code>s running in an executor that may have multiple threads, so
+ <a href="https://developer.android.com/reference/android/os/AsyncTask.html?is-external=true" title="class or interface in android.os"><code>AsyncTask</code></a>s running in an executor that may have multiple threads, so
  implementations must be thread safe. Adding <code>synchronized</code> to the method signature
  is the simplest way to achieve this, but bear in mind the <a href="../../../../../com/davemorrissey/labs/subscaleview/decoder/ImageRegionDecoder.html#recycle--"><code>recycle()</code></a> method can be
  called concurrently.
