@@ -15,6 +15,7 @@ import java.net.URLDecoder;
  * When you are using a preview image, you must set the dimensions of the full size image on the
  * ImageSource object for the full size image using the {@link #dimensions(int, int)} method.
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class ImageSource {
 
     static final String FILE_SCHEME = "file:///";
