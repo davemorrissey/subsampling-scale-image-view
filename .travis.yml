@@ -3,6 +3,9 @@ language: android
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  
+before_install:
+  - yes | sdkmanager "platforms;android-27"
 
 cache:
   directories:
