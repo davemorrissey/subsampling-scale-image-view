@@ -23,7 +23,7 @@ public class ExtensionCircleFragment extends Fragment {
             @Override public void onClick(View v) { ((ExtensionActivity) ExtensionCircleFragment.this.getActivity()).previous(); }
         });
         SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
+        imageView.setImage(ImageSource.asset("sanmartino.jpg"));
         return rootView;
     }
 

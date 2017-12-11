@@ -39,7 +39,7 @@ public class AnimationActivity extends AbstractPagesActivity {
             @Override public void onClick(View v) { AnimationActivity.this.play(); }
         });
         view = findViewById(id.imageView);
-        view.setImage(ImageSource.asset("squirrel.jpg"));
+        view.setImage(ImageSource.asset("sanmartino.jpg"));
     }
 
     @Override

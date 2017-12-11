@@ -38,7 +38,7 @@ public class ConfigurationActivity extends AbstractPagesActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         view = findViewById(id.imageView);
-        view.setImage(ImageSource.asset("eagle.jpg"));
+        view.setImage(ImageSource.asset("card.png"));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class ConfigurationActivity extends AbstractPagesActivity {
         if (page == 1) {
             view.setMinimumTileDpi(50);
         } else {
-            view.setMinimumTileDpi(500);
+            view.setMinimumTileDpi(320);
         }
         if (page == 4) {
             view.setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER);
@@ -78,13 +78,13 @@ public class ConfigurationActivity extends AbstractPagesActivity {
             view.setDebug(false);
         }
         if (page == 2) {
-            view.setScaleAndCenter(0f, new PointF(2456, 1632));
+            view.setScaleAndCenter(0f, new PointF(3900, 3120));
             view.setPanEnabled(false);
         } else {
             view.setPanEnabled(true);
         }
         if (page == 3) {
-            view.setScaleAndCenter(1f, new PointF(2456, 1632));
+            view.setScaleAndCenter(1f, new PointF(3900, 3120));
             view.setZoomEnabled(false);
         } else {
             view.setZoomEnabled(true);

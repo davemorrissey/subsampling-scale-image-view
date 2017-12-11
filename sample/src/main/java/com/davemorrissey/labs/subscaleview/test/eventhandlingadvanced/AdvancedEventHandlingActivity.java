@@ -66,7 +66,7 @@ public class AdvancedEventHandlingActivity extends AbstractPagesActivity {
             }
         });
 
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
+        imageView.setImage(ImageSource.asset("sanmartino.jpg"));
         imageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {

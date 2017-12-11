@@ -21,8 +21,8 @@ public class ExtensionPinFragment extends Fragment {
             @Override public void onClick(View v) { ((ExtensionActivity) ExtensionPinFragment.this.getActivity()).next(); }
         });
         PinView imageView = rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
-        imageView.setPin(new PointF(1718f, 581f));
+        imageView.setImage(ImageSource.asset("sanmartino.jpg"));
+        imageView.setPin(new PointF(1602f, 405f));
         return rootView;
     }
 

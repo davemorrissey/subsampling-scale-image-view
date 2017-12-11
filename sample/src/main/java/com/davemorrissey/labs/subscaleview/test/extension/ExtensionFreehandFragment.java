@@ -20,7 +20,7 @@ public class ExtensionFreehandFragment extends Fragment {
             @Override public void onClick(View v) { ((ExtensionActivity) ExtensionFreehandFragment.this.getActivity()).previous(); }
         });
         final FreehandView imageView = rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("squirrel.jpg"));
+        imageView.setImage(ImageSource.asset("sanmartino.jpg"));
         rootView.findViewById(id.reset).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { imageView.reset(); }
         });

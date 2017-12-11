@@ -22,7 +22,7 @@ import static com.davemorrissey.labs.subscaleview.test.R.string.pager_title;
 
 public class ViewPagerActivity extends AbstractPagesActivity {
 
-    private static final String[] IMAGES = { "eagle.jpg", "pony.jpg" };
+    private static final String[] IMAGES = { "sanmartino.jpg", "swissroad.jpg" };
 
     public ViewPagerActivity() {
         super(pager_title, view_pager, Arrays.asList(

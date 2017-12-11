@@ -37,7 +37,7 @@
     <string name="display.title">Image display</string>
     <string name="display.p1.subtitle">Large images</string>
     <string name="display.p1.text">
-        This image is 7,557 x 5,669 pixels. On most devices it will be subsampled, and higher quality tiles are loaded as you zoom in.
+        This image is 7,800 x 6,240 pixels. On most devices it will be subsampled, and higher quality tiles are loaded as you zoom in.
     </string>
     <string name="display.p2.subtitle">Rotation</string>
     <string name="display.p2.text">
