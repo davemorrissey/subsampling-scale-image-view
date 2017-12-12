@@ -35,7 +35,7 @@ public class SkiaImageDecoder implements ImageDecoder {
         this(null);
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
     public SkiaImageDecoder(Bitmap.Config bitmapConfig) {
         Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
         if (bitmapConfig != null) {

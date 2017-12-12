@@ -47,7 +47,7 @@ public class SkiaImageRegionDecoder implements ImageRegionDecoder {
         this(null);
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
     public SkiaImageRegionDecoder(Bitmap.Config bitmapConfig) {
         Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
         if (bitmapConfig != null) {
