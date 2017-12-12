@@ -22,7 +22,7 @@ The view optionally uses subsampling and tiles to support very large images - a 
 
 #### Migration guides
 
-Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions can be found [in the wiki](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/X.--Release-notes).
+Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions can be found [in the wiki](https://github.com/davemorrissey/subsampling-scale-image-view/wiki/X.--Migration-guides).
 
 #### Download the sample app
 
