@@ -72,7 +72,7 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
     private Uri uri;
 
     private long fileLength = Long.MAX_VALUE;
-    private Point imageDimensions = new Point(0, 0);
+    private final Point imageDimensions = new Point(0, 0);
     private final AtomicBoolean lazyInited = new AtomicBoolean(false);
 
     @Keep
@@ -339,7 +339,7 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
      */
     private static class DecoderPool {
         private final Semaphore available = new Semaphore(0, true);
-        private Map<BitmapRegionDecoder, Boolean> decoders = new ConcurrentHashMap<>();
+        private final Map<BitmapRegionDecoder, Boolean> decoders = new ConcurrentHashMap<>();
 
         /**
          * Returns false if there is at least one decoder in the pool.

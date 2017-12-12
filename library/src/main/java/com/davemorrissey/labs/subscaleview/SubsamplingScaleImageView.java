@@ -170,7 +170,7 @@ public class SubsamplingScaleImageView extends View {
     private int minimumScaleType = SCALE_TYPE_CENTER_INSIDE;
 
     // overrides for the dimensions of the generated tiles
-    public static int TILE_SIZE_AUTO = Integer.MAX_VALUE;
+    public static final int TILE_SIZE_AUTO = Integer.MAX_VALUE;
     private int maxTileWidth = TILE_SIZE_AUTO;
     private int maxTileHeight = TILE_SIZE_AUTO;
 
@@ -260,7 +260,7 @@ public class SubsamplingScaleImageView extends View {
     private OnLongClickListener onLongClickListener;
 
     // Long click handler
-    private Handler handler;
+    private final Handler handler;
     private static final int MESSAGE_LONG_CLICK = 1;
 
     // Paint objects created once and reused for efficiency
@@ -273,11 +273,11 @@ public class SubsamplingScaleImageView extends View {
     private ScaleAndTranslate satTemp;
     private Matrix matrix;
     private RectF sRect;
-    private float[] srcArray = new float[8];
-    private float[] dstArray = new float[8];
+    private final float[] srcArray = new float[8];
+    private final float[] dstArray = new float[8];
 
     //The logical density of the display
-    private float density;
+    private final float density;
 
     // A global preference for bitmap format, available to decoder classes that respect it
     private static Bitmap.Config preferredBitmapConfig;
@@ -1913,7 +1913,7 @@ public class SubsamplingScaleImageView extends View {
             this.vTranslate = vTranslate;
         }
         private float scale;
-        private PointF vTranslate;
+        private final PointF vTranslate;
     }
 
     /**

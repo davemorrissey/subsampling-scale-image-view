@@ -13,8 +13,8 @@ import java.lang.reflect.InvocationTargetException;
 @SuppressWarnings("WeakerAccess")
 public class CompatDecoderFactory<T> implements DecoderFactory<T> {
 
-    private Class<? extends T> clazz;
-    private Bitmap.Config bitmapConfig;
+    private final Class<? extends T> clazz;
+    private final Bitmap.Config bitmapConfig;
 
     /**
      * Construct a factory for the given class. This must have a default constructor.
