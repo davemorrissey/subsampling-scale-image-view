@@ -2182,6 +2182,7 @@ public class SubsamplingScaleImageView extends View {
      * @param vTarget target object for result. The same instance is also returned.
      * @return view coordinates. This is the same instance passed to the vTarget param.
      */
+    @SuppressWarnings("UnusedReturnValue")
     public final PointF sourceToViewCoord(PointF sxy, PointF vTarget) {
         return sourceToViewCoord(sxy.x, sxy.y, vTarget);
     }
@@ -2204,14 +2205,13 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Convert source rect to screen rect, integer values.
      */
-    private Rect sourceToViewRect(Rect sRect, Rect vTarget) {
+    private void sourceToViewRect(Rect sRect, Rect vTarget) {
         vTarget.set(
             (int)sourceToViewX(sRect.left),
             (int)sourceToViewY(sRect.top),
             (int)sourceToViewX(sRect.right),
             (int)sourceToViewY(sRect.bottom)
         );
-        return vTarget;
     }
 
     /**
@@ -2590,6 +2590,7 @@ public class SubsamplingScaleImageView extends View {
      * next draw. This is triggered at the same time as {@link OnImageEventListener#onReady()} but
      * allows a subclass to receive this event without using a listener.
      */
+    @SuppressWarnings("EmptyMethod")
     protected void onReady() {
 
     }
@@ -2606,6 +2607,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Called once when the full size image or its base layer tiles have been loaded.
      */
+    @SuppressWarnings("EmptyMethod")
     protected void onImageLoaded() {
 
     }
@@ -3063,6 +3065,7 @@ public class SubsamplingScaleImageView extends View {
      * these events are triggered if the activity is paused, the image is swapped, or in other cases
      * where the view's internal state gets wiped or draw events stop.
      */
+    @SuppressWarnings("EmptyMethod")
     public interface OnAnimationEventListener {
 
         /**
@@ -3096,6 +3099,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * An event listener, allowing subclasses and activities to be notified of significant events.
      */
+    @SuppressWarnings("EmptyMethod")
     public interface OnImageEventListener {
 
         /**
@@ -3168,6 +3172,7 @@ public class SubsamplingScaleImageView extends View {
      * this listener will be called on the UI thread and may be called very frequently - your
      * implementation should return quickly.
      */
+    @SuppressWarnings("EmptyMethod")
     public interface OnStateChangedListener {
 
         /**
