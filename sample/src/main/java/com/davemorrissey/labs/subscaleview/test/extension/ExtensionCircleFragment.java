@@ -17,12 +17,15 @@ public class ExtensionCircleFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.extension_circle_fragment, container, false);
-        rootView.findViewById(id.next).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { ((ExtensionActivity) ExtensionCircleFragment.this.getActivity()).next(); }
-        });
-        rootView.findViewById(id.previous).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { ((ExtensionActivity) ExtensionCircleFragment.this.getActivity()).previous(); }
-        });
+        final ExtensionActivity activity = (ExtensionActivity)getActivity();
+        if (activity != null) {
+            rootView.findViewById(id.next).setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { activity.next(); }
+            });
+            rootView.findViewById(id.previous).setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { activity.previous(); }
+            });
+        }
         SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
         imageView.setImage(ImageSource.asset("sanmartino.jpg"));
         return rootView;
