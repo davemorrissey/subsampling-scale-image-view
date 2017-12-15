@@ -2,6 +2,7 @@ package com.davemorrissey.labs.subscaleview.test.extension;
 
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,7 @@ import com.davemorrissey.labs.subscaleview.test.extension.views.PinView;
 public class ExtensionPinFragment extends Fragment {
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(layout.extension_pin_fragment, container, false);
         rootView.findViewById(id.next).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { ((ExtensionActivity) ExtensionPinFragment.this.getActivity()).next(); }
