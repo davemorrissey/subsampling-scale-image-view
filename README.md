@@ -118,4 +118,4 @@ Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions
 
 ## About
 
-Copyright 2017 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it!
+Copyright 2018 David Morrissey, and licensed under the Apache License, Version 2.0. No attribution is necessary but it's very much appreciated. Star this project if you like it!
