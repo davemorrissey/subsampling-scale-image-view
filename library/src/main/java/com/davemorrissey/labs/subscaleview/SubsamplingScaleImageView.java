@@ -219,6 +219,8 @@ public class SubsamplingScaleImageView extends View {
     private boolean isQuickScaling;
     // Max touches used in current gesture
     private int maxTouchCount;
+    // Reset zoom level on size change
+    private boolean resetScaleOnSizeChange;
 
     // Fling detector
     private GestureDetector detector;
@@ -487,6 +489,7 @@ public class SubsamplingScaleImageView extends View {
         isZooming = false;
         isPanning = false;
         isQuickScaling = false;
+        resetScaleOnSizeChange = true;
         maxTouchCount = 0;
         fullImageSampleSize = 0;
         vCenterStart = null;
@@ -609,9 +612,18 @@ public class SubsamplingScaleImageView extends View {
      */
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        if(oldh != 0 && oldw != 0) {
-            resetScaleAndCenter();
+        if (resetScaleOnSizeChange) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            if (oldh != 0 && oldw != 0) {
+                resetScaleAndCenter();
+            }
+        } else {
+            PointF sCenter = getCenter();
+            if (readySent && sCenter != null) {
+                this.anim = null;
+                this.pendingScale = scale;
+                this.sPendingCenter = sCenter;
+            }
         }
     }
 
@@ -2768,6 +2780,10 @@ public class SubsamplingScaleImageView extends View {
      */
     public final void setDoubleTapZoomDuration(int durationMs) {
         this.doubleTapZoomDuration = Math.max(0, durationMs);
+    }
+
+    public final void setResetScaleOnSizeChange(boolean resetScaleOnSizeChange) {
+        this.resetScaleOnSizeChange = resetScaleOnSizeChange;
     }
 
     /**
