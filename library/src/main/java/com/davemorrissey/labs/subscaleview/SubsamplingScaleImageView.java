@@ -286,6 +286,7 @@ public class SubsamplingScaleImageView extends View {
 
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
+        resetScaleOnSizeChange = true;
         density = getResources().getDisplayMetrics().density;
         setMinimumDpi(160);
         setDoubleTapZoomDpi(160);
@@ -489,7 +490,6 @@ public class SubsamplingScaleImageView extends View {
         isZooming = false;
         isPanning = false;
         isQuickScaling = false;
-        resetScaleOnSizeChange = true;
         maxTouchCount = 0;
         fullImageSampleSize = 0;
         vCenterStart = null;
