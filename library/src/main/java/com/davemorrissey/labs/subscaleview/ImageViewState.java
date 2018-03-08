@@ -1,6 +1,7 @@
 package com.davemorrissey.labs.subscaleview;
 
 import android.graphics.PointF;
+import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 
@@ -18,7 +19,7 @@ public class ImageViewState implements Serializable {
 
     private final int orientation;
 
-    public ImageViewState(float scale, PointF center, int orientation) {
+    public ImageViewState(float scale, @NonNull PointF center, int orientation) {
         this.scale = scale;
         this.centerX = center.x;
         this.centerY = center.y;
@@ -29,7 +30,7 @@ public class ImageViewState implements Serializable {
         return scale;
     }
 
-    public PointF getCenter() {
+    @NonNull public PointF getCenter() {
         return new PointF(centerX, centerY);
     }
 
