@@ -15,6 +15,8 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.Keep;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -82,7 +84,7 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
     }
 
     @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
-    public SkiaPooledImageRegionDecoder(Bitmap.Config bitmapConfig) {
+    public SkiaPooledImageRegionDecoder(@Nullable Bitmap.Config bitmapConfig) {
         Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
         if (bitmapConfig != null) {
             this.bitmapConfig = bitmapConfig;
@@ -109,7 +111,8 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
      * additional three decoders. The thread will abort if {@link #recycle()} is called.
      */
     @Override
-    public Point init(final Context context, final Uri uri) throws Exception {
+    @NonNull
+    public Point init(final Context context, @NonNull final Uri uri) throws Exception {
         this.context = context;
         this.uri = uri;
         initialiseDecoder();
@@ -245,7 +248,8 @@ public class SkiaPooledImageRegionDecoder implements ImageRegionDecoder {
      * method until after {@link #init(Context, Uri)}, so there will be no blocking on an empty pool.
      */
     @Override
-    public Bitmap decodeRegion(Rect sRect, int sampleSize) {
+    @NonNull
+    public Bitmap decodeRegion(@NonNull Rect sRect, int sampleSize) {
         debug("Decode region " + sRect + " on thread " + Thread.currentThread().getName());
         if (sRect.width() < imageDimensions.x || sRect.height() < imageDimensions.y) {
             lazyInit();
