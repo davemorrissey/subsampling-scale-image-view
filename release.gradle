@@ -36,7 +36,7 @@ afterEvaluate { project ->
             pom.project {
                 name 'SubsamplingScaleImageView'
                 packaging 'aar'
-                description 'Custom image views for Android with pinch to zoom, panning, rotation and animation support, with easy extension so you can add your own overlays and touch event detection.'
+                description 'Highly configurable, easily extendable deep zoom view for displaying huge images without loss of detail. Perfect for photo galleries, maps, building plans etc.'
                 url 'https://github.com/davemorrissey/subsampling-scale-image-view'
 
                 scm {
