@@ -63,6 +63,22 @@ afterEvaluate { project ->
         }
     }
 
+    task androidJavadocs(type: Javadoc) {
+        onlyIf { gradle.taskGraph.hasTask("uploadArchives") }
+        source = android.sourceSets.main.java.sourceFiles
+        destinationDir = rootProject.file("docs/javadoc")
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += configurations.compile
+        classpath += configurations.javadocs
+        options.noTimestamp = true
+        options.links = ['https://developer.android.com/reference/']
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        from androidJavadocs.destinationDir
+    }
+
     task androidSourcesJar(type: Jar) {
         classifier = 'sources'
         from android.sourceSets.main.java.sourceFiles
@@ -70,6 +86,7 @@ afterEvaluate { project ->
 
     artifacts {
         archives androidSourcesJar
+        archives androidJavadocsJar
     }
 
 }
