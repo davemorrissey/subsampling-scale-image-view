@@ -85,7 +85,7 @@ Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions
 **1)** Add this library as a dependency in your app's build.gradle file.
 
     dependencies {
-        implementation 'com.davemorrissey.labs:subsampling-scale-image-view:3.9.0'
+        implementation 'com.davemorrissey.labs:subsampling-scale-image-view:3.10.0'
     }
 
 **2)** Add the view to your layout XML.
