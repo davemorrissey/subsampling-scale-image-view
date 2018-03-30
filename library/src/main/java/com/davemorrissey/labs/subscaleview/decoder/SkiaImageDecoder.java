@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.Keep;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
@@ -36,7 +38,7 @@ public class SkiaImageDecoder implements ImageDecoder {
     }
 
     @SuppressWarnings({"WeakerAccess", "SameParameterValue"})
-    public SkiaImageDecoder(Bitmap.Config bitmapConfig) {
+    public SkiaImageDecoder(@Nullable Bitmap.Config bitmapConfig) {
         Bitmap.Config globalBitmapConfig = SubsamplingScaleImageView.getPreferredBitmapConfig();
         if (bitmapConfig != null) {
             this.bitmapConfig = bitmapConfig;
@@ -48,7 +50,8 @@ public class SkiaImageDecoder implements ImageDecoder {
     }
 
     @Override
-    public Bitmap decode(Context context, Uri uri) throws Exception {
+    @NonNull
+    public Bitmap decode(Context context, @NonNull Uri uri) throws Exception {
         String uriString = uri.toString();
         BitmapFactory.Options options = new BitmapFactory.Options();
         Bitmap bitmap;
