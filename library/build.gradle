@@ -9,6 +9,10 @@ android {
 
     defaultConfig {
         consumerProguardFiles 'proguard-rules.txt'
+        minSdkVersion 14
+        targetSdkVersion 27
+        versionCode 1
+        versionName '1.0'
     }
 }
 
@@ -17,10 +21,10 @@ configurations {
 }
 
 dependencies {
-    javadocs 'com.android.support:support-annotations:27.1.0'
-    javadocs 'com.android.support:exifinterface:27.1.0'
-    implementation 'com.android.support:support-annotations:27.1.0'
-    implementation 'com.android.support:exifinterface:27.1.0'
+    javadocs 'com.android.support:support-annotations:27.1.1'
+    javadocs 'com.android.support:exifinterface:27.1.1'
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation 'com.android.support:exifinterface:27.1.1'
 }
 
 task javadoc(type: Javadoc) {
