@@ -15,5 +15,5 @@ android {
 
 dependencies {
     implementation project(':library')
-    implementation 'com.android.support:support-v4:27.1.0'
+    implementation 'com.android.support:support-v4:27.1.1'
 }

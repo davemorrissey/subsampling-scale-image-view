@@ -6,6 +6,7 @@ version = '3.10.0'
 
 android {
     compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         consumerProguardFiles 'proguard-rules.txt'
@@ -17,10 +18,10 @@ configurations {
 }
 
 dependencies {
-    javadocs 'com.android.support:support-annotations:27.1.0'
-    javadocs 'com.android.support:exifinterface:27.1.0'
-    implementation 'com.android.support:support-annotations:27.1.0'
-    implementation 'com.android.support:exifinterface:27.1.0'
+    javadocs 'com.android.support:support-annotations:27.1.1'
+    javadocs 'com.android.support:exifinterface:27.1.1'
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation 'com.android.support:exifinterface:27.1.1'
 }
 
 task javadoc(type: Javadoc) {
