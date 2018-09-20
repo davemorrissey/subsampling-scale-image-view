@@ -1089,7 +1089,7 @@ public class SubsamplingScaleImageView extends View {
                 }
             }
 
-        } else if (bitmap != null) {
+        } else if (bitmap != null && !bitmap.isRecycled()) {
 
             float xScale = scale, yScale = scale;
             if (bitmapIsPreview) {
