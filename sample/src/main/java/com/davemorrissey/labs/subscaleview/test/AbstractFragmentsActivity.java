@@ -2,8 +2,8 @@ package com.davemorrissey.labs.subscaleview.test;
 
 import android.app.ActionBar;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 import android.view.MenuItem;
 
 import java.util.List;

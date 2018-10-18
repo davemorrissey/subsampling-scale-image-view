@@ -3,7 +3,7 @@ package com.davemorrissey.labs.subscaleview.decoder;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Interface for image decoding classes, allowing the default {@link android.graphics.BitmapFactory}
