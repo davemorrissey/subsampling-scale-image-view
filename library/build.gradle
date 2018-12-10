@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
@@ -23,6 +24,7 @@ dependencies {
     javadocs 'com.android.support:exifinterface:28.0.0'
     implementation 'com.android.support:support-annotations:28.0.0'
     implementation 'com.android.support:exifinterface:28.0.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 task javadoc(type: Javadoc) {
@@ -37,3 +39,7 @@ task javadoc(type: Javadoc) {
 }
 
 apply from: rootProject.file('release.gradle')
+
+repositories {
+    google()
+}
