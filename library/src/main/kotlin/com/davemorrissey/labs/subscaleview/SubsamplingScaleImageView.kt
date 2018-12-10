@@ -512,7 +512,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             } else {
                 var uri = previewSource.uri
                 if (uri == null && previewSource.resource != null) {
-                    uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/" + previewSource.resource)
+                    uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${previewSource.resource}")
                 }
                 val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, true)
                 execute(task)
@@ -527,7 +527,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             sRegion = imageSource.sRegion
             uri = imageSource.uri
             if (uri == null && imageSource.resource != null) {
-                uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/" + imageSource.resource)
+                uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${imageSource.resource}")
             }
             if (imageSource.tile || sRegion != null) {
                 // Load the bitmap using tile decoding.
@@ -1137,7 +1137,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             canvas.drawText("LOADING", (tile.vRect!!.left + px(5)).toFloat(), (tile.vRect!!.top + px(35)).toFloat(), debugTextPaint!!)
                         }
                         if (tile.visible && debug) {
-                            canvas.drawText("ISS " + tile.sampleSize + " RECT " + tile.sRect!!.top + "," + tile.sRect!!.left + "," + tile.sRect!!.bottom + "," + tile.sRect!!.right, (tile.vRect!!.left + px(5)).toFloat(), (tile.vRect!!.top + px(15)).toFloat(), debugTextPaint!!)
+                            canvas.drawText("ISS ${tile.sampleSize} RECT ${tile.sRect!!.top}, ${tile.sRect!!.left}, ${tile.sRect!!.bottom}, ${tile.sRect!!.right}", (tile.vRect!!.left + px(5)).toFloat(), (tile.vRect!!.top + px(15)).toFloat(), debugTextPaint!!)
                         }
                     }
                 }
@@ -1179,11 +1179,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (debug) {
-            canvas.drawText("Scale: " + String.format(Locale.ENGLISH, "%.2f", scale) + " (" + String.format(Locale.ENGLISH, "%.2f", minScale()) + " - " + String.format(Locale.ENGLISH, "%.2f", maxScale) + ")", px(5).toFloat(), px(15).toFloat(), debugTextPaint!!)
-            canvas.drawText("Translate: " + String.format(Locale.ENGLISH, "%.2f", vTranslate!!.x) + ":" + String.format(Locale.ENGLISH, "%.2f", vTranslate!!.y), px(5).toFloat(), px(30).toFloat(), debugTextPaint!!)
+            canvas.drawText("Scale: ${String.format(Locale.ENGLISH, "%.2f", scale)} (${String.format(Locale.ENGLISH, "%.2f", minScale())} - ${String.format(Locale.ENGLISH, "%.2f", maxScale)})", px(5).toFloat(), px(15).toFloat(), debugTextPaint!!)
+            canvas.drawText("Translate: ${String.format(Locale.ENGLISH, "%.2f", vTranslate!!.x)}:${String.format(Locale.ENGLISH, "%.2f", vTranslate!!.y)}", px(5).toFloat(), px(30).toFloat(), debugTextPaint!!)
             val center = center
 
-            canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center!!.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), px(5).toFloat(), px(45).toFloat(), debugTextPaint!!)
+            canvas.drawText("Source center: ${String.format(Locale.ENGLISH, "%.2f", center!!.x)}:${String.format(Locale.ENGLISH, "%.2f", center.y)}", px(5).toFloat(), px(45).toFloat(), debugTextPaint!!)
             if (anim != null) {
                 val vCenterStart = sourceToViewCoord(anim!!.sCenterStart!!)
                 val vCenterEndRequested = sourceToViewCoord(anim!!.sCenterEndRequested!!)
@@ -1301,7 +1301,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     @Synchronized
     private fun initialiseBaseLayer(maxTileDimensions: Point) {
-        debug("initialiseBaseLayer maxTileDimensions=%dx%d", maxTileDimensions.x, maxTileDimensions.y)
+        debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
 
         satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
         fitToBounds(true, satTemp!!)
@@ -1531,7 +1531,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Once source image and view dimensions are known, creates a map of sample size to tile grid.
      */
     private fun initialiseTileMap(maxTileDimensions: Point) {
-        debug("initialiseTileMap maxTileDimensions=%dx%d", maxTileDimensions.x, maxTileDimensions.y)
+        debug("initialiseTileMap maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
         tileMap = LinkedHashMap()
         var sampleSize = fullImageSampleSize
         var xTiles = 1
@@ -1638,7 +1638,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     @Synchronized
     private fun onTilesInited(decoder: ImageRegionDecoder, sWidth: Int, sHeight: Int, sOrientation: Int) {
-        debug("onTilesInited sWidth=%d, sHeight=%d, sOrientation=%d", sWidth, sHeight, orientation)
+        debug("onTilesInited sWidth=$sWidth, sHeight=$sHeight, sOrientation=$orientation")
         // If actual dimensions don't match the declared size, reset everything.
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false)
@@ -1687,7 +1687,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 val decoder = decoderRef.get()
                 val tile = tileRef.get()
                 if (decoder != null && tile != null && view != null && decoder.isReady && tile.visible) {
-                    view.debug("TileLoadTask.doInBackground, tile.sRect=%s, tile.sampleSize=%d", tile.sRect as Rect, tile.sampleSize)
+                    view.debug("TileLoadTask.doInBackground, tile.sRect=${tile.sRect as Rect}, tile.sampleSize=${tile.sampleSize}")
                     view.decoderLock.readLock().lock()
                     try {
                         if (decoder.isReady) {
@@ -2323,9 +2323,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Debug logger
      */
     @AnyThread
-    private fun debug(message: String, vararg args: Any) {
+    private fun debug(message: String) {
         if (debug) {
-            Log.d(TAG, String.format(message, *args))
+            Log.d(TAG, message)
         }
     }
 
