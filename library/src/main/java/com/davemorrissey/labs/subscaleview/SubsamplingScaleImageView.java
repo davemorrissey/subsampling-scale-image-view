@@ -310,13 +310,13 @@ public class SubsamplingScaleImageView extends View {
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_assetName)) {
                 String assetName = typedAttr.getString(styleable.SubsamplingScaleImageView_assetName);
                 if (assetName != null && assetName.length() > 0) {
-                    setImage(ImageSource.asset(assetName).tilingEnabled());
+                    setImage(ImageSource.Companion.asset(assetName).tilingEnabled());
                 }
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_src)) {
                 int resId = typedAttr.getResourceId(styleable.SubsamplingScaleImageView_src, 0);
                 if (resId > 0) {
-                    setImage(ImageSource.resource(resId).tilingEnabled());
+                    setImage(ImageSource.Companion.resource(resId).tilingEnabled());
                 }
             }
             if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_panEnabled)) {
@@ -1864,9 +1864,9 @@ public class SubsamplingScaleImageView extends View {
                     cursor.close();
                 }
             }
-        } else if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
+        } else if (sourceUri.startsWith(ImageSource.Companion.getFILE_SCHEME()) && !sourceUri.startsWith(ImageSource.Companion.getASSET_SCHEME())) {
             try {
-                ExifInterface exifInterface = new ExifInterface(sourceUri.substring(ImageSource.FILE_SCHEME.length() - 1));
+                ExifInterface exifInterface = new ExifInterface(sourceUri.substring(ImageSource.Companion.getFILE_SCHEME().length() - 1));
                 int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
                 if (orientationAttr == ExifInterface.ORIENTATION_NORMAL || orientationAttr == ExifInterface.ORIENTATION_UNDEFINED) {
                     exifOrientation = ORIENTATION_0;

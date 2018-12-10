@@ -38,7 +38,7 @@ public class ConfigurationActivity extends AbstractPagesActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         view = findViewById(id.imageView);
-        view.setImage(ImageSource.asset("card.png"));
+        view.setImage(ImageSource.Companion.asset("card.png"));
     }
 
     @Override

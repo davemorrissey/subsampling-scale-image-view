@@ -25,7 +25,7 @@ public class ExtensionPinFragment extends Fragment {
             });
         }
         PinView imageView = rootView.findViewById(id.imageView);
-        imageView.setImage(ImageSource.asset("sanmartino.jpg"));
+        imageView.setImage(ImageSource.Companion.asset("sanmartino.jpg"));
         imageView.setPin(new PointF(1602f, 405f));
         return rootView;
     }
