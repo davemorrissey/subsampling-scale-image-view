@@ -27,7 +27,7 @@ public class ImageDisplayRegionFragment extends Fragment {
         final SubsamplingScaleImageView imageView = rootView.findViewById(id.imageView);
         imageView.setBitmapDecoderFactory(new CompatDecoderFactory<ImageDecoder>(SkiaImageDecoder.class, Bitmap.Config.ARGB_8888));
         imageView.setRegionDecoderFactory(new CompatDecoderFactory<ImageRegionDecoder>(SkiaImageRegionDecoder.class, Bitmap.Config.ARGB_8888));
-        imageView.setOrientation(SubsamplingScaleImageView.Companion.getORIENTATION_90());
+        imageView.setOrientation(SubsamplingScaleImageView.ORIENTATION_90);
         imageView.setImage(ImageSource.Companion.asset("card.png").region(new Rect(5200, 651, 8200, 3250)));
         final ImageDisplayActivity activity = (ImageDisplayActivity)getActivity();
         if (activity != null) {
