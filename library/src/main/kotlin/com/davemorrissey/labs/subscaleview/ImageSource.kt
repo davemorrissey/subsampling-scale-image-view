@@ -87,12 +87,12 @@ class ImageSource {
 
     private constructor(bitmap: Bitmap, cached: Boolean) {
         this.bitmap = bitmap
-        this.uri = null
-        this.resource = null
-        this.tile = false
-        this.sWidth = bitmap.width
-        this.sHeight = bitmap.height
-        this.isCached = cached
+        uri = null
+        resource = null
+        tile = false
+        sWidth = bitmap.width
+        sHeight = bitmap.height
+        isCached = cached
     }
 
     private constructor(uri: Uri) {
@@ -110,17 +110,17 @@ class ImageSource {
 
             }
         }
-        this.bitmap = null
         this.uri = newUri
-        this.resource = null
-        this.tile = true
+        bitmap = null
+        resource = null
+        tile = true
     }
 
     private constructor(resource: Int) {
-        this.bitmap = null
-        this.uri = null
         this.resource = resource
-        this.tile = true
+        bitmap = null
+        uri = null
+        tile = true
     }
 
     /**
@@ -178,10 +178,10 @@ class ImageSource {
     }
 
     private fun setInvariants() {
-        if (this.sRegion != null) {
-            this.tile = true
-            this.sWidth = this.sRegion!!.width()
-            this.sHeight = this.sRegion!!.height()
+        if (sRegion != null) {
+            tile = true
+            sWidth = sRegion!!.width()
+            sHeight = sRegion!!.height()
         }
     }
 }

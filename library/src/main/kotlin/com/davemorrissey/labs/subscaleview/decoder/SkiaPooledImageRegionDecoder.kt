@@ -46,7 +46,7 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         private val TAG = SkiaPooledImageRegionDecoder::class.java.simpleName
         private val FILE_PREFIX = "file://"
         private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
-        private val RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+        private val RESOURCE_PREFIX = "${ContentResolver.SCHEME_ANDROID_RESOURCE}://"
 
         private var debug = false
 
@@ -126,11 +126,11 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
                                 debug("Starting decoder")
                                 initialiseDecoder()
                                 val end = System.currentTimeMillis()
-                                debug("Started decoder, took " + (end - start) + "ms")
+                                debug("Started decoder, took ${end - start} ms")
                             }
                         } catch (e: Exception) {
                             // A decoder has already been successfully created so we can ignore this
-                            debug("Failed to start decoder: " + e.message)
+                            debug("Failed to start decoder: ${e.message}")
                         }
 
                     }
@@ -240,7 +240,7 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
      * method until after [.init], so there will be no blocking on an empty pool.
      */
     override fun decodeRegion(sRect: Rect, sampleSize: Int): Bitmap {
-        debug("Decode region " + sRect + " on thread " + Thread.currentThread().name)
+        debug("Decode region $sRect on thread ${Thread.currentThread().name}")
         if (sRect.width() < imageDimensions.x || sRect.height() < imageDimensions.y) {
             lazyInit()
         }
@@ -316,7 +316,7 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
                 false
             }
             else -> {
-                debug("Additional decoder allowed, current count is " + numberOfDecoders + ", estimated native memory " + fileLength * numberOfDecoders / (1024 * 1024) + "Mb")
+                debug("Additional decoder allowed, current count is $numberOfDecoders, estimated native memory ${fileLength * numberOfDecoders / (1024 * 1024)} Mb")
                 true
             }
         }
