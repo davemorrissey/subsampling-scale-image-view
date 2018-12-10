@@ -2143,6 +2143,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (vTranslate == null) {
             return null
         }
+
         sTarget.set(viewToSourceX(vx), viewToSourceY(vy))
         return sTarget
     }
@@ -2152,8 +2153,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     private fun sourceToViewX(sx: Float): Float {
         return if (vTranslate == null) {
-            java.lang.Float.NaN
-        } else sx * scale + vTranslate!!.x
+            Float.NaN
+        } else {
+            sx * scale + vTranslate!!.x
+        }
     }
 
     /**
@@ -2161,8 +2164,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     private fun sourceToViewY(sy: Float): Float {
         return if (vTranslate == null) {
-            java.lang.Float.NaN
-        } else sy * scale + vTranslate!!.y
+            Float.NaN
+        } else {
+            sy * scale + vTranslate!!.y
+        }
     }
 
     /**
@@ -2170,9 +2175,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param sxy source coordinates to convert.
      * @return view coordinates.
      */
-    fun sourceToViewCoord(sxy: PointF): PointF? {
-        return sourceToViewCoord(sxy.x, sxy.y, PointF())
-    }
+    fun sourceToViewCoord(sxy: PointF) = sourceToViewCoord(sxy.x, sxy.y, PointF())
 
     /**
      * Convert source coordinate to view coordinate.
@@ -2180,9 +2183,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param vTarget target object for result. The same instance is also returned.
      * @return view coordinates. This is the same instance passed to the vTarget param.
      */
-    fun sourceToViewCoord(sxy: PointF, vTarget: PointF): PointF? {
-        return sourceToViewCoord(sxy.x, sxy.y, vTarget)
-    }
+    fun sourceToViewCoord(sxy: PointF, vTarget: PointF) = sourceToViewCoord(sxy.x, sxy.y, vTarget)
 
     /**
      * Convert source coordinate to view coordinate.
@@ -2196,6 +2197,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (vTranslate == null) {
             return null
         }
+
         vTarget.set(sourceToViewX(sx), sourceToViewY(sy))
         return vTarget
     }
@@ -2223,6 +2225,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (satTemp == null) {
             satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
         }
+
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vxCenter - sCenterX * scale, vyCenter - sCenterY * scale)
         fitToBounds(true, satTemp!!)
@@ -2262,10 +2265,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Adjust a requested scale to be within the allowed limits.
      */
     private fun limitedScale(targetScale: Float): Float {
-        var targetScale = targetScale
-        targetScale = Math.max(minScale(), targetScale)
-        targetScale = Math.min(maxScale, targetScale)
-        return targetScale
+        var newTargetScale = targetScale
+        newTargetScale = Math.max(minScale(), newTargetScale)
+        newTargetScale = Math.min(maxScale, newTargetScale)
+        return newTargetScale
     }
 
     /**
@@ -2278,9 +2281,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @return Current value
      */
     private fun ease(type: Int, time: Long, from: Float, change: Float, duration: Long): Float {
-        when (type) {
-            EASE_IN_OUT_QUAD -> return easeInOutQuad(time, from, change, duration)
-            EASE_OUT_QUAD -> return easeOutQuad(time, from, change, duration)
+        return when (type) {
+            EASE_IN_OUT_QUAD -> easeInOutQuad(time, from, change, duration)
+            EASE_OUT_QUAD -> easeOutQuad(time, from, change, duration)
             else -> throw IllegalStateException("Unexpected easing type: $type")
         }
     }
@@ -2308,11 +2311,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     private fun easeInOutQuad(time: Long, from: Float, change: Float, duration: Long): Float {
         var timeF = time / (duration / 2f)
-        if (timeF < 1) {
-            return change / 2f * timeF * timeF + from
+        return if (timeF < 1) {
+            change / 2f * timeF * timeF + from
         } else {
             timeF--
-            return -change / 2f * (timeF * (timeF - 2) - 1) + from
+            -change / 2f * (timeF * (timeF - 2) - 1) + from
         }
     }
 
@@ -2329,9 +2332,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     /**
      * For debug overlays. Scale pixel value according to screen density.
      */
-    private fun px(px: Int): Int {
-        return (density * px).toInt()
-    }
+    private fun px(px: Int) = (density * px).toInt()
 
     /**
      *
@@ -2341,11 +2342,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param regionDecoderClass The [ImageRegionDecoder] implementation to use.
      */
     fun setRegionDecoderClass(regionDecoderClass: Class<out ImageRegionDecoder>) {
-
-        if (regionDecoderClass == null) {
-            throw IllegalArgumentException("Decoder class cannot be set to null")
-        }
-        this.regionDecoderFactory = CompatDecoderFactory(regionDecoderClass)
+        regionDecoderFactory = CompatDecoderFactory(regionDecoderClass)
     }
 
     /**
@@ -2355,10 +2352,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * instances.
      */
     fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<out ImageRegionDecoder>) {
-
-        if (regionDecoderFactory == null) {
-            throw IllegalArgumentException("Decoder factory cannot be set to null")
-        }
         this.regionDecoderFactory = regionDecoderFactory
     }
 
@@ -2369,11 +2362,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param bitmapDecoderClass The [ImageDecoder] implementation to use.
      */
     fun setBitmapDecoderClass(bitmapDecoderClass: Class<out ImageDecoder>) {
-
-        if (bitmapDecoderClass == null) {
-            throw IllegalArgumentException("Decoder class cannot be set to null")
-        }
-        this.bitmapDecoderFactory = CompatDecoderFactory(bitmapDecoderClass)
+        bitmapDecoderFactory = CompatDecoderFactory(bitmapDecoderClass)
     }
 
     /**
@@ -2382,10 +2371,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param bitmapDecoderFactory The [DecoderFactory] implementation that produces [ImageDecoder] instances.
      */
     fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
-
-        if (bitmapDecoderFactory == null) {
-            throw IllegalArgumentException("Decoder factory cannot be set to null")
-        }
         this.bitmapDecoderFactory = bitmapDecoderFactory
     }
 
@@ -2403,21 +2388,25 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val scaleWidth = scale * sWidth()
         val scaleHeight = scale * sHeight()
 
-        if (panLimit == PAN_LIMIT_CENTER) {
-            vTarget.top = Math.max(0f, -(vTranslate!!.y - height / 2))
-            vTarget.left = Math.max(0f, -(vTranslate!!.x - width / 2))
-            vTarget.bottom = Math.max(0f, vTranslate!!.y - (height / 2 - scaleHeight))
-            vTarget.right = Math.max(0f, vTranslate!!.x - (width / 2 - scaleWidth))
-        } else if (panLimit == PAN_LIMIT_OUTSIDE) {
-            vTarget.top = Math.max(0f, -(vTranslate!!.y - height))
-            vTarget.left = Math.max(0f, -(vTranslate!!.x - width))
-            vTarget.bottom = Math.max(0f, vTranslate!!.y + scaleHeight)
-            vTarget.right = Math.max(0f, vTranslate!!.x + scaleWidth)
-        } else {
-            vTarget.top = Math.max(0f, -vTranslate!!.y)
-            vTarget.left = Math.max(0f, -vTranslate!!.x)
-            vTarget.bottom = Math.max(0f, scaleHeight + vTranslate!!.y - height)
-            vTarget.right = Math.max(0f, scaleWidth + vTranslate!!.x - width)
+        when (panLimit) {
+            PAN_LIMIT_CENTER -> {
+                vTarget.top = Math.max(0f, -(vTranslate!!.y - height / 2))
+                vTarget.left = Math.max(0f, -(vTranslate!!.x - width / 2))
+                vTarget.bottom = Math.max(0f, vTranslate!!.y - (height / 2 - scaleHeight))
+                vTarget.right = Math.max(0f, vTranslate!!.x - (width / 2 - scaleWidth))
+            }
+            PAN_LIMIT_OUTSIDE -> {
+                vTarget.top = Math.max(0f, -(vTranslate!!.y - height))
+                vTarget.left = Math.max(0f, -(vTranslate!!.x - width))
+                vTarget.bottom = Math.max(0f, vTranslate!!.y + scaleHeight)
+                vTarget.right = Math.max(0f, vTranslate!!.x + scaleWidth)
+            }
+            else -> {
+                vTarget.top = Math.max(0f, -vTranslate!!.y)
+                vTarget.left = Math.max(0f, -vTranslate!!.x)
+                vTarget.bottom = Math.max(0f, scaleHeight + vTranslate!!.y - height)
+                vTarget.right = Math.max(0f, scaleWidth + vTranslate!!.x - width)
+            }
         }
     }
 
@@ -2429,6 +2418,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (!VALID_PAN_LIMITS.contains(panLimit)) {
             throw IllegalArgumentException("Invalid pan limit: $panLimit")
         }
+
         this.panLimit = panLimit
         if (isReady) {
             fitToBounds(true)
@@ -2444,7 +2434,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (!VALID_SCALE_TYPES.contains(scaleType)) {
             throw IllegalArgumentException("Invalid scale type: $scaleType")
         }
-        this.minimumScaleType = scaleType
+
+        minimumScaleType = scaleType
         if (isReady) {
             fitToBounds(true)
             invalidate()
@@ -2487,9 +2478,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Returns the minimum allowed scale.
      * @return the minimum scale as a source/view pixels ratio.
      */
-    fun getMinScale(): Float {
-        return minScale()
-    }
+    fun getMinScale() = minScale()
 
     /**
      * By default, image tiles are at least as high resolution as the screen. For a retina screen this may not be
@@ -2516,10 +2505,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param sCenter New source image coordinate to center on the screen, subject to boundaries.
      */
     fun setScaleAndCenter(scale: Float, sCenter: PointF?) {
-        this.anim = null
-        this.pendingScale = scale
-        this.sPendingCenter = sCenter
-        this.sRequestedCenter = sCenter
+        anim = null
+        pendingScale = scale
+        sPendingCenter = sCenter
+        sRequestedCenter = sCenter
         invalidate()
     }
 
@@ -2528,12 +2517,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * and want images to be reset when the user has moved to another page.
      */
     fun resetScaleAndCenter() {
-        this.anim = null
-        this.pendingScale = limitedScale(0f)
+        anim = null
+        pendingScale = limitedScale(0f)
         if (isReady) {
-            this.sPendingCenter = PointF((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat())
+            sPendingCenter = PointF((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat())
         } else {
-            this.sPendingCenter = PointF(0f, 0f)
+            sPendingCenter = PointF(0f, 0f)
         }
         invalidate()
     }
@@ -2543,25 +2532,19 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * next draw. This is triggered at the same time as [OnImageEventListener.onReady] but
      * allows a subclass to receive this event without using a listener.
      */
-    protected fun onReady() {
-
-    }
+    protected fun onReady() {}
 
     /**
      * Called once when the full size image or its base layer tiles have been loaded.
      */
-    protected fun onImageLoaded() {
-
-    }
+    protected fun onImageLoaded() {}
 
     /**
      * Returns the orientation setting. This can return [.ORIENTATION_USE_EXIF], in which case it doesn't tell you
      * the applied orientation of the image. For that, use [.getAppliedOrientation].
      * @return the orientation setting. See static fields.
      */
-    fun getOrientation(): Int {
-        return orientation
-    }
+    fun getOrientation() = orientation
 
     /**
      * Set a solid color to render behind tiles, useful for displaying transparent PNGs.
@@ -2571,9 +2554,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (Color.alpha(tileBgColor) == 0) {
             tileBgPaint = null
         } else {
-            tileBgPaint = Paint()
-            tileBgPaint!!.style = Style.FILL
-            tileBgPaint!!.color = tileBgColor
+            tileBgPaint = Paint().apply {
+                style = Style.FILL
+                color = tileBgColor
+            }
         }
         invalidate()
     }
@@ -2616,7 +2600,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param durationMs Duration in milliseconds.
      */
     fun setDoubleTapZoomDuration(durationMs: Int) {
-        this.doubleTapZoomDuration = Math.max(0, durationMs)
+        doubleTapZoomDuration = Math.max(0, durationMs)
     }
 
     fun setResetScaleOnSizeChange(resetScaleOnSizeChange: Boolean) {
@@ -2643,10 +2627,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param executor an [Executor] for image loading.
      */
     fun setExecutor(executor: Executor) {
-
-        if (executor == null) {
-            throw NullPointerException("Executor must not be null")
-        }
         this.executor = executor
     }
 
@@ -2675,9 +2655,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Check if an image has been set. The image may not have been loaded and displayed yet.
      * @return If an image is currently set.
      */
-    fun hasImage(): Boolean {
-        return uri != null || bitmap != null
-    }
+    fun hasImage() = uri != null || bitmap != null
 
     /**
      * {@inheritDoc}
@@ -2705,11 +2683,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun sendStateChanged(oldScale: Float, oldVTranslate: PointF, origin: Int) {
-        if (onStateChangedListener != null && scale != oldScale) {
-            onStateChangedListener!!.onScaleChanged(scale, origin)
+        if (scale != oldScale) {
+            onStateChangedListener?.onScaleChanged(scale, origin)
         }
-        if (onStateChangedListener != null && vTranslate != oldVTranslate) {
-            onStateChangedListener!!.onCenterChanged(center, origin)
+
+        if (vTranslate != oldVTranslate) {
+            onStateChangedListener?.onCenterChanged(center, origin)
         }
     }
 
@@ -2724,7 +2703,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     fun animateCenter(sCenter: PointF): AnimationBuilder? {
         return if (!isReady) {
             null
-        } else AnimationBuilder(sCenter)
+        } else {
+            AnimationBuilder(sCenter)
+        }
     }
 
     /**
@@ -2736,7 +2717,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     fun animateScale(scale: Float): AnimationBuilder? {
         return if (!isReady) {
             null
-        } else AnimationBuilder(scale)
+        } else {
+            AnimationBuilder(scale)
+        }
     }
 
     /**
@@ -2749,7 +2732,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     fun animateScaleAndCenter(scale: Float, sCenter: PointF): AnimationBuilder? {
         return if (!isReady) {
             null
-        } else AnimationBuilder(scale, sCenter)
+        } else {
+            AnimationBuilder(scale, sCenter)
+        }
     }
 
     /**
@@ -2757,11 +2742,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * then set your options and call [.start].
      */
     inner class AnimationBuilder {
-
         private val targetScale: Float
         private val targetSCenter: PointF?
         private val vFocus: PointF?
-        private var duration: Long = 500
+        private var duration = 500L
         private var easing = EASE_IN_OUT_QUAD
         private var origin = ORIGIN_ANIM
         private var interruptible = true
@@ -2769,26 +2753,26 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private var listener: OnAnimationEventListener? = null
 
         constructor(sCenter: PointF) {
-            this.targetScale = scale
-            this.targetSCenter = sCenter
-            this.vFocus = null
+            targetScale = scale
+            targetSCenter = sCenter
+            vFocus = null
         }
 
         constructor(scale: Float) {
-            this.targetScale = scale
-            this.targetSCenter = center
-            this.vFocus = null
+            targetScale = scale
+            targetSCenter = center
+            vFocus = null
         }
 
         constructor(scale: Float, sCenter: PointF) {
-            this.targetScale = scale
-            this.targetSCenter = sCenter
-            this.vFocus = null
+            targetScale = scale
+            targetSCenter = sCenter
+            vFocus = null
         }
 
         constructor(scale: Float, sCenter: PointF, vFocus: PointF) {
-            this.targetScale = scale
-            this.targetSCenter = sCenter
+            targetScale = scale
+            targetSCenter = sCenter
             this.vFocus = vFocus
         }
 
@@ -2858,36 +2842,35 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
          * Starts the animation.
          */
         fun start() {
-            if (anim != null && anim!!.listener != null) {
-                try {
-                    anim!!.listener!!.onInterruptedByNewAnim()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error thrown by animation listener", e)
-                }
-
+            try {
+                anim?.listener?.onInterruptedByNewAnim()
+            } catch (e: Exception) {
+                Log.w(TAG, "Error thrown by animation listener", e)
             }
 
             val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
             val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
-            val targetScale = limitedScale(this.targetScale)
-            val targetSCenter = if (panLimited) limitedSCenter(this.targetSCenter!!.x, this.targetSCenter.y, targetScale, PointF()) else this.targetSCenter
-            anim = Anim()
-            anim!!.scaleStart = scale
-            anim!!.scaleEnd = targetScale
-            anim!!.time = System.currentTimeMillis()
-            anim!!.sCenterEndRequested = targetSCenter
-            anim!!.sCenterStart = center
-            anim!!.sCenterEnd = targetSCenter
-            anim!!.vFocusStart = sourceToViewCoord(targetSCenter!!)
-            anim!!.vFocusEnd = PointF(
-                    vxCenter.toFloat(),
-                    vyCenter.toFloat()
-            )
+            val targetScale = limitedScale(targetScale)
+            val targetSCenter = if (panLimited) limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF()) else targetSCenter
+            anim = Anim().apply {
+                scaleStart = scale
+                scaleEnd = targetScale
+                time = System.currentTimeMillis()
+                sCenterEndRequested = targetSCenter
+                sCenterStart = center
+                sCenterEnd = targetSCenter
+                vFocusStart = sourceToViewCoord(targetSCenter!!)
+                vFocusEnd = PointF(
+                        vxCenter.toFloat(),
+                        vyCenter.toFloat()
+                )
+                time = System.currentTimeMillis()
+            }
+
             anim!!.duration = duration
             anim!!.interruptible = interruptible
             anim!!.easing = easing
             anim!!.origin = origin
-            anim!!.time = System.currentTimeMillis()
             anim!!.listener = listener
 
             if (vFocus != null) {
@@ -2906,7 +2889,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             invalidate()
         }
-
     }
 
     /**
@@ -2931,18 +2913,15 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
          * The animation has been aborted before reaching its endpoint because a new animation has been started.
          */
         fun onInterruptedByNewAnim()
-
     }
 
     /**
      * Default implementation of [OnAnimationEventListener] for extension. This does nothing in any method.
      */
     class DefaultOnAnimationEventListener : OnAnimationEventListener {
-
         override fun onComplete() {}
         override fun onInterruptedByUser() {}
         override fun onInterruptedByNewAnim() {}
-
     }
 
     /**
@@ -3035,7 +3014,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
          * @param origin Where the event originated from - one of [.ORIGIN_ANIM], [.ORIGIN_TOUCH].
          */
         fun onCenterChanged(newCenter: PointF?, origin: Int)
-
     }
 
     /**
