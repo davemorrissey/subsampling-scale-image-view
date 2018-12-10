@@ -13,6 +13,10 @@ android {
         minSdkVersion 21
         consumerProguardFiles 'proguard-rules.txt'
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 }
 
 configurations {
