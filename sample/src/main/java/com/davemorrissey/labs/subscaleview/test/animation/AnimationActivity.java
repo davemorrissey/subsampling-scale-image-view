@@ -45,9 +45,9 @@ public class AnimationActivity extends AbstractPagesActivity {
     @Override
     protected void onPageChanged(int page) {
         if (page == 2) {
-            view.setPanLimit(PAN_LIMIT_CENTER);
+            view.setPanLimit(Companion.getPAN_LIMIT_CENTER());
         } else {
-            view.setPanLimit(PAN_LIMIT_INSIDE);
+            view.setPanLimit(Companion.getPAN_LIMIT_INSIDE());
         }
     }
 
@@ -61,7 +61,7 @@ public class AnimationActivity extends AbstractPagesActivity {
             view.setPin(center);
             AnimationBuilder animationBuilder = view.animateScaleAndCenter(scale, center);
             if (getPage() == 3) {
-                animationBuilder.withDuration(2000).withEasing(EASE_OUT_QUAD).withInterruptible(false).start();
+                animationBuilder.withDuration(2000).withEasing(Companion.getEASE_OUT_QUAD()).withInterruptible(false).start();
             } else {
                 animationBuilder.withDuration(750).start();
             }
