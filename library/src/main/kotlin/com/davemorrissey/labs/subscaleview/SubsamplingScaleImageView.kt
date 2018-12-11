@@ -279,8 +279,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     // Tile and image decoding
     private var decoder: ImageRegionDecoder? = null
     private val decoderLock = ReentrantReadWriteLock(true)
-    private var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory<ImageDecoder>(SkiaImageDecoder::class.java)
-    private var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory<ImageRegionDecoder>(SkiaImageRegionDecoder::class.java)
+    private var bitmapDecoderFactory: DecoderFactory<ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
+    private var regionDecoderFactory: DecoderFactory<ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
 
     // Debug values
     private var vCenterStart: PointF? = null
