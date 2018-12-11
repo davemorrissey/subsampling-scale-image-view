@@ -279,8 +279,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     // Tile and image decoding
     private var decoder: ImageRegionDecoder? = null
     private val decoderLock = ReentrantReadWriteLock(true)
-    private var bitmapDecoderFactory: DecoderFactory<ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
-    private var regionDecoderFactory: DecoderFactory<ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
+    private var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
+    private var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
 
     // Debug values
     private var vCenterStart: PointF? = null
@@ -2329,7 +2329,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * public default constructor.
      * @param bitmapDecoderClass The [ImageDecoder] implementation to use.
      */
-    fun setBitmapDecoderClass(bitmapDecoderClass: Class<ImageDecoder>) {
+    fun setBitmapDecoderClass(bitmapDecoderClass: Class<out ImageDecoder>) {
         bitmapDecoderFactory = CompatDecoderFactory(bitmapDecoderClass)
     }
 
@@ -2338,7 +2338,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
      * @param bitmapDecoderFactory The [DecoderFactory] implementation that produces [ImageDecoder] instances.
      */
-    fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<ImageDecoder>) {
+    fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
         this.bitmapDecoderFactory = bitmapDecoderFactory
     }
 
