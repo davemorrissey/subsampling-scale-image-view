@@ -16,7 +16,6 @@ import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import com.davemorrissey.labs.subscaleview.R.styleable
 import com.davemorrissey.labs.subscaleview.decoder.*
 import com.davemorrissey.labs.subscaleview.decoder.ImageDecoder
 import java.lang.ref.WeakReference
@@ -395,7 +394,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     val state: ImageViewState?
         get() = if (vTranslate != null && sWidth > 0 && sHeight > 0) {
             ImageViewState(scale, center!!, getOrientation())
-        } else null
+        } else {
+            null
+        }
 
     init {
         resetScaleOnSizeChange = true
@@ -404,7 +405,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         setDoubleTapZoomDpi(160)
         setMinimumTileDpi(320)
         setGestureDetector(context)
-        this.longClickHandler = Handler(Handler.Callback { message ->
+        longClickHandler = Handler(Handler.Callback { message ->
             if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
                 maxTouchCount = 0
                 super@SubsamplingScaleImageView.setOnLongClickListener(onLongClickListener)
@@ -413,35 +414,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
             true
         })
-        // Handle XML attributes
-        if (attr != null) {
-            val typedAttr = getContext().obtainStyledAttributes(attr, styleable.SubsamplingScaleImageView)
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_assetName)) {
-                val assetName = typedAttr.getString(styleable.SubsamplingScaleImageView_assetName)
-                if (assetName != null && assetName.isNotEmpty()) {
-                    setImage(ImageSource.asset(assetName).tilingEnabled())
-                }
-            }
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_src)) {
-                val resId = typedAttr.getResourceId(styleable.SubsamplingScaleImageView_src, 0)
-                if (resId > 0) {
-                    setImage(ImageSource.resource(resId).tilingEnabled())
-                }
-            }
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_panEnabled)) {
-                isPanEnabled = typedAttr.getBoolean(styleable.SubsamplingScaleImageView_panEnabled, true)
-            }
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_zoomEnabled)) {
-                isZoomEnabled = typedAttr.getBoolean(styleable.SubsamplingScaleImageView_zoomEnabled, true)
-            }
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_quickScaleEnabled)) {
-                isQuickScaleEnabled = typedAttr.getBoolean(styleable.SubsamplingScaleImageView_quickScaleEnabled, true)
-            }
-            if (typedAttr.hasValue(styleable.SubsamplingScaleImageView_tileBackgroundColor)) {
-                setTileBackgroundColor(typedAttr.getColor(styleable.SubsamplingScaleImageView_tileBackgroundColor, Color.argb(0, 0, 0, 0)))
-            }
-            typedAttr.recycle()
-        }
 
         quickScaleThreshold = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, context.resources.displayMetrics)
     }
