@@ -7,9 +7,9 @@ import android.content.Context.ACTIVITY_SERVICE
 import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
-import androidx.annotation.Keep
 import android.text.TextUtils
 import android.util.Log
+import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.File
 import java.io.InputStream
@@ -71,8 +71,8 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
      * Holding a read lock to avoid returning true while the pool is being recycled, this returns
      * true if the pool has at least one decoder available.
      */
-    override val isReady: Boolean
-        @Synchronized get() = decoderPool != null && !decoderPool!!.getIsEmpty()
+    @Synchronized
+    override fun isReady() = decoderPool != null && !decoderPool!!.getIsEmpty()
 
     private fun getNumberOfCores() = Runtime.getRuntime().availableProcessors()
 

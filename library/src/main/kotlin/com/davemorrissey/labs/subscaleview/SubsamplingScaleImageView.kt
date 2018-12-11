@@ -1657,11 +1657,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 val view = viewRef.get()
                 val decoder = decoderRef.get()
                 val tile = tileRef.get()
-                if (decoder != null && tile != null && view != null && decoder.isReady && tile.visible) {
+                if (decoder != null && tile != null && view != null && decoder.isReady() && tile.visible) {
                     view.debug("TileLoadTask.doInBackground, tile.sRect=${tile.sRect as Rect}, tile.sampleSize=${tile.sampleSize}")
                     view.decoderLock.readLock().lock()
                     try {
-                        if (decoder.isReady) {
+                        if (decoder.isReady()) {
                             // Update tile's file sRect according to rotation
                             view.fileSRect(tile.sRect, tile.fileSRect)
                             if (view.sRegion != null) {

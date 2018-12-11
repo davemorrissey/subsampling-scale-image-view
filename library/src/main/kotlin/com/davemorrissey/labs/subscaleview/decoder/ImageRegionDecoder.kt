@@ -16,7 +16,7 @@ interface ImageRegionDecoder {
      * Status check. Should return false before initialisation and after recycle.
      * @return true if the decoder is ready to be used.
      */
-    val isReady: Boolean
+    fun isReady(): Boolean
 
     /**
      * Initialise the decoder. When possible, perform initial setup work once in this method. The

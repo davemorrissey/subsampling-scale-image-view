@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
-import androidx.annotation.Keep
 import android.text.TextUtils
+import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.InputStream
 import java.util.concurrent.locks.ReadWriteLock
@@ -33,8 +33,8 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
 
     private val bitmapConfig: Bitmap.Config
 
-    override val isReady: Boolean
-        @Synchronized get() = decoder != null && !decoder!!.isRecycled
+    @Synchronized
+    override fun isReady() = decoder != null && !decoder!!.isRecycled
 
     @Keep
     constructor() : this(null)
