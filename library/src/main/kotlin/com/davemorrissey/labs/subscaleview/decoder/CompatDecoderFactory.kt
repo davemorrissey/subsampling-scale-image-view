@@ -15,7 +15,9 @@ class CompatDecoderFactory<T>
  * @param clazz        a class that implements [ImageDecoder] or [ImageRegionDecoder].
  * @param bitmapConfig bitmap configuration to be used when loading images.
  */
-@JvmOverloads constructor(private val clazz: Class<out T>, private val bitmapConfig: Bitmap.Config? = null) : DecoderFactory<T> {
+constructor(private val clazz: Class<out T>, private val bitmapConfig: Bitmap.Config? = null) : DecoderFactory<T> {
+
+    constructor(clazz: Class<out T>) : this(clazz, null)
 
     @Throws(IllegalAccessException::class, InstantiationException::class, NoSuchMethodException::class, InvocationTargetException::class)
     override fun make(): T {
