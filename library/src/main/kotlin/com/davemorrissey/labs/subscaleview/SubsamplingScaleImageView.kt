@@ -2309,7 +2309,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * public default constructor.
      * @param regionDecoderClass The [ImageRegionDecoder] implementation to use.
      */
-    fun setRegionDecoderClass(regionDecoderClass: Class<out ImageRegionDecoder>) {
+    fun setRegionDecoderClass(regionDecoderClass: Class<ImageRegionDecoder>) {
         regionDecoderFactory = CompatDecoderFactory(regionDecoderClass)
     }
 
@@ -2319,7 +2319,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param regionDecoderFactory The [DecoderFactory] implementation that produces [ImageRegionDecoder]
      * instances.
      */
-    fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<out ImageRegionDecoder>) {
+    fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<ImageRegionDecoder>) {
         this.regionDecoderFactory = regionDecoderFactory
     }
 
@@ -2329,7 +2329,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * public default constructor.
      * @param bitmapDecoderClass The [ImageDecoder] implementation to use.
      */
-    fun setBitmapDecoderClass(bitmapDecoderClass: Class<out ImageDecoder>) {
+    fun setBitmapDecoderClass(bitmapDecoderClass: Class<ImageDecoder>) {
         bitmapDecoderFactory = CompatDecoderFactory(bitmapDecoderClass)
     }
 
@@ -2338,7 +2338,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
      * @param bitmapDecoderFactory The [DecoderFactory] implementation that produces [ImageDecoder] instances.
      */
-    fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
+    fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<ImageDecoder>) {
         this.bitmapDecoderFactory = bitmapDecoderFactory
     }
 
