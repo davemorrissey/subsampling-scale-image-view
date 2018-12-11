@@ -2,7 +2,7 @@ package com.davemorrissey.labs.subscaleview.test.configuration;
 
 import android.graphics.PointF;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;

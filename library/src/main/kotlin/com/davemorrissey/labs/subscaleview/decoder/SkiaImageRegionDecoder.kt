@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
-import android.support.annotation.Keep
+import androidx.annotation.Keep
 import android.text.TextUtils
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.InputStream

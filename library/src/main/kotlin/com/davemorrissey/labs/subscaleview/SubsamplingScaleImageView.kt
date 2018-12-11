@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Handler
 import android.provider.MediaStore
-import android.support.annotation.AnyThread
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
@@ -1866,7 +1865,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Helper method for load tasks. Examines the EXIF info on the image file to determine the orientation.
      * This will only work for external files, not assets, resources or other URIs.
      */
-    @AnyThread
     private fun getExifOrientation(context: Context, sourceUri: String): Int {
         var exifOrientation = ORIENTATION_0
         if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
@@ -2012,7 +2010,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Converts source rectangle from tile, which treats the image file as if it were in the correct orientation already,
      * to the rectangle of the image that needs to be loaded.
      */
-    @AnyThread
     private fun fileSRect(sRect: Rect?, target: Rect?) {
         when (requiredRotation) {
             0 -> target!!.set(sRect)
@@ -2322,7 +2319,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     /**
      * Debug logger
      */
-    @AnyThread
     private fun debug(message: String) {
         if (debug) {
             Log.d(TAG, message)
