@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.text.TextUtils
+import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.InputStream
 
@@ -21,6 +22,9 @@ class SkiaImageDecoder(bitmapConfig: Bitmap.Config?) : ImageDecoder {
     private val RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
 
     private val bitmapConfig: Bitmap.Config
+
+    @Keep
+    constructor() : this(null)
 
     init {
         val globalBitmapConfig = SubsamplingScaleImageView.preferredBitmapConfig
