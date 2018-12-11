@@ -551,12 +551,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 decoderLock.writeLock().unlock()
             }
 
-            if (bitmap != null && !bitmapIsCached) {
-                bitmap!!.recycle()
+            if (!bitmapIsCached) {
+                bitmap?.recycle()
             }
 
-            if (bitmap != null && bitmapIsCached && onImageEventListener != null) {
-                onImageEventListener!!.onPreviewReleased()
+            if (bitmap != null && bitmapIsCached) {
+                onImageEventListener?.onPreviewReleased()
             }
 
             sWidth = 0
@@ -693,7 +693,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // During non-interruptible anims, ignore all touch events
-        if (anim != null && !anim!!.interruptible) {
+        if (anim?.interruptible == false) {
             parent?.requestDisallowInterceptTouchEvent(true)
             return true
         } else {
@@ -710,6 +710,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             singleDetector?.onTouchEvent(event)
             return true
         }
+
         // Detect flings, taps and double taps
         if (!isQuickScaling && (detector == null || detector!!.onTouchEvent(event))) {
             isZooming = false
@@ -1717,8 +1718,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
             bitmap = null
 
-            if (onImageEventListener != null && bitmapIsCached) {
-                onImageEventListener!!.onPreviewReleased()
+            if (bitmapIsCached) {
+                onImageEventListener?.onPreviewReleased()
             }
             bitmapIsPreview = false
             bitmapIsCached = false
@@ -2487,10 +2488,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     fun resetScaleAndCenter() {
         anim = null
         pendingScale = limitedScale(0f)
-        if (isReady) {
-            sPendingCenter = PointF((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat())
+        sPendingCenter = if (isReady) {
+            PointF((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat())
         } else {
-            sPendingCenter = PointF(0f, 0f)
+            PointF(0f, 0f)
         }
         invalidate()
     }
@@ -2988,7 +2989,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * Default implementation of [OnStateChangedListener]. This does nothing in any method.
      */
     class DefaultOnStateChangedListener : OnStateChangedListener {
-
         override fun onCenterChanged(newCenter: PointF?, origin: Int) {}
         override fun onScaleChanged(newScale: Float, origin: Int) {}
     }
