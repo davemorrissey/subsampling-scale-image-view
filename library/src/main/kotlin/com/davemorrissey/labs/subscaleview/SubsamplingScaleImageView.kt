@@ -1285,6 +1285,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             fullImageSampleSize /= 2
         }
 
+        if (uri == null) {
+            return
+        }
+
         if (fullImageSampleSize == 1 && sRegion == null && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
             // Whole image is required at native resolution, and is smaller than the canvas max bitmap size.
             // Use BitmapDecoder for better image support.
