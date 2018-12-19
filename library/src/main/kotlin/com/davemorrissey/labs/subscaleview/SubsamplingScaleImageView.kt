@@ -212,8 +212,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var isQuickScaleEnabled = true
 
     // Double tap zoom behaviour
+    private val DOUBLE_TAP_ZOOM_DURATION = 500L
     private var doubleTapZoomScale = 1f
-    private var doubleTapZoomDuration = 500
 
     // Current scale and scale at start of zoom
     /**
@@ -979,9 +979,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale
         val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
         if (!zoomIn || !isPanEnabled) {
-            AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(doubleTapZoomDuration.toLong()).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+            AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
         } else {
-            AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(doubleTapZoomDuration.toLong()).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+            AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
         }
         invalidate()
     }
@@ -2543,14 +2543,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
         setDoubleTapZoomScale(averageDpi / dpi)
-    }
-
-    /**
-     * Set the duration of the double tap zoom animation.
-     * @param durationMs Duration in milliseconds.
-     */
-    fun setDoubleTapZoomDuration(durationMs: Int) {
-        doubleTapZoomDuration = Math.max(0, durationMs)
     }
 
     fun setResetScaleOnSizeChange(resetScaleOnSizeChange: Boolean) {
