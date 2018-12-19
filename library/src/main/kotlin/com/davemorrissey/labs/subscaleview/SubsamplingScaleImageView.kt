@@ -57,15 +57,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private val VALID_ORIENTATIONS = Arrays.asList(ORIENTATION_0, ORIENTATION_90, ORIENTATION_180, ORIENTATION_270, ORIENTATION_USE_EXIF)
 
-        /** During zoom animation, keep the point of the image that was tapped in the same place, and scale the image around it.  */
-        const val ZOOM_FOCUS_FIXED = 1
-        /** During zoom animation, move the point of the image that was tapped to the center of the screen.  */
-        const val ZOOM_FOCUS_CENTER = 2
-        /** Zoom in to and center the tapped point immediately without animating.  */
-        const val ZOOM_FOCUS_CENTER_IMMEDIATE = 3
-
-        private val VALID_ZOOM_STYLES = Arrays.asList(ZOOM_FOCUS_FIXED, ZOOM_FOCUS_CENTER, ZOOM_FOCUS_CENTER_IMMEDIATE)
-
         /** Quadratic ease out. Not recommended for scale animation, but good for panning.  */
         const val EASE_OUT_QUAD = 1
         /** Quadratic ease in and out.  */
@@ -222,7 +213,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     // Double tap zoom behaviour
     private var doubleTapZoomScale = 1f
-    private var doubleTapZoomStyle = ZOOM_FOCUS_FIXED
     private var doubleTapZoomDuration = 500
 
     // Current scale and scale at start of zoom
@@ -988,11 +978,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale
         val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
-        if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER_IMMEDIATE) {
-            setScaleAndCenter(targetScale, sCenter)
-        } else if (doubleTapZoomStyle == ZOOM_FOCUS_CENTER || !zoomIn || !isPanEnabled) {
+        if (!zoomIn || !isPanEnabled) {
             AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(doubleTapZoomDuration.toLong()).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
-        } else if (doubleTapZoomStyle == ZOOM_FOCUS_FIXED) {
+        } else {
             AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(doubleTapZoomDuration.toLong()).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
         }
         invalidate()
@@ -2555,17 +2543,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
         setDoubleTapZoomScale(averageDpi / dpi)
-    }
-
-    /**
-     * Set the type of zoom animation to be used for double taps. See static fields.
-     * @param doubleTapZoomStyle New value for zoom style.
-     */
-    fun setDoubleTapZoomStyle(doubleTapZoomStyle: Int) {
-        if (!VALID_ZOOM_STYLES.contains(doubleTapZoomStyle)) {
-            throw IllegalArgumentException("Invalid zoom style: $doubleTapZoomStyle")
-        }
-        this.doubleTapZoomStyle = doubleTapZoomStyle
     }
 
     /**
