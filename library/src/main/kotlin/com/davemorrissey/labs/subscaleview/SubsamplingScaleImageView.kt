@@ -1029,9 +1029,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 postTranslate(vTranslate!!.x, vTranslate!!.y)
 
                 when (requiredRotation) {
-                    ORIENTATION_180 -> objectMatrix!!.postTranslate(scale * sWidth, scale * sHeight)
-                    ORIENTATION_90 -> objectMatrix!!.postTranslate(scale * sHeight, 0f)
-                    ORIENTATION_270 -> objectMatrix!!.postTranslate(0f, scale * sWidth)
+                    ORIENTATION_180 -> postTranslate(scale * sWidth, scale * sHeight)
+                    ORIENTATION_90 -> postTranslate(scale * sHeight, 0f)
+                    ORIENTATION_270 -> postTranslate(0f, scale * sWidth)
                 }
             }
 
@@ -1112,9 +1112,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             preDraw()
             isReady = true
             onReady()
-            if (onImageEventListener != null) {
-                onImageEventListener!!.onReady()
-            }
+            onImageEventListener?.onReady()
         }
         return ready
     }
@@ -1129,9 +1127,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             preDraw()
             isImageLoaded = true
             onImageLoaded()
-            if (onImageEventListener != null) {
-                onImageEventListener!!.onImageLoaded()
-            }
+            onImageEventListener?.onImageLoaded()
         }
         return imageLoaded
     }
@@ -1475,13 +1471,13 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     var sWidth = dimensions.x
                     var sHeight = dimensions.y
                     val exifOrientation = view.getExifOrientation(context, sourceUri)
-                    if (view.sRegion != null) {
-                        view.sRegion!!.left = Math.max(0, view.sRegion!!.left)
-                        view.sRegion!!.top = Math.max(0, view.sRegion!!.top)
-                        view.sRegion!!.right = Math.min(sWidth, view.sRegion!!.right)
-                        view.sRegion!!.bottom = Math.min(sHeight, view.sRegion!!.bottom)
-                        sWidth = view.sRegion!!.width()
-                        sHeight = view.sRegion!!.height()
+                    view.sRegion?.apply {
+                        left = Math.max(0, left)
+                        top = Math.max(0, top)
+                        right = Math.min(sWidth, right)
+                        bottom = Math.min(sHeight, bottom)
+                        sWidth = width()
+                        sHeight = height()
                     }
                     return intArrayOf(sWidth, sHeight, exifOrientation)
                 }
@@ -1498,8 +1494,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (view != null) {
                 if (decoder != null && xyo != null && xyo.size == 3) {
                     view.onTilesInited(decoder!!, xyo[0], xyo[1], xyo[2])
-                } else if (exception != null && view.onImageEventListener != null) {
-                    view.onImageEventListener!!.onImageLoadError(exception!!)
+                } else if (exception != null) {
+                    view.onImageEventListener?.onImageLoadError(exception!!)
                 }
             }
         }
@@ -1972,34 +1968,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     /**
-     * Find the area of the source file that is currently visible on screen, taking into account the
-     * current scale, translation, orientation and clipped region. This is a convenience method; see
-     * [.viewToFileRect].
-     * @param fRect rectangle instance to which the result will be written. Re-use for efficiency.
-     */
-    fun visibleFileRect(fRect: Rect) {
-        if (vTranslate == null || !isReady) {
-            return
-        }
-
-        fRect.set(0, 0, width, height)
-        viewToFileRect(fRect, fRect)
-    }
-
-    /**
      * Convert screen coordinate to source coordinate.
      * @param vxy view X/Y coordinate.
      * @return a coordinate representing the corresponding source coordinate.
      */
     fun viewToSourceCoord(vxy: PointF) = viewToSourceCoord(vxy.x, vxy.y, PointF())
-
-    /**
-     * Convert screen coordinate to source coordinate.
-     * @param vxy view coordinates to convert.
-     * @param sTarget target object for result. The same instance is also returned.
-     * @return source coordinates. This is the same instance passed to the sTarget param.
-     */
-    fun viewToSourceCoord(vxy: PointF, sTarget: PointF) = viewToSourceCoord(vxy.x, vxy.y, sTarget)
 
     /**
      * Convert screen coordinate to source coordinate.
@@ -2244,42 +2217,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     /**
-     * Calculate how much further the image can be panned in each direction. The results are set on
-     * the supplied [RectF] and expressed as screen pixels. For example, if the image cannot be
-     * panned any further towards the left, the value of [RectF.left] will be set to 0.
-     * @param vTarget target object for results. Re-use for efficiency.
-     */
-    fun getPanRemaining(vTarget: RectF) {
-        if (!isReady) {
-            return
-        }
-
-        val scaleWidth = scale * sWidth()
-        val scaleHeight = scale * sHeight()
-
-        when (panLimit) {
-            PAN_LIMIT_CENTER -> {
-                vTarget.top = Math.max(0f, -(vTranslate!!.y - height / 2))
-                vTarget.left = Math.max(0f, -(vTranslate!!.x - width / 2))
-                vTarget.bottom = Math.max(0f, vTranslate!!.y - (height / 2 - scaleHeight))
-                vTarget.right = Math.max(0f, vTranslate!!.x - (width / 2 - scaleWidth))
-            }
-            PAN_LIMIT_OUTSIDE -> {
-                vTarget.top = Math.max(0f, -(vTranslate!!.y - height))
-                vTarget.left = Math.max(0f, -(vTranslate!!.x - width))
-                vTarget.bottom = Math.max(0f, vTranslate!!.y + scaleHeight)
-                vTarget.right = Math.max(0f, vTranslate!!.x + scaleWidth)
-            }
-            else -> {
-                vTarget.top = Math.max(0f, -vTranslate!!.y)
-                vTarget.left = Math.max(0f, -vTranslate!!.x)
-                vTarget.bottom = Math.max(0f, scaleHeight + vTranslate!!.y - height)
-                vTarget.right = Math.max(0f, scaleWidth + vTranslate!!.x - width)
-            }
-        }
-    }
-
-    /**
      * Set the pan limiting style. See static fields. Normally [.PAN_LIMIT_INSIDE] is best, for image galleries.
      * @param panLimit a pan limit constant. See static fields.
      */
@@ -2502,27 +2439,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     /**
-     * Check if an image has been set. The image may not have been loaded and displayed yet.
-     * @return If an image is currently set.
-     */
-    fun hasImage() = uri != null || bitmap != null
-
-    /**
      * Add a listener allowing notification of load and error events. Extend [DefaultOnImageEventListener]
      * to simplify implementation.
      * @param onImageEventListener an [OnImageEventListener] instance.
      */
     fun setOnImageEventListener(onImageEventListener: OnImageEventListener) {
         this.onImageEventListener = onImageEventListener
-    }
-
-    /**
-     * Add a listener for pan and zoom events. Extend [DefaultOnStateChangedListener] to simplify
-     * implementation.
-     * @param onStateChangedListener an [OnStateChangedListener] instance.
-     */
-    fun setOnStateChangedListener(onStateChangedListener: OnStateChangedListener) {
-        this.onStateChangedListener = onStateChangedListener
     }
 
     private fun sendStateChanged(oldScale: Float, oldVTranslate: PointF, origin: Int) {
@@ -2532,36 +2454,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         if (vTranslate != oldVTranslate) {
             onStateChangedListener?.onCenterChanged(center, origin)
-        }
-    }
-
-    /**
-     * Creates a panning animation builder, that when started will animate the image to place the given coordinates of
-     * the image in the center of the screen. If doing this would move the image beyond the edges of the screen, the
-     * image is instead animated to move the center point as near to the center of the screen as is allowed - it's
-     * guaranteed to be on screen.
-     * @param sCenter Target center point
-     * @return [AnimationBuilder] instance. Call [SubsamplingScaleImageView.AnimationBuilder.start] to start the anim.
-     */
-    fun animateCenter(sCenter: PointF): AnimationBuilder? {
-        return if (!isReady) {
-            null
-        } else {
-            AnimationBuilder(sCenter)
-        }
-    }
-
-    /**
-     * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
-     * beyond the panning limits, the image is automatically panned during the animation.
-     * @param scale Target scale.
-     * @return [AnimationBuilder] instance. Call [SubsamplingScaleImageView.AnimationBuilder.start] to start the anim.
-     */
-    fun animateScale(scale: Float): AnimationBuilder? {
-        return if (!isReady) {
-            null
-        } else {
-            AnimationBuilder(scale)
         }
     }
 

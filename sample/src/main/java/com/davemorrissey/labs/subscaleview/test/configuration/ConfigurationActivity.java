@@ -79,13 +79,6 @@ public class ConfigurationActivity extends AbstractPagesActivity {
         } else {
             view.setDoubleTapZoomScale(1F);
         }
-        if (page == 7) {
-            view.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_CENTER);
-        } else if (page == 8) {
-            view.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_OUTSIDE);
-        } else {
-            view.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE);
-        }
         if (page == 9) {
             view.setDebug(true);
         } else {
