@@ -8,7 +8,6 @@ import android.graphics.Paint.Style
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.AsyncTask
-import android.os.Handler
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.util.Log
@@ -289,12 +288,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     // Scale and center listener
     private var onStateChangedListener: OnStateChangedListener? = null
 
-    // Long click listener
-    private var onLongClickListener: View.OnLongClickListener? = null
-
-    // Long click handler
-    private val longClickHandler: Handler
-
     // Paint objects created once and reused for efficiency
     private var bitmapPaint: Paint? = null
     private var debugTextPaint: Paint? = null
@@ -362,16 +355,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         setDoubleTapZoomDpi(160)
         setMinimumTileDpi(320)
         setGestureDetector(context)
-        longClickHandler = Handler(Handler.Callback { message ->
-            if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
-                maxTouchCount = 0
-                super@SubsamplingScaleImageView.setOnLongClickListener(onLongClickListener)
-                performLongClick()
-                super@SubsamplingScaleImageView.setOnLongClickListener(null)
-            }
-            true
-        })
-
         quickScaleThreshold = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, context.resources.displayMetrics)
     }
 
@@ -716,15 +699,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         // Abort all gestures on second touch
                         maxTouchCount = 0
                     }
-                    // Cancel long click timer
-                    longClickHandler.removeMessages(MESSAGE_LONG_CLICK)
                 } else if (!isQuickScaling) {
                     // Start one-finger pan
                     vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                     vCenterStart!!.set(event.x, event.y)
-
-                    // Start long click timer
-                    longClickHandler.sendEmptyMessageDelayed(MESSAGE_LONG_CLICK, 600)
                 }
                 return true
             }
@@ -843,7 +821,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             } else if (dx > offset || dy > offset) {
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0
-                                longClickHandler.removeMessages(MESSAGE_LONG_CLICK)
                                 parent?.requestDisallowInterceptTouchEvent(false)
                             }
 
@@ -853,13 +830,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
 
                 if (consumed) {
-                    longClickHandler.removeMessages(MESSAGE_LONG_CLICK)
                     invalidate()
                     return true
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_POINTER_2_UP -> {
-                longClickHandler.removeMessages(MESSAGE_LONG_CLICK)
                 if (isQuickScaling) {
                     isQuickScaling = false
                     if (!quickScaleMoved) {
@@ -2531,13 +2506,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @return If an image is currently set.
      */
     fun hasImage() = uri != null || bitmap != null
-
-    /**
-     * {@inheritDoc}
-     */
-    override fun setOnLongClickListener(onLongClickListener: View.OnLongClickListener?) {
-        this.onLongClickListener = onLongClickListener
-    }
 
     /**
      * Add a listener allowing notification of load and error events. Extend [DefaultOnImageEventListener]
