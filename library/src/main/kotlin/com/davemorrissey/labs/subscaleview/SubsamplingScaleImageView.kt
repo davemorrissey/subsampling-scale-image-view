@@ -172,27 +172,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     // Gesture detection settings
     /**
-     * Returns true if pan gesture detection is enabled.
-     * @return true if pan gesture detection is enabled.
-     */
-    /**
-     * Enable or disable pan gesture detection. Disabling pan causes the image to be centered. Pan
-     * can still be changed from code.
-     * @param panEnabled true to enable panning, false to disable.
-     */
-    var isPanEnabled = true
-        set(panEnabled) {
-            field = panEnabled
-            if (!panEnabled && vTranslate != null) {
-                vTranslate!!.x = width / 2 - scale * (sWidth() / 2)
-                vTranslate!!.y = height / 2 - scale * (sHeight() / 2)
-                if (isReady) {
-                    refreshRequiredTiles(true)
-                    invalidate()
-                }
-            }
-        }
-    /**
      * Returns true if zoom gesture detection is enabled.
      * @return true if zoom gesture detection is enabled.
      */
@@ -578,7 +557,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         detector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
 
             override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-                if (isPanEnabled && isReady && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.x - e2.x) > 50 || Math.abs(e1.y - e2.y) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
+                if (isReady && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.x - e2.x) > 50 || Math.abs(e1.y - e2.y) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
                     val vTranslateEnd = PointF(vTranslate!!.x + velocityX * 0.25f, vTranslate!!.y + velocityY * 0.25f)
                     val sCenterXEnd = (width / 2 - vTranslateEnd.x) / scale
                     val sCenterYEnd = (height / 2 - vTranslateEnd.y) / scale
@@ -784,7 +763,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 scaleStart = minScale()
                                 vCenterStart!!.set(vCenterEndX, vCenterEndY)
                                 vTranslateStart!!.set(vTranslate)
-                            } else if (isPanEnabled) {
+                            } else {
                                 // Translate to place the source image coordinate that was at the center of the pinch at the start
                                 // at the center of the pinch now, to give simultaneous pan + zoom.
                                 val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
@@ -800,14 +779,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                     scaleStart = scale
                                     vDistStart = vDistEnd
                                 }
-                            } else if (sRequestedCenter != null) {
-                                // With a center specified from code, zoom around that point.
-                                vTranslate!!.x = width / 2 - scale * sRequestedCenter!!.x
-                                vTranslate!!.y = height / 2 - scale * sRequestedCenter!!.y
-                            } else {
-                                // With no requested center, scale around the image center.
-                                vTranslate!!.x = width / 2 - scale * (sWidth() / 2)
-                                vTranslate!!.y = height / 2 - scale * (sHeight() / 2)
                             }
 
                             fitToBounds(true)
@@ -837,28 +808,18 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             val previousScale = scale.toDouble()
                             scale = Math.max(minScale(), Math.min(maxScale, scale * multiplier))
 
-                            if (isPanEnabled) {
-                                val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
-                                val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
-                                val vLeftNow = vLeftStart * (scale / scaleStart)
-                                val vTopNow = vTopStart * (scale / scaleStart)
-                                vTranslate!!.x = vCenterStart!!.x - vLeftNow
-                                vTranslate!!.y = vCenterStart!!.y - vTopNow
-                                if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
-                                    fitToBounds(true)
-                                    vCenterStart!!.set(sourceToViewCoord(quickScaleSCenter!!))
-                                    vTranslateStart!!.set(vTranslate)
-                                    scaleStart = scale
-                                    dist = 0f
-                                }
-                            } else if (sRequestedCenter != null) {
-                                // With a center specified from code, zoom around that point.
-                                vTranslate!!.x = width / 2 - scale * sRequestedCenter!!.x
-                                vTranslate!!.y = height / 2 - scale * sRequestedCenter!!.y
-                            } else {
-                                // With no requested center, scale around the image center.
-                                vTranslate!!.x = width / 2 - scale * (sWidth() / 2)
-                                vTranslate!!.y = height / 2 - scale * (sHeight() / 2)
+                            val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
+                            val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
+                            val vLeftNow = vLeftStart * (scale / scaleStart)
+                            val vTopNow = vTopStart * (scale / scaleStart)
+                            vTranslate!!.x = vCenterStart!!.x - vLeftNow
+                            vTranslate!!.y = vCenterStart!!.y - vTopNow
+                            if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
+                                fitToBounds(true)
+                                vCenterStart!!.set(sourceToViewCoord(quickScaleSCenter!!))
+                                vTranslateStart!!.set(vTranslate)
+                                scaleStart = scale
+                                dist = 0f
                             }
                         }
 
@@ -895,11 +856,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0
                                 longClickHandler.removeMessages(MESSAGE_LONG_CLICK)
-                                parent?.requestDisallowInterceptTouchEvent(false)
-                            }
-                            if (!isPanEnabled) {
-                                vTranslate!!.x = vTranslateStart!!.x
-                                vTranslate!!.y = vTranslateStart!!.y
                                 parent?.requestDisallowInterceptTouchEvent(false)
                             }
 
@@ -964,21 +920,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * quick scale is enabled.
      */
     private fun doubleTapZoom(sCenter: PointF?, vFocus: PointF?) {
-        if (!isPanEnabled) {
-            if (sRequestedCenter != null) {
-                // With a center specified from code, zoom around that point.
-                sCenter!!.x = sRequestedCenter!!.x
-                sCenter.y = sRequestedCenter!!.y
-            } else {
-                // With no requested center, scale around the image center.
-                sCenter!!.x = (sWidth() / 2).toFloat()
-                sCenter.y = (sHeight() / 2).toFloat()
-            }
-        }
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale
         val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
-        if (!zoomIn || !isPanEnabled) {
+        if (!zoomIn) {
             AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
         } else {
             AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()

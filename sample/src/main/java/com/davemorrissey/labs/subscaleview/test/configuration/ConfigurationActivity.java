@@ -93,9 +93,6 @@ public class ConfigurationActivity extends AbstractPagesActivity {
         }
         if (page == 2) {
             view.setScaleAndCenter(0f, new PointF(3900, 3120));
-            view.setPanEnabled(false);
-        } else {
-            view.setPanEnabled(true);
         }
         if (page == 3) {
             view.setScaleAndCenter(1f, new PointF(3900, 3120));
