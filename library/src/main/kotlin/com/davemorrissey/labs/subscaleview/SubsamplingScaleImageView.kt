@@ -355,18 +355,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return viewToSourceCoord(mX.toFloat(), mY.toFloat())
         }
 
-    /**
-     * Get the current state of the view (scale, center, orientation) for restoration after rotate. Will return null if
-     * the view is not ready.
-     * @return an [ImageViewState] instance representing the current position of the image. null if the view isn't ready.
-     */
-    val state: ImageViewState?
-        get() = if (vTranslate != null && sWidth > 0 && sHeight > 0) {
-            ImageViewState(scale, center!!, getOrientation())
-        } else {
-            null
-        }
-
     init {
         resetScaleOnSizeChange = true
         density = resources.displayMetrics.density
