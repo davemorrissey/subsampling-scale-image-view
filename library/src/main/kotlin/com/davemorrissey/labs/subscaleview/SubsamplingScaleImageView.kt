@@ -485,7 +485,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     val vTranslateEnd = PointF(vTranslate!!.x + velocityX * 0.25f, vTranslate!!.y + velocityY * 0.25f)
                     val sCenterXEnd = (width / 2 - vTranslateEnd.x) / scale
                     val sCenterYEnd = (height / 2 - vTranslateEnd.y) / scale
-                    AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withPanLimited(false).withOrigin(ORIGIN_FLING).start()
+                    AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withOrigin(ORIGIN_FLING).start()
                     return true
                 }
                 return super.onFling(e1, e2, velocityX, velocityY)
@@ -590,11 +590,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             parent?.requestDisallowInterceptTouchEvent(true)
             return true
         } else {
-            try {
-                anim?.listener?.onInterruptedByUser()
-            } catch (e: Exception) {
-                Log.w(TAG, "Error thrown by animation listener", e)
-            }
             anim = null
         }
 
@@ -895,11 +890,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             fitToBounds(finished || anim!!.scaleStart == anim!!.scaleEnd)
             refreshRequiredTiles(finished)
             if (finished) {
-                try {
-                    anim?.listener?.onComplete()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error thrown by animation listener", e)
-                }
                 anim = null
             }
             invalidate()
@@ -1732,7 +1722,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var easing = EASE_IN_OUT_QUAD
         var origin = ORIGIN_ANIM
         var time = System.currentTimeMillis()
-        var listener: OnAnimationEventListener? = null
     }
 
     class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF)
@@ -2275,18 +2264,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private var easing = EASE_IN_OUT_QUAD
         private var origin = ORIGIN_ANIM
         private var interruptible = true
-        private var panLimited = true
-        private var listener: OnAnimationEventListener? = null
 
         constructor(sCenter: PointF) {
             targetScale = scale
             targetSCenter = sCenter
-            vFocus = null
-        }
-
-        constructor(scale: Float) {
-            targetScale = scale
-            targetSCenter = center
             vFocus = null
         }
 
@@ -2336,27 +2317,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         /**
-         * Add an animation event listener.
-         * @param listener The listener.
-         * @return this builder for method chaining.
-         */
-        fun withOnAnimationEventListener(listener: OnAnimationEventListener): AnimationBuilder {
-            this.listener = listener
-            return this
-        }
-
-        /**
-         * Only for internal use. When set to true, the animation proceeds towards the actual end point - the nearest
-         * point to the center allowed by pan limits. When false, animation is in the direction of the requested end
-         * point and is stopped when the limit for each axis is reached. The latter behaviour is used for flings but
-         * nothing else.
-         */
-        fun withPanLimited(panLimited: Boolean): AnimationBuilder {
-            this.panLimited = panLimited
-            return this
-        }
-
-        /**
          * Only for internal use. Indicates what caused the animation.
          */
         fun withOrigin(origin: Int): AnimationBuilder {
@@ -2368,16 +2328,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
          * Starts the animation.
          */
         fun start() {
-            try {
-                anim?.listener?.onInterruptedByNewAnim()
-            } catch (e: Exception) {
-                Log.w(TAG, "Error thrown by animation listener", e)
-            }
-
             val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
             val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
             val targetScale = limitedScale(targetScale)
-            val targetSCenter = if (panLimited) limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF()) else targetSCenter
             anim = Anim().apply {
                 scaleStart = scale
                 scaleEnd = targetScale
@@ -2397,7 +2350,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim!!.interruptible = interruptible
             anim!!.easing = easing
             anim!!.origin = origin
-            anim!!.listener = listener
 
             if (vFocus != null) {
                 // Calculate where translation will be at the end of the anim
@@ -2415,39 +2367,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             invalidate()
         }
-    }
-
-    /**
-     * An event listener for animations, allows events to be triggered when an animation completes,
-     * is aborted by another animation starting, or is aborted by a touch event. Note that none of
-     * these events are triggered if the activity is paused, the image is swapped, or in other cases
-     * where the view's internal state gets wiped or draw events stop.
-     */
-    interface OnAnimationEventListener {
-
-        /**
-         * The animation has completed, having reached its endpoint.
-         */
-        fun onComplete()
-
-        /**
-         * The animation has been aborted before reaching its endpoint because the user touched the screen.
-         */
-        fun onInterruptedByUser()
-
-        /**
-         * The animation has been aborted before reaching its endpoint because a new animation has been started.
-         */
-        fun onInterruptedByNewAnim()
-    }
-
-    /**
-     * Default implementation of [OnAnimationEventListener] for extension. This does nothing in any method.
-     */
-    class DefaultOnAnimationEventListener : OnAnimationEventListener {
-        override fun onComplete() {}
-        override fun onInterruptedByUser() {}
-        override fun onInterruptedByNewAnim() {}
     }
 
     /**
@@ -2516,37 +2435,5 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         override fun onImageLoadError(e: Exception) {}
         override fun onTileLoadError(e: Exception) {}
         override fun onPreviewReleased() {}
-    }
-
-    /**
-     * An event listener, allowing activities to be notified of pan and zoom events. Initialisation
-     * and calls made by your code do not trigger events; touch events and animations do. Methods in
-     * this listener will be called on the UI thread and may be called very frequently - your
-     * implementation should return quickly.
-     */
-    interface OnStateChangedListener {
-
-        /**
-         * The scale has changed. Use with [.getMaxScale] and [.getMinScale] to determine
-         * whether the image is fully zoomed in or out.
-         * @param newScale The new scale.
-         * @param origin Where the event originated from - one of [.ORIGIN_ANIM], [.ORIGIN_TOUCH].
-         */
-        fun onScaleChanged(newScale: Float, origin: Int)
-
-        /**
-         * The source center has been changed. This can be a result of panning or zooming.
-         * @param newCenter The new source center point.
-         * @param origin Where the event originated from - one of [.ORIGIN_ANIM], [.ORIGIN_TOUCH].
-         */
-        fun onCenterChanged(newCenter: PointF?, origin: Int)
-    }
-
-    /**
-     * Default implementation of [OnStateChangedListener]. This does nothing in any method.
-     */
-    class DefaultOnStateChangedListener : OnStateChangedListener {
-        override fun onCenterChanged(newCenter: PointF?, origin: Int) {}
-        override fun onScaleChanged(newScale: Float, origin: Int) {}
     }
 }
