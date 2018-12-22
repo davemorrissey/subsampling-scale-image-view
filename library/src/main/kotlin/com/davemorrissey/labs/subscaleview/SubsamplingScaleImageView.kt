@@ -272,9 +272,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     // Event listener
     private var onImageEventListener: OnImageEventListener? = null
 
-    // Scale and center listener
-    private var onStateChangedListener: OnStateChangedListener? = null
-
     // Paint objects created once and reused for efficiency
     private var bitmapPaint: Paint? = null
     private var debugTextPaint: Paint? = null
@@ -658,12 +655,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vCenterStart = PointF(0f, 0f)
         }
 
-        // Store current values so we can send an event if they change
-        val scaleBefore = scale
         vTranslateBefore!!.set(vTranslate)
-
         val handled = onTouchEventInternal(event)
-        sendStateChanged(scaleBefore, vTranslateBefore!!, ORIGIN_TOUCH)
         return handled || super.onTouchEvent(event)
     }
 
@@ -912,7 +905,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         // If animating scale, calculate current scale and center with easing equations
         if (anim != null && anim!!.vFocusStart != null) {
             // Store current values so we can send an event if they change
-            val scaleBefore = scale
             if (vTranslateBefore == null) {
                 vTranslateBefore = PointF(0f, 0f)
             }
@@ -932,7 +924,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             // For translate anims, showing the image non-centered is never allowed, for scaling anims it is during the animation.
             fitToBounds(finished || anim!!.scaleStart == anim!!.scaleEnd)
-            sendStateChanged(scaleBefore, vTranslateBefore!!, anim!!.origin)
             refreshRequiredTiles(finished)
             if (finished) {
                 try {
@@ -1909,41 +1900,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     /**
-     * Converts a rectangle within the view to the corresponding rectangle from the source file, taking
-     * into account the current scale, translation, orientation and clipped region. This can be used
-     * to decode a bitmap from the source file.
-     *
-     * This method will only work when the image has fully initialised, after [.isReady] returns
-     * true. It is not guaranteed to work with preloaded bitmaps.
-     *
-     * The result is written to the fRect argument. Re-use a single instance for efficiency.
-     * @param vRect rectangle representing the view area to interpret.
-     * @param fRect rectangle instance to which the result will be written. Re-use for efficiency.
-     */
-    fun viewToFileRect(vRect: Rect, fRect: Rect) {
-        if (vTranslate == null || !isReady) {
-            return
-        }
-
-        fRect.set(
-                viewToSourceX(vRect.left.toFloat()).toInt(),
-                viewToSourceY(vRect.top.toFloat()).toInt(),
-                viewToSourceX(vRect.right.toFloat()).toInt(),
-                viewToSourceY(vRect.bottom.toFloat()).toInt())
-        fileSRect(fRect, fRect)
-        fRect.set(
-                Math.max(0, fRect.left),
-                Math.max(0, fRect.top),
-                Math.min(sWidth, fRect.right),
-                Math.min(sHeight, fRect.bottom)
-        )
-
-        if (sRegion != null) {
-            fRect.offset(sRegion!!.left, sRegion!!.top)
-        }
-    }
-
-    /**
      * Convert screen coordinate to source coordinate.
      * @param vxy view X/Y coordinate.
      * @return a coordinate representing the corresponding source coordinate.
@@ -2153,17 +2109,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun px(px: Int) = (density * px).toInt()
 
     /**
-     *
-     * Swap the default region decoder implementation for one of your own. You must do this before setting the image file or
-     * asset, and you cannot use a custom decoder when using layout XML to set an asset name. Your class must have a
-     * public default constructor.
-     * @param regionDecoderClass The [ImageRegionDecoder] implementation to use.
-     */
-    fun setRegionDecoderClass(regionDecoderClass: Class<ImageRegionDecoder>) {
-        regionDecoderFactory = CompatDecoderFactory(regionDecoderClass)
-    }
-
-    /**
      * Swap the default region decoder implementation for one of your own. You must do this before setting the image file or
      * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
      * @param regionDecoderFactory The [DecoderFactory] implementation that produces [ImageRegionDecoder]
@@ -2171,16 +2116,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<ImageRegionDecoder>) {
         this.regionDecoderFactory = regionDecoderFactory
-    }
-
-    /**
-     * Swap the default bitmap decoder implementation for one of your own. You must do this before setting the image file or
-     * asset, and you cannot use a custom decoder when using layout XML to set an asset name. Your class must have a
-     * public default constructor.
-     * @param bitmapDecoderClass The [ImageDecoder] implementation to use.
-     */
-    fun setBitmapDecoderClass(bitmapDecoderClass: Class<out ImageDecoder>) {
-        bitmapDecoderFactory = CompatDecoderFactory(bitmapDecoderClass)
     }
 
     /**
@@ -2405,16 +2340,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     fun setOnImageEventListener(onImageEventListener: OnImageEventListener) {
         this.onImageEventListener = onImageEventListener
-    }
-
-    private fun sendStateChanged(oldScale: Float, oldVTranslate: PointF, origin: Int) {
-        if (scale != oldScale) {
-            onStateChangedListener?.onScaleChanged(scale, origin)
-        }
-
-        if (vTranslate != oldVTranslate) {
-            onStateChangedListener?.onCenterChanged(center, origin)
-        }
     }
 
     /**
