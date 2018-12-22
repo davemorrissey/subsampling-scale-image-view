@@ -63,25 +63,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private val VALID_EASING_STYLES = Arrays.asList(EASE_IN_OUT_QUAD, EASE_OUT_QUAD)
 
-        /** Scale the image so that both dimensions of the image will be equal to or less than the corresponding dimension of the view. The image is then centered in the view. This is the default behaviour and best for galleries.  */
-        const val SCALE_TYPE_CENTER_INSIDE = 1
-        /** Scale the image uniformly so that both dimensions of the image will be equal to or larger than the corresponding dimension of the view. The image is then centered in the view.  */
-        const val SCALE_TYPE_CENTER_CROP = 2
-        /** Scale the image so that both dimensions of the image will be equal to or less than the maxScale and equal to or larger than minScale. The image is then centered in the view.  */
-        const val SCALE_TYPE_CUSTOM = 3
-        /** Scale the image so that both dimensions of the image will be equal to or larger than the corresponding dimension of the view. The top left is shown.  */
-        const val SCALE_TYPE_START = 4
-
-        private val VALID_SCALE_TYPES = Arrays.asList(SCALE_TYPE_CENTER_CROP, SCALE_TYPE_CENTER_INSIDE, SCALE_TYPE_CUSTOM, SCALE_TYPE_START)
-
         /** State change originated from animation.  */
         const val ORIGIN_ANIM = 1
-        /** State change originated from touch gesture.  */
-        const val ORIGIN_TOUCH = 2
         /** State change originated from a fling momentum anim.  */
-        const val ORIGIN_FLING = 3
+        const val ORIGIN_FLING = 2
         /** State change originated from a double tap zoom anim.  */
-        const val ORIGIN_DOUBLE_TAP_ZOOM = 4
+        const val ORIGIN_DOUBLE_TAP_ZOOM = 3
 
         // overrides for the dimensions of the generated tiles
         const val TILE_SIZE_AUTO = Integer.MAX_VALUE
@@ -145,8 +132,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     // Density to reach before loading higher resolution tiles
     private var minimumTileDpi = -1
 
-    // Minimum scale type
-    private var minimumScaleType = SCALE_TYPE_CENTER_INSIDE
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
 
@@ -1344,7 +1329,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         fitToBounds(center, satTemp!!)
         scale = satTemp!!.scale
         vTranslate!!.set(satTemp!!.vTranslate)
-        if (init && minimumScaleType != SCALE_TYPE_START) {
+        if (init) {
             vTranslate!!.set(vTranslateForSCenter((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat(), scale))
         }
     }
@@ -2013,13 +1998,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun minScale(): Float {
         val vPadding = paddingBottom + paddingTop
         val hPadding = paddingLeft + paddingRight
-        return if (minimumScaleType == SCALE_TYPE_CENTER_CROP || minimumScaleType == SCALE_TYPE_START) {
-            Math.max((width - hPadding) / sWidth().toFloat(), (height - vPadding) / sHeight().toFloat())
-        } else if (minimumScaleType == SCALE_TYPE_CUSTOM && minScale > 0) {
-            minScale
-        } else {
-            Math.min((width - hPadding) / sWidth().toFloat(), (height - vPadding) / sHeight().toFloat())
-        }
+        return Math.min((width - hPadding) / sWidth().toFloat(), (height - vPadding) / sHeight().toFloat())
     }
 
     /**
@@ -2111,22 +2090,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
         this.bitmapDecoderFactory = bitmapDecoderFactory
-    }
-
-    /**
-     * Set the minimum scale type. See static fields. Normally [.SCALE_TYPE_CENTER_INSIDE] is best, for image galleries.
-     * @param scaleType a scale type constant. See static fields.
-     */
-    fun setMinimumScaleType(scaleType: Int) {
-        if (!VALID_SCALE_TYPES.contains(scaleType)) {
-            throw IllegalArgumentException("Invalid scale type: $scaleType")
-        }
-
-        minimumScaleType = scaleType
-        if (isReady) {
-            fitToBounds(true)
-            invalidate()
-        }
     }
 
     /**
