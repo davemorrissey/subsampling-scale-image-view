@@ -342,18 +342,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     fun setImage(imageSource: ImageSource) {
-        setImage(imageSource, null, null)
-    }
-
-    /**
-     * Set the image source from a bitmap, resource, asset, file or other URI, starting with a given orientation
-     * setting, scale and center. This is the best method to use when you want scale and center to be restored
-     * after screen orientation change; it avoids any redundant loading of tiles in the wrong orientation.
-     * @param imageSource Image source.
-     * @param state State to be restored. Nullable.
-     */
-    fun setImage(imageSource: ImageSource, state: ImageViewState) {
-        setImage(imageSource, null, state)
+        setImage(imageSource, null)
     }
 
     /**
@@ -367,13 +356,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * and if you provide a bitmap for the full size image.
      * @param imageSource Image source. Dimensions must be declared.
      * @param previewSource Optional source for a preview image to be displayed and allow interaction while the full size image loads.
-     * @param state State to be restored. Nullable.
      */
-    fun setImage(imageSource: ImageSource, previewSource: ImageSource? = null, state: ImageViewState? = null) {
+    fun setImage(imageSource: ImageSource, previewSource: ImageSource? = null) {
         reset(true)
-        if (state != null) {
-            restoreState(state)
-        }
 
         if (previewSource != null) {
             if (imageSource.bitmap != null) {
@@ -1751,18 +1736,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF)
-
-    /**
-     * Set scale, center and orientation from saved state.
-     */
-    private fun restoreState(state: ImageViewState?) {
-        if (state != null && VALID_ORIENTATIONS.contains(state.orientation)) {
-            orientation = state.orientation
-            pendingScale = state.scale
-            sPendingCenter = state.center
-            invalidate()
-        }
-    }
 
     /**
      * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing [.TILE_SIZE_AUTO] will re-enable the default behaviour.
