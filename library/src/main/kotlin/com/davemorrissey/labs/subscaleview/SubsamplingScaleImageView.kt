@@ -276,7 +276,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var bitmapPaint: Paint? = null
     private var debugTextPaint: Paint? = null
     private var debugLinePaint: Paint? = null
-    private var tileBgPaint: Paint? = null
 
     // Volatile fields used to reduce object creation
     private var satTemp: ScaleAndTranslate? = null
@@ -958,10 +957,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     for (tile in value) {
                         sourceToViewRect(tile.sRect!!, tile.vRect!!)
                         if (!tile.loading && tile.bitmap != null) {
-                            if (tileBgPaint != null) {
-                                canvas.drawRect(tile.vRect!!, tileBgPaint!!)
-                            }
-
                             if (objectMatrix == null) {
                                 objectMatrix = Matrix()
                             }
@@ -1013,14 +1008,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
             }
 
-            if (tileBgPaint != null) {
-                if (sRect == null) {
-                    sRect = RectF()
-                }
-                sRect!!.set(0f, 0f, (if (bitmapIsPreview) bitmap!!.width else sWidth).toFloat(), (if (bitmapIsPreview) bitmap!!.height else sHeight).toFloat())
-                objectMatrix!!.mapRect(sRect)
-                canvas.drawRect(sRect!!, tileBgPaint!!)
-            }
             canvas.drawBitmap(bitmap!!, objectMatrix!!, bitmapPaint)
         }
 
@@ -1874,7 +1861,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         bitmapPaint = null
         debugTextPaint = null
         debugLinePaint = null
-        tileBgPaint = null
     }
 
     /**
@@ -2246,22 +2232,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @return the orientation setting. See static fields.
      */
     fun getOrientation() = orientation
-
-    /**
-     * Set a solid color to render behind tiles, useful for displaying transparent PNGs.
-     * @param tileBgColor Background color for tiles.
-     */
-    fun setTileBackgroundColor(tileBgColor: Int) {
-        if (Color.alpha(tileBgColor) == 0) {
-            tileBgPaint = null
-        } else {
-            tileBgPaint = Paint().apply {
-                style = Style.FILL
-                color = tileBgColor
-            }
-        }
-        invalidate()
-    }
 
     /**
      * Set the scale the image will zoom in to when double tapped. This also the scale point where a double tap is interpreted
