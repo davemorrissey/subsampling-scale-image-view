@@ -63,15 +63,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private val VALID_EASING_STYLES = Arrays.asList(EASE_IN_OUT_QUAD, EASE_OUT_QUAD)
 
-        /** Don't allow the image to be panned off screen. As much of the image as possible is always displayed, centered in the view when it is smaller. This is the best option for galleries.  */
-        const val PAN_LIMIT_INSIDE = 1
-        /** Allows the image to be panned until it is just off screen, but no further. The edge of the image will stop when it is flush with the screen edge.  */
-        const val PAN_LIMIT_OUTSIDE = 2
-        /** Allows the image to be panned until a corner reaches the center of the screen but no further. Useful when you want to pan any spot on the image to the exact center of the screen.  */
-        const val PAN_LIMIT_CENTER = 3
-
-        private val VALID_PAN_LIMITS = Arrays.asList(PAN_LIMIT_INSIDE, PAN_LIMIT_OUTSIDE, PAN_LIMIT_CENTER)
-
         /** Scale the image so that both dimensions of the image will be equal to or less than the corresponding dimension of the view. The image is then centered in the view. This is the default behaviour and best for galleries.  */
         const val SCALE_TYPE_CENTER_INSIDE = 1
         /** Scale the image uniformly so that both dimensions of the image will be equal to or larger than the corresponding dimension of the view. The image is then centered in the view.  */
@@ -94,7 +85,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         // overrides for the dimensions of the generated tiles
         const val TILE_SIZE_AUTO = Integer.MAX_VALUE
-        const val MESSAGE_LONG_CLICK = 1
 
         // A global preference for bitmap format, available to decoder classes that respect it
         /**
@@ -154,9 +144,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     // Density to reach before loading higher resolution tiles
     private var minimumTileDpi = -1
-
-    // Pan limiting style
-    private var panLimit = PAN_LIMIT_INSIDE
 
     // Minimum scale type
     private var minimumScaleType = SCALE_TYPE_CENTER_INSIDE
@@ -1325,20 +1312,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      * @param sat The scale we want and the translation we're aiming for. The values are adjusted to be valid.
      */
     private fun fitToBounds(center: Boolean, sat: ScaleAndTranslate) {
-        var newCenter = center
-        if (panLimit == PAN_LIMIT_OUTSIDE && isReady) {
-            newCenter = false
-        }
-
         val vTranslate = sat.vTranslate
         val scale = limitedScale(sat.scale)
         val scaleWidth = scale * sWidth()
         val scaleHeight = scale * sHeight()
 
-        if (panLimit == PAN_LIMIT_CENTER && isReady) {
-            vTranslate.x = Math.max(vTranslate.x, width / 2 - scaleWidth)
-            vTranslate.y = Math.max(vTranslate.y, height / 2 - scaleHeight)
-        } else if (newCenter) {
+        if (center) {
             vTranslate.x = Math.max(vTranslate.x, width - scaleWidth)
             vTranslate.y = Math.max(vTranslate.y, height - scaleHeight)
         } else {
@@ -1352,10 +1331,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         val maxTx: Float
         val maxTy: Float
-        if (panLimit == PAN_LIMIT_CENTER && isReady) {
-            maxTx = Math.max(0, width / 2).toFloat()
-            maxTy = Math.max(0, height / 2).toFloat()
-        } else if (newCenter) {
+        if (center) {
             maxTx = Math.max(0f, (width - scaleWidth) * xPaddingRatio)
             maxTy = Math.max(0f, (height - scaleHeight) * yPaddingRatio)
         } else {
@@ -2214,22 +2190,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
      */
     fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
         this.bitmapDecoderFactory = bitmapDecoderFactory
-    }
-
-    /**
-     * Set the pan limiting style. See static fields. Normally [.PAN_LIMIT_INSIDE] is best, for image galleries.
-     * @param panLimit a pan limit constant. See static fields.
-     */
-    fun setPanLimit(panLimit: Int) {
-        if (!VALID_PAN_LIMITS.contains(panLimit)) {
-            throw IllegalArgumentException("Invalid pan limit: $panLimit")
-        }
-
-        this.panLimit = panLimit
-        if (isReady) {
-            fitToBounds(true)
-            invalidate()
-        }
     }
 
     /**
