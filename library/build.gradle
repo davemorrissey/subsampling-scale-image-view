@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
-version = '3.10.1'
+version = '4.0.1'
 
 android {
     compileSdkVersion 28
