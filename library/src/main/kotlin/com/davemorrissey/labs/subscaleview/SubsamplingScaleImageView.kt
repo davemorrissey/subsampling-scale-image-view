@@ -962,8 +962,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 postTranslate(vTranslate!!.x, vTranslate!!.y)
 
                 when (requiredRotation) {
-                    ORIENTATION_180 -> postTranslate(scale * sWidth, scale * sHeight)
                     ORIENTATION_90 -> postTranslate(scale * sHeight, 0f)
+                    ORIENTATION_180 -> postTranslate(scale * sWidth, scale * sHeight)
                     ORIENTATION_270 -> postTranslate(0f, scale * sWidth)
                 }
             }
@@ -1938,20 +1938,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         satTemp!!.vTranslate.set(vxCenter - sCenterX * scale, vyCenter - sCenterY * scale)
         fitToBounds(true, satTemp!!)
         return satTemp!!.vTranslate
-    }
-
-    /**
-     * Given a requested source center and scale, calculate what the actual center will have to be to keep the image in
-     * pan limits, keeping the requested center as near to the middle of the screen as allowed.
-     */
-    private fun limitedSCenter(sCenterX: Float, sCenterY: Float, scale: Float, sTarget: PointF): PointF {
-        val vTranslate = vTranslateForSCenter(sCenterX, sCenterY, scale)
-        val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
-        val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
-        val sx = (vxCenter - vTranslate.x) / scale
-        val sy = (vyCenter - vTranslate.y) / scale
-        sTarget.set(sx, sy)
-        return sTarget
     }
 
     /**
