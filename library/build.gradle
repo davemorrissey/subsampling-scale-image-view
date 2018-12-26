@@ -28,7 +28,7 @@ dependencies {
     javadocs 'androidx.exifinterface:exifinterface:1.0.0'
     implementation 'androidx.annotation:annotation:1.0.1'
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 task javadoc(type: Javadoc) {
