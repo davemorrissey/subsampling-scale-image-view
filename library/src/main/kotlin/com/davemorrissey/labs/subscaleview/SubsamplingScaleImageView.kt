@@ -1941,6 +1941,20 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     /**
+     * Given a requested source center and scale, calculate what the actual center will have to be to keep the image in
+     * pan limits, keeping the requested center as near to the middle of the screen as allowed.
+     */
+    private fun limitedSCenter(sCenterX: Float, sCenterY: Float, scale: Float, sTarget: PointF): PointF {
+        val vTranslate = vTranslateForSCenter(sCenterX, sCenterY, scale)
+        val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
+        val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
+        val sx = (vxCenter - vTranslate.x) / scale
+        val sy = (vyCenter - vTranslate.y) / scale
+        sTarget.set(sx, sy)
+        return sTarget
+    }
+
+    /**
      * Returns the minimum allowed scale.
      */
     private fun minScale(): Float {
@@ -2317,6 +2331,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
             val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
             val targetScale = limitedScale(targetScale)
+            val targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF())
             anim = Anim().apply {
                 scaleStart = scale
                 scaleEnd = targetScale
@@ -2324,7 +2339,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 sCenterEndRequested = targetSCenter
                 sCenterStart = center
                 sCenterEnd = targetSCenter
-                vFocusStart = sourceToViewCoord(targetSCenter!!)
+                vFocusStart = sourceToViewCoord(targetSCenter)
                 vFocusEnd = PointF(
                         vxCenter.toFloat(),
                         vyCenter.toFloat()
