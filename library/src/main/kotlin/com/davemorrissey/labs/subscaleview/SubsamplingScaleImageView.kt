@@ -830,10 +830,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale
         val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
-        if (!zoomIn) {
-            AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
-        } else {
+        if (zoomIn) {
             AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+        } else {
+            AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
         }
         invalidate()
     }
