@@ -2,13 +2,10 @@ package com.davemorrissey.labs.subscaleview
 
 import android.content.ContentResolver
 import android.content.Context
-import android.database.Cursor
 import android.graphics.*
 import android.graphics.Paint.Style
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.AsyncTask
-import android.provider.MediaStore
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
@@ -1395,7 +1392,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         override fun doInBackground(vararg params: Void): IntArray? {
             try {
-                val sourceUri = source.toString()
                 val context = contextRef.get()
                 val decoderFactory = decoderFactoryRef.get()
                 val view = viewRef.get()
@@ -1405,7 +1401,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     val dimensions = decoder!!.init(context, source)
                     var sWidth = dimensions.x
                     var sHeight = dimensions.y
-                    val exifOrientation = view.getExifOrientation(context, sourceUri)
+                    val exifOrientation = view.orientation
                     view.sRegion?.apply {
                         left = Math.max(0, left)
                         top = Math.max(0, top)
@@ -1570,7 +1566,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         override fun doInBackground(vararg params: Void): Int? {
             try {
-                val sourceUri = source.toString()
                 val context = contextRef.get()
                 val decoderFactory = decoderFactoryRef.get()
                 val view = viewRef.get()
@@ -1578,7 +1573,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 if (context != null && decoderFactory != null && view != null) {
                     view.debug("BitmapLoadTask.doInBackground")
                     bitmap = decoderFactory.make().decode(context, source)
-                    return view.getExifOrientation(context, sourceUri)
+                    return view.orientation
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load bitmap", e)
@@ -1663,55 +1658,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             invalidate()
             requestLayout()
         }
-    }
-
-    /**
-     * Helper method for load tasks. Examines the EXIF info on the image file to determine the orientation.
-     * This will only work for external files, not assets, resources or other URIs.
-     */
-    private fun getExifOrientation(context: Context, sourceUri: String): Int {
-        var exifOrientation = ORIENTATION_0
-        if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
-            var cursor: Cursor? = null
-            try {
-                val columns = arrayOf(MediaStore.Images.Media.ORIENTATION)
-                cursor = context.contentResolver.query(Uri.parse(sourceUri), columns, null, null, null)
-                if (cursor != null) {
-                    if (cursor.moveToFirst()) {
-                        val orientation = cursor.getInt(0)
-                        if (VALID_ORIENTATIONS.contains(orientation) && orientation != ORIENTATION_USE_EXIF) {
-                            exifOrientation = orientation
-                        } else {
-                            Log.w(TAG, "Unsupported orientation: $orientation")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not get orientation of image from media store")
-            } finally {
-                cursor?.close()
-            }
-        } else if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
-            try {
-                val exifInterface = ExifInterface(sourceUri.substring(ImageSource.FILE_SCHEME.length - 1))
-                val orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                if (orientationAttr == ExifInterface.ORIENTATION_NORMAL || orientationAttr == ExifInterface.ORIENTATION_UNDEFINED) {
-                    exifOrientation = ORIENTATION_0
-                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_90) {
-                    exifOrientation = ORIENTATION_90
-                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_180) {
-                    exifOrientation = ORIENTATION_180
-                } else if (orientationAttr == ExifInterface.ORIENTATION_ROTATE_270) {
-                    exifOrientation = ORIENTATION_270
-                } else {
-                    Log.w(TAG, "Unsupported EXIF orientation: $orientationAttr")
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not get EXIF orientation of image")
-            }
-
-        }
-        return exifOrientation
     }
 
     private fun execute(asyncTask: AsyncTask<Void, Void, *>) {
