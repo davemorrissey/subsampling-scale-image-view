@@ -961,7 +961,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     }
                 }
             }
-        } else if (bitmap != null && !bitmap!!.isRecycled) {
+        } else if (bitmap?.isRecycled == false) {
             var xScale = scale
             var yScale = scale
             if (bitmapIsPreview) {
@@ -1614,6 +1614,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             previewBitmap!!.recycle()
             return
         }
+
         bitmap = if (pRegion != null) {
             Bitmap.createBitmap(previewBitmap!!, pRegion!!.left, pRegion!!.top, pRegion!!.width(), pRegion!!.height())
         } else {
