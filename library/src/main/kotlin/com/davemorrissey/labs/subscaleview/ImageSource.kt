@@ -17,8 +17,8 @@ import java.net.URLDecoder
  */
 class ImageSource {
     companion object {
-        val FILE_SCHEME = "file:///"
-        val ASSET_SCHEME = "file:///android_asset/"
+        const val FILE_SCHEME = "file:///"
+        const val ASSET_SCHEME = "file:///android_asset/"
 
         /**
          * Create an instance from a resource. The correct resource for the device screen resolution will be used.
@@ -52,28 +52,7 @@ class ImageSource {
             return ImageSource(Uri.parse(newUri))
         }
 
-        /**
-         * Create an instance from a URI.
-         * @param uri image URI.
-         * @return an [ImageSource] instance.
-         */
         fun uri(uri: Uri) = ImageSource(uri)
-
-        /**
-         * Provide a loaded bitmap for display.
-         * @param bitmap bitmap to be displayed.
-         * @return an [ImageSource] instance.
-         */
-        fun bitmap(bitmap: Bitmap) = ImageSource(bitmap, false)
-
-        /**
-         * Provide a loaded and cached bitmap for display. This bitmap will not be recycled when it is no
-         * longer needed. Use this method if you loaded the bitmap with an image loader such as Picasso
-         * or Volley.
-         * @param bitmap bitmap to be displayed.
-         * @return an [ImageSource] instance.
-         */
-        fun cachedBitmap(bitmap: Bitmap) = ImageSource(bitmap, true)
     }
 
     val uri: Uri?
@@ -84,16 +63,6 @@ class ImageSource {
     var sHeight = 0
     var isCached = false
     var sRegion: Rect? = null
-
-    private constructor(bitmap: Bitmap, cached: Boolean) {
-        this.bitmap = bitmap
-        uri = null
-        resource = null
-        tile = false
-        sWidth = bitmap.width
-        sHeight = bitmap.height
-        isCached = cached
-    }
 
     private constructor(uri: Uri) {
         var newUri = uri

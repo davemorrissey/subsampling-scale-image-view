@@ -1,11 +1,9 @@
 package com.davemorrissey.labs.subscaleview.decoder
 
-import android.content.ContentResolver
 import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
-import android.text.TextUtils
 import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.InputStream
@@ -26,7 +24,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
     private val FILE_PREFIX = "file://"
     private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
-    private val RESOURCE_PREFIX = ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
 
     private var decoder: BitmapRegionDecoder? = null
     private val decoderLock = ReentrantReadWriteLock(true)
@@ -52,30 +49,6 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
     override fun init(context: Context, uri: Uri): Point {
         val uriString = uri.toString()
         when {
-            uriString.startsWith(RESOURCE_PREFIX) -> {
-                val packageName = uri.authority
-                val res = if (context.packageName == packageName) {
-                    context.resources
-                } else {
-                    val pm = context.packageManager
-                    pm.getResourcesForApplication(packageName)
-                }
-
-                var id = 0
-                val segments = uri.pathSegments
-                val size = segments.size
-                if (size == 2 && segments[0] == "drawable") {
-                    val resName = segments[1]
-                    id = res.getIdentifier(resName, "drawable", packageName)
-                } else if (size == 1 && TextUtils.isDigitsOnly(segments[0])) {
-                    try {
-                        id = Integer.parseInt(segments[0])
-                    } catch (ignored: NumberFormatException) {
-                    }
-                }
-
-                decoder = BitmapRegionDecoder.newInstance(context.resources.openRawResource(id), false)
-            }
             uriString.startsWith(ASSET_PREFIX) -> {
                 val assetName = uriString.substring(ASSET_PREFIX.length)
                 decoder = BitmapRegionDecoder.newInstance(context.assets.open(assetName, AssetManager.ACCESS_RANDOM), false)
