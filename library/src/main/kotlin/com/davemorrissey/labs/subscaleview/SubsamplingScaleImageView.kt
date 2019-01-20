@@ -1357,35 +1357,18 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF)
 
-    /**
-     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing [.TILE_SIZE_AUTO] will re-enable the default behaviour.
-     *
-     * @param maxPixels Maximum tile size X and Y in pixels.
-     */
     fun setMaxTileSize(maxPixels: Int) {
         maxTileWidth = maxPixels
         maxTileHeight = maxPixels
     }
 
-    /**
-     * By default the View automatically calculates the optimal tile size. Set this to override this, and force an upper limit to the dimensions of the generated tiles. Passing [.TILE_SIZE_AUTO] will re-enable the default behaviour.
-     *
-     * @param maxPixelsX Maximum tile width.
-     * @param maxPixelsY Maximum tile height.
-     */
     fun setMaxTileSize(maxPixelsX: Int, maxPixelsY: Int) {
         maxTileWidth = maxPixelsX
         maxTileHeight = maxPixelsY
     }
 
-    /**
-     * Use canvas max bitmap width and height instead of the default 2048, to avoid redundant tiling.
-     */
     private fun getMaxBitmapDimensions(canvas: Canvas) = Point(Math.min(canvas.maximumBitmapWidth, maxTileWidth), Math.min(canvas.maximumBitmapHeight, maxTileHeight))
 
-    /**
-     * Get source width taking rotation into account.
-     */
     private fun sWidth(): Int {
         val rotation = getRequiredRotation()
         return if (rotation == 90 || rotation == 270) {
@@ -1395,9 +1378,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Get source height taking rotation into account.
-     */
     private fun sHeight(): Int {
         val rotation = getRequiredRotation()
         return if (rotation == 90 || rotation == 270) {
@@ -1407,10 +1387,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Converts source rectangle from tile, which treats the image file as if it were in the correct orientation already,
-     * to the rectangle of the image that needs to be loaded.
-     */
     private fun fileSRect(sRect: Rect?, target: Rect?) {
         when (getRequiredRotation()) {
             0 -> target!!.set(sRect)
@@ -1420,20 +1396,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Pythagoras distance between two points.
-     */
     private fun distance(x0: Float, x1: Float, y0: Float, y1: Float): Float {
         val x = x0 - x1
         val y = y0 - y1
         return Math.sqrt((x * x + y * y).toDouble()).toFloat()
     }
 
-    /**
-     * Releases all resources the view is using and resets the state, nulling any fields that use significant memory.
-     * After you have called this method, the view can be re-used by setting a new image. Settings are remembered
-     * but state (scale and center) is forgotten. You can restore these yourself if required.
-     */
     fun recycle() {
         reset(true)
         bitmapPaint = null
@@ -1441,9 +1409,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         debugLinePaint = null
     }
 
-    /**
-     * Convert screen to source x coordinate.
-     */
     private fun viewToSourceX(vx: Float): Float {
         return if (vTranslate == null) {
             Float.NaN
@@ -1452,9 +1417,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Convert screen to source y coordinate.
-     */
     private fun viewToSourceY(vy: Float): Float {
         return if (vTranslate == null) {
             Float.NaN
@@ -1463,22 +1425,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Convert screen coordinate to source coordinate.
-     * @param vxy view X/Y coordinate.
-     * @return a coordinate representing the corresponding source coordinate.
-     */
     fun viewToSourceCoord(vxy: PointF) = viewToSourceCoord(vxy.x, vxy.y, PointF())
 
-    /**
-     * Convert screen coordinate to source coordinate.
-     * @param vx view X coordinate.
-     * @param vy view Y coordinate.
-     * @param sTarget target object for result. The same instance is also returned.
-     * @return source coordinates. This is the same instance passed to the sTarget param.
-     */
-    @JvmOverloads
-    fun viewToSourceCoord(vx: Float, vy: Float, sTarget: PointF = PointF()): PointF? {
+    private fun viewToSourceCoord(vx: Float, vy: Float, sTarget: PointF = PointF()): PointF? {
         if (vTranslate == null) {
             return null
         }
@@ -1487,9 +1436,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return sTarget
     }
 
-    /**
-     * Convert source to view x coordinate.
-     */
     private fun sourceToViewX(sx: Float): Float {
         return if (vTranslate == null) {
             Float.NaN
@@ -1498,9 +1444,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Convert source to view y coordinate.
-     */
     private fun sourceToViewY(sy: Float): Float {
         return if (vTranslate == null) {
             Float.NaN
@@ -1509,30 +1452,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Convert source coordinate to view coordinate.
-     * @param sxy source coordinates to convert.
-     * @return view coordinates.
-     */
     fun sourceToViewCoord(sxy: PointF) = sourceToViewCoord(sxy.x, sxy.y, PointF())
 
-    /**
-     * Convert source coordinate to view coordinate.
-     * @param sxy source coordinates to convert.
-     * @param vTarget target object for result. The same instance is also returned.
-     * @return view coordinates. This is the same instance passed to the vTarget param.
-     */
-    fun sourceToViewCoord(sxy: PointF, vTarget: PointF) = sourceToViewCoord(sxy.x, sxy.y, vTarget)
-
-    /**
-     * Convert source coordinate to view coordinate.
-     * @param sx source X coordinate.
-     * @param sy source Y coordinate.
-     * @param vTarget target object for result. The same instance is also returned.
-     * @return view coordinates. This is the same instance passed to the vTarget param.
-     */
-    @JvmOverloads
-    fun sourceToViewCoord(sx: Float, sy: Float, vTarget: PointF = PointF()): PointF? {
+    private fun sourceToViewCoord(sx: Float, sy: Float, vTarget: PointF = PointF()): PointF? {
         if (vTranslate == null) {
             return null
         }
@@ -1541,9 +1463,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return vTarget
     }
 
-    /**
-     * Convert source rect to screen rect, integer values.
-     */
     private fun sourceToViewRect(sRect: Rect, vTarget: Rect) {
         vTarget.set(
                 sourceToViewX(sRect.left.toFloat()).toInt(),
@@ -1553,11 +1472,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         )
     }
 
-    /**
-     * Get the translation required to place a given source coordinate at the center of the screen, with the center
-     * adjusted for asymmetric padding. Accepts the desired scale as an argument, so this is independent of current
-     * translate and scale. The result is fitted to bounds, putting the image point as near to the screen center as permitted.
-     */
     private fun vTranslateForSCenter(sCenterX: Float, sCenterY: Float, scale: Float): PointF {
         val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
         val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
@@ -1571,10 +1485,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return satTemp!!.vTranslate
     }
 
-    /**
-     * Given a requested source center and scale, calculate what the actual center will have to be to keep the image in
-     * pan limits, keeping the requested center as near to the middle of the screen as allowed.
-     */
     private fun limitedSCenter(sCenterX: Float, sCenterY: Float, scale: Float, sTarget: PointF): PointF {
         val vTranslate = vTranslateForSCenter(sCenterX, sCenterY, scale)
         val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
@@ -1585,18 +1495,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return sTarget
     }
 
-    /**
-     * Returns the minimum allowed scale.
-     */
     private fun minScale(): Float {
         val vPadding = paddingBottom + paddingTop
         val hPadding = paddingLeft + paddingRight
         return Math.min((width - hPadding) / sWidth().toFloat(), (height - vPadding) / sHeight().toFloat())
     }
 
-    /**
-     * Adjust a requested scale to be within the allowed limits.
-     */
     private fun limitedScale(targetScale: Float): Float {
         var newTargetScale = targetScale
         newTargetScale = Math.max(minScale(), newTargetScale)
@@ -1604,15 +1508,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return newTargetScale
     }
 
-    /**
-     * Apply a selected type of easing.
-     * @param type Easing type, from static fields
-     * @param time Elapsed time
-     * @param from Start value
-     * @param change Target value
-     * @param duration Anm duration
-     * @return Current value
-     */
     private fun ease(type: Int, time: Long, from: Float, change: Float, duration: Long): Float {
         return when (type) {
             EASE_IN_OUT_QUAD -> easeInOutQuad(time, from, change, duration)
@@ -1621,27 +1516,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Quadratic easing for fling. With thanks to Robert Penner - http://gizma.com/easing/
-     * @param time Elapsed time
-     * @param from Start value
-     * @param change Target value
-     * @param duration Anm duration
-     * @return Current value
-     */
     private fun easeOutQuad(time: Long, from: Float, change: Float, duration: Long): Float {
         val progress = time.toFloat() / duration.toFloat()
         return -change * progress * (progress - 2) + from
     }
 
-    /**
-     * Quadratic easing for scale and center animations. With thanks to Robert Penner - http://gizma.com/easing/
-     * @param time Elapsed time
-     * @param from Start value
-     * @param change Target value
-     * @param duration Anm duration
-     * @return Current value
-     */
     private fun easeInOutQuad(time: Long, from: Float, change: Float, duration: Long): Float {
         var timeF = time / (duration / 2f)
         return if (timeF < 1) {
@@ -1658,9 +1537,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * For debug overlays. Scale pixel value according to screen density.
-     */
     private fun px(px: Int) = (density * px).toInt()
 
     /**
