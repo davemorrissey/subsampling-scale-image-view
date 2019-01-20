@@ -844,8 +844,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
         fitToBounds(true, satTemp!!)
 
-        // Load double resolution - next level will be split into four tiles and at the center all four are required,
-        // so don't bother with tiling until the next level 16 tiles are needed.
         fullImageSampleSize = calculateInSampleSize(satTemp!!.scale)
         if (fullImageSampleSize > 1) {
             fullImageSampleSize /= 2
@@ -856,8 +854,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (fullImageSampleSize == 1 && sRegion == null && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
-            // Whole image is required at native resolution, and is smaller than the canvas max bitmap size.
-            // Use BitmapDecoder for better image support.
             decoder!!.recycle()
             decoder = null
             val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, false)
@@ -874,11 +870,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Loads the optimum tiles for display at the current scale and translate, so the screen can be filled with tiles
-     * that are at least as high resolution as the screen. Frees up bitmaps that are now off the screen.
-     * @param load Whether to load the new tiles needed. Use false while scrolling/panning for performance.
-     */
     private fun refreshRequiredTiles(load: Boolean) {
         if (decoder == null || tileMap == null) {
             return
@@ -886,8 +877,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         val sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize(scale))
 
-        // Load tiles of the correct sample size that are on screen. Discard tiles off screen, and those that are higher
-        // resolution than required, or lower res than required but not the base layer, so the base layer is always present.
         for ((key, value) in tileMap!!) {
             for (tile in value) {
                 if (tile.sampleSize < sampleSize || tile.sampleSize > sampleSize && tile.sampleSize != fullImageSampleSize) {
@@ -895,6 +884,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     tile.bitmap?.recycle()
                     tile.bitmap = null
                 }
+
                 if (tile.sampleSize == sampleSize) {
                     if (tileVisible(tile)) {
                         tile.visible = true
@@ -914,9 +904,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Determine whether tile is visible.
-     */
     private fun tileVisible(tile: Tile): Boolean {
         val sVisLeft = viewToSourceX(0f)
         val sVisRight = viewToSourceX(width.toFloat())
@@ -925,15 +912,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)
     }
 
-    /**
-     * Sets scale and translate ready for the next draw.
-     */
     private fun preDraw() {
         if (width == 0 || height == 0 || sWidth <= 0 || sHeight <= 0) {
             return
         }
 
-        // If waiting to translate to new center position, set translate now
         if (sPendingCenter != null && pendingScale != null) {
             scale = pendingScale!!
             if (vTranslate == null) {
@@ -947,13 +930,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             refreshRequiredTiles(true)
         }
 
-        // On first display of base image set up position, and in other cases make sure scale is correct.
         fitToBounds(false)
     }
 
-    /**
-     * Calculates sample size to fit the source image in given bounds.
-     */
     private fun calculateInSampleSize(scale: Float): Int {
         var newScale = scale
         if (minimumTileDpi > 0) {
@@ -965,24 +944,17 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val reqWidth = (sWidth() * newScale).toInt()
         val reqHeight = (sHeight() * newScale).toInt()
 
-        // Raw height and width of image
         var inSampleSize = 1
         if (reqWidth == 0 || reqHeight == 0) {
             return 32
         }
 
         if (sHeight() > reqHeight || sWidth() > reqWidth) {
-            // Calculate ratios of height and width to requested height and width
             val heightRatio = Math.round(sHeight().toFloat() / reqHeight.toFloat())
             val widthRatio = Math.round(sWidth().toFloat() / reqWidth.toFloat())
-
-            // Choose the smallest ratio as inSampleSize value, this will guarantee
-            // a final image with both dimensions larger than or equal to the
-            // requested height and width.
             inSampleSize = if (heightRatio < widthRatio) heightRatio else widthRatio
         }
 
-        // We want the actual sample size that will be used, so round down to nearest power of 2.
         var power = 1
         while (power * 2 < inSampleSize) {
             power *= 2
@@ -991,13 +963,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return power
     }
 
-    /**
-     * Adjusts hypothetical future scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
-     * is set so one dimension fills the view and the image is centered on the other dimension. Used to calculate what the target of an
-     * animation should be.
-     * @param center Whether the image should be centered in the dimension it's too small to fill. While animating this can be false to avoid changes in direction as bounds are reached.
-     * @param sat The scale we want and the translation we're aiming for. The values are adjusted to be valid.
-     */
     private fun fitToBounds(center: Boolean, sat: ScaleAndTranslate) {
         val vTranslate = sat.vTranslate
         val scale = limitedScale(sat.scale)
@@ -1012,7 +977,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate.y = Math.max(vTranslate.y, -scaleHeight)
         }
 
-        // Asymmetric padding adjustments
         val xPaddingRatio = if (paddingLeft > 0 || paddingRight > 0) paddingLeft / (paddingLeft + paddingRight).toFloat() else 0.5f
         val yPaddingRatio = if (paddingTop > 0 || paddingBottom > 0) paddingTop / (paddingTop + paddingBottom).toFloat() else 0.5f
 
@@ -1032,11 +996,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         sat.scale = scale
     }
 
-    /**
-     * Adjusts current scale and translate values to keep scale within the allowed range and the image on screen. Minimum scale
-     * is set so one dimension fills the view and the image is centered on the other dimension.
-     * @param center Whether the image should be centered in the dimension it's too small to fill. While animating this can be false to avoid changes in direction as bounds are reached.
-     */
     private fun fitToBounds(center: Boolean) {
         var init = false
         if (vTranslate == null) {
@@ -1053,14 +1012,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         fitToBounds(center, satTemp!!)
         scale = satTemp!!.scale
         vTranslate!!.set(satTemp!!.vTranslate)
+
         if (init) {
             vTranslate!!.set(vTranslateForSCenter((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat(), scale))
         }
     }
 
-    /**
-     * Once source image and view dimensions are known, creates a map of sample size to tile grid.
-     */
     private fun initialiseTileMap(maxTileDimensions: Point) {
         debug("initialiseTileMap maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
         tileMap = LinkedHashMap()
@@ -1111,9 +1068,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Async task used to get image details without blocking the UI thread.
-     */
     private class TilesInitTask internal constructor(view: SubsamplingScaleImageView, context: Context, decoderFactory: DecoderFactory<out ImageRegionDecoder>, private val source: Uri) : AsyncTask<Void, Void, IntArray>() {
         private val viewRef = WeakReference(view)
         private val contextRef = WeakReference(context)
@@ -1144,8 +1098,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     return intArrayOf(sWidth, sHeight, exifOrientation)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialise bitmap decoder", e)
-                this.exception = e
+                exception = e
             }
 
             return null
@@ -1163,13 +1116,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Called by worker task when decoder is ready and image size and EXIF orientation is known.
-     */
     @Synchronized
     private fun onTilesInited(decoder: ImageRegionDecoder, sWidth: Int, sHeight: Int, sOrientation: Int) {
         debug("onTilesInited sWidth=$sWidth, sHeight=$sHeight, sOrientation=$orientation")
-        // If actual dimensions don't match the declared size, reset everything.
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false)
             if (bitmap != null) {
@@ -1198,9 +1147,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         requestLayout()
     }
 
-    /**
-     * Async task used to load images without blocking the UI thread.
-     */
     private class TileLoadTask internal constructor(view: SubsamplingScaleImageView, decoder: ImageRegionDecoder, tile: Tile) : AsyncTask<Void, Void, Bitmap>() {
         private val viewRef = WeakReference(view)
         private val decoderRef = WeakReference(decoder)
@@ -1237,10 +1183,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     tile?.loading = false
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to decode tile", e)
+                Log.e(TAG, "Failed to decode tile $e")
                 exception = e
             } catch (e: OutOfMemoryError) {
-                Log.e(TAG, "Failed to decode tile - OutOfMemoryError", e)
+                Log.e(TAG, "Failed to decode tile - OutOfMemoryError $e")
                 exception = RuntimeException(e)
             }
 
@@ -1262,9 +1208,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Called by worker task when a tile has loaded. Redraws the view.
-     */
     @Synchronized
     private fun onTileLoaded() {
         debug("onTileLoaded")
@@ -1285,9 +1228,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         invalidate()
     }
 
-    /**
-     * Async task used to load bitmap without blocking the UI thread.
-     */
     private class BitmapLoadTask internal constructor(view: SubsamplingScaleImageView, context: Context, decoderFactory: DecoderFactory<out ImageDecoder>, private val source: Uri, private val preview: Boolean) : AsyncTask<Void, Void, Int>() {
         private val viewRef = WeakReference(view)
         private val contextRef = WeakReference(context)
@@ -1310,7 +1250,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 Log.e(TAG, "Failed to load bitmap", e)
                 exception = e
             } catch (e: OutOfMemoryError) {
-                Log.e(TAG, "Failed to load bitmap - OutOfMemoryError", e)
+                Log.e(TAG, "Failed to load bitmap - OutOfMemoryError $e")
                 exception = RuntimeException(e)
             }
 
@@ -1335,9 +1275,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Called by worker task when preview image is loaded.
-     */
     @Synchronized
     private fun onPreviewLoaded(previewBitmap: Bitmap?) {
         debug("onPreviewLoaded")
@@ -1359,13 +1296,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Called by worker task when full size image bitmap is ready (tiling is disabled).
-     */
     @Synchronized
     private fun onImageLoaded(bitmap: Bitmap?, sOrientation: Int, bitmapIsCached: Boolean) {
         debug("onImageLoaded")
-        // If actual dimensions don't match the declared size, reset everything.
         if (sWidth > 0 && sHeight > 0 && (sWidth != bitmap!!.width || sHeight != bitmap.height)) {
             reset(false)
         }
@@ -1403,7 +1336,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var loading = false
         var visible = false
 
-        // Volatile fields instantiated once then updated before use to reduce GC.
         var vRect: Rect? = null
         var fileSRect: Rect? = null
     }
@@ -1720,9 +1652,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Debug logger
-     */
     private fun debug(message: String) {
         if (debug) {
             Log.d(TAG, message)
