@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
     companion object {
         private const val FILE_PREFIX = "file://"
-        private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
+        private const val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
     }
 
     private var decoderPool: DecoderPool? = DecoderPool()
