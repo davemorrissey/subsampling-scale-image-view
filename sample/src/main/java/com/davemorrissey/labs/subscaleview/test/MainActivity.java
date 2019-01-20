@@ -8,14 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.davemorrissey.labs.subscaleview.test.R.id;
-import com.davemorrissey.labs.subscaleview.test.animation.AnimationActivity;
 import com.davemorrissey.labs.subscaleview.test.basicfeatures.BasicFeaturesActivity;
-import com.davemorrissey.labs.subscaleview.test.configuration.ConfigurationActivity;
-import com.davemorrissey.labs.subscaleview.test.eventhandling.EventHandlingActivity;
-import com.davemorrissey.labs.subscaleview.test.eventhandlingadvanced.AdvancedEventHandlingActivity;
-import com.davemorrissey.labs.subscaleview.test.extension.ExtensionActivity;
-import com.davemorrissey.labs.subscaleview.test.imagedisplay.ImageDisplayActivity;
-import com.davemorrissey.labs.subscaleview.test.viewpager.ViewPagerActivity;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
@@ -28,28 +21,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         setContentView(R.layout.main);
         findViewById(id.basicFeatures).setOnClickListener(this);
-        findViewById(id.imageDisplay).setOnClickListener(this);
-        findViewById(id.eventHandling).setOnClickListener(this);
-        findViewById(id.advancedEventHandling).setOnClickListener(this);
-        findViewById(id.viewPagerGalleries).setOnClickListener(this);
-        findViewById(id.animation).setOnClickListener(this);
-        findViewById(id.extension).setOnClickListener(this);
-        findViewById(id.configuration).setOnClickListener(this);
-        findViewById(id.github).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case id.basicFeatures: startActivity(BasicFeaturesActivity.class); break;
-            case id.imageDisplay: startActivity(ImageDisplayActivity.class); break;
-            case id.eventHandling: startActivity(EventHandlingActivity.class); break;
-            case id.advancedEventHandling: startActivity(AdvancedEventHandlingActivity.class); break;
-            case id.viewPagerGalleries: startActivity(ViewPagerActivity.class); break;
-            case id.animation: startActivity(AnimationActivity.class); break;
-            case id.extension: startActivity(ExtensionActivity.class); break;
-            case id.configuration: startActivity(ConfigurationActivity.class); break;
-            case id.github: openGitHub(); break;
+            case id.basicFeatures:
+                startActivity(BasicFeaturesActivity.class);
+                break;
+            case id.github:
+                openGitHub();
+                break;
         }
     }
 

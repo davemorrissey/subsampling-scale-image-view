@@ -25,18 +25,13 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app.name">
+        </activity>
+
+        <activity android:name=".basicfeatures.BasicFeaturesActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".basicfeatures.BasicFeaturesActivity"/>
-        <activity android:name=".imagedisplay.ImageDisplayActivity"/>
-        <activity android:name=".eventhandling.EventHandlingActivity"/>
-        <activity android:name=".eventhandlingadvanced.AdvancedEventHandlingActivity"/>
-        <activity android:name=".viewpager.ViewPagerActivity"/>
-        <activity android:name=".animation.AnimationActivity"/>
-        <activity android:name=".extension.ExtensionActivity"/>
-        <activity android:name=".configuration.ConfigurationActivity"/>
     </application>
 </manifest>
