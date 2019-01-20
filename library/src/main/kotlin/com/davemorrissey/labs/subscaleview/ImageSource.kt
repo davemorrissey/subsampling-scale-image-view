@@ -8,38 +8,13 @@ import java.io.File
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 
-/**
- * Helper class used to set the source and additional attributes from a variety of sources. Supports
- * use of a bitmap, asset, resource, external file or any other URI.
- *
- * When you are using a preview image, you must set the dimensions of the full size image on the
- * ImageSource object for the full size image using the [.dimensions] method.
- */
-class ImageSource {
+class ImageSource private constructor(uri: Uri) {
     companion object {
         const val FILE_SCHEME = "file:///"
         const val ASSET_SCHEME = "file:///android_asset/"
 
-        /**
-         * Create an instance from a resource. The correct resource for the device screen resolution will be used.
-         * @param resId resource ID.
-         * @return an [ImageSource] instance.
-         */
-        fun resource(resId: Int) = ImageSource(resId)
-
-        /**
-         * Create an instance from an asset name.
-         * @param assetName asset name.
-         * @return an [ImageSource] instance.
-         */
         fun asset(assetName: String) = uri(ASSET_SCHEME + assetName)
 
-        /**
-         * Create an instance from a URI. If the URI does not start with a scheme, it's assumed to be the URI
-         * of a file.
-         * @param uri image URI.
-         * @return an [ImageSource] instance.
-         */
         fun uri(uri: String): ImageSource {
             var newUri = uri
 
@@ -51,8 +26,6 @@ class ImageSource {
             }
             return ImageSource(Uri.parse(newUri))
         }
-
-        fun uri(uri: Uri) = ImageSource(uri)
     }
 
     val uri: Uri?
@@ -64,9 +37,8 @@ class ImageSource {
     var isCached = false
     var sRegion: Rect? = null
 
-    private constructor(uri: Uri) {
+    init {
         var newUri = uri
-        // #114 If file doesn't exist, attempt to url decode the URI and try again
         val uriString = uri.toString()
         if (uriString.startsWith(FILE_SCHEME)) {
             val uriFile = File(uriString.substring(FILE_SCHEME.length - 1))
@@ -74,21 +46,12 @@ class ImageSource {
                 try {
                     newUri = Uri.parse(URLDecoder.decode(uriString, "UTF-8"))
                 } catch (e: UnsupportedEncodingException) {
-                    // Fallback to encoded URI. This exception is not expected.
                 }
-
             }
         }
         this.uri = newUri
         bitmap = null
         resource = null
-        tile = true
-    }
-
-    private constructor(resource: Int) {
-        this.resource = resource
-        bitmap = null
-        uri = null
         tile = true
     }
 
@@ -129,14 +92,6 @@ class ImageSource {
         return this
     }
 
-    /**
-     * Declare the dimensions of the image. This is only required for a full size image, when you are specifying a URI
-     * and also a preview image. When displaying a bitmap object, or not using a preview, you do not need to declare
-     * the image dimensions. Note if the declared dimensions are found to be incorrect, the view will reset.
-     * @param sWidth width of the source image.
-     * @param sHeight height of the source image.
-     * @return this instance for chaining.
-     */
     fun dimensions(sWidth: Int, sHeight: Int): ImageSource {
         if (bitmap == null) {
             this.sWidth = sWidth

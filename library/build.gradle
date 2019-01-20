@@ -19,30 +19,11 @@ android {
     }
 }
 
-configurations {
-    javadocs
-}
-
 dependencies {
-    javadocs 'androidx.annotation:annotation:1.0.1'
-    javadocs 'androidx.exifinterface:exifinterface:1.0.0'
     implementation 'androidx.annotation:annotation:1.0.1'
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
-
-task javadoc(type: Javadoc) {
-    failOnError false
-    source = android.sourceSets.main.java.sourceFiles
-    destinationDir = rootProject.file("docs/javadoc")
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.compile
-    classpath += configurations.javadocs
-    options.noTimestamp = true
-    options.links = ['https://developer.android.com/reference/']
-}
-
-apply from: rootProject.file('release.gradle')
 
 repositories {
     google()
