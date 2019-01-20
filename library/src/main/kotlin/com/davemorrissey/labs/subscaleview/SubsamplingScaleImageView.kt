@@ -160,11 +160,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return viewToSourceCoord(mX.toFloat(), mY.toFloat())
     }
 
-    /**
-     * Sets the image orientation. It's best to call this before setting the image file or asset, because it may waste
-     * loading of tiles. However, this can be freely called at any time.
-     * @param orientation orientation to be set. See ORIENTATION_ static fields for valid values.
-     */
     fun setOrientation(orientation: Int) {
         if (!VALID_ORIENTATIONS.contains(orientation)) {
             throw IllegalArgumentException("Invalid orientation: $orientation")
@@ -179,18 +174,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         setImage(imageSource, null)
     }
 
-    /**
-     * Set the image source from a bitmap, resource, asset, file or other URI, providing a preview image to be
-     * displayed until the full size image is loaded, starting with a given orientation setting, scale and center.
-     * This is the best method to use when you want scale and center to be restored after screen orientation change;
-     * it avoids any redundant loading of tiles in the wrong orientation.
-     *
-     * You must declare the dimensions of the full size image by calling [ImageSource.dimensions]
-     * on the imageSource object. The preview source will be ignored if you don't provide dimensions,
-     * and if you provide a bitmap for the full size image.
-     * @param imageSource Image source. Dimensions must be declared.
-     * @param previewSource Optional source for a preview image to be displayed and allow interaction while the full size image loads.
-     */
     fun setImage(imageSource: ImageSource, previewSource: ImageSource? = null) {
         reset(true)
 
@@ -228,22 +211,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${imageSource.resource}")
             }
             if (imageSource.tile || sRegion != null) {
-                // Load the bitmap using tile decoding.
                 val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
                 execute(task)
             } else {
-                // Load the bitmap as a single image.
                 val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, false)
                 execute(task)
             }
         }
     }
 
-    /**
-     * Reset all state before setting/changing image or setting new rotation.
-     */
     private fun reset(newImage: Boolean) {
-        debug("reset newImage=$newImage")
         scale = 0f
         scaleStart = 0f
         vTranslate = null
@@ -268,6 +245,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         satTemp = null
         objectMatrix = null
         sRect = null
+
         if (newImage) {
             uri = null
             decoderLock.writeLock().lock()
@@ -314,8 +292,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun setGestureDetector(context: Context) {
         detector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
 
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-                if (isReady && vTranslate != null && e1 != null && e2 != null && (Math.abs(e1.x - e2.x) > 50 || Math.abs(e1.y - e2.y) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
+            override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                if (isReady && vTranslate != null && (Math.abs(e1.x - e2.x) > 50 || Math.abs(e1.y - e2.y) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
                     val vTranslateEnd = PointF(vTranslate!!.x + velocityX * 0.25f, vTranslate!!.y + velocityY * 0.25f)
                     val sCenterXEnd = (width / 2 - vTranslateEnd.x) / scale
                     val sCenterYEnd = (height / 2 - vTranslateEnd.y) / scale
@@ -332,12 +310,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 if (isZoomEnabled && isReady && vTranslate != null) {
-                    // Hacky solution for #15 - after a double tap the GestureDetector gets in a state
-                    // where the next fling is ignored, so here we replace it with a new one.
                     setGestureDetector(context)
                     if (isQuickScaleEnabled) {
-                        // Store quick scale params. This will become either a double tap zoom or a
-                        // quick scale depending on whether the user swipes.
                         vCenterStart = PointF(e.x, e.y)
                         vTranslateStart = PointF(vTranslate!!.x, vTranslate!!.y)
                         scaleStart = scale
@@ -348,10 +322,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         quickScaleVStart = PointF(e.x, e.y)
                         quickScaleVLastPoint = PointF(quickScaleSCenter!!.x, quickScaleSCenter!!.y)
                         quickScaleMoved = false
-                        // We need to get events in onTouchEvent after this.
                         return false
                     } else {
-                        // Start double tap zoom animation.
                         doubleTapZoom(viewToSourceCoord(PointF(e.x, e.y)), PointF(e.x, e.y))
                         return true
                     }
@@ -368,9 +340,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         })
     }
 
-    /**
-     * On resize, preserve center and scale. Various behaviours are possible, override this method to use another.
-     */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         if (resetScaleOnSizeChange) {
             super.onSizeChanged(w, h, oldw, oldh)
@@ -387,10 +356,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Measures the width and height of the view, preserving the aspect ratio of the image displayed if wrap_content is
-     * used. The image will scale within this box, not resizing the view as it is zoomed.
-     */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthSpecMode = View.MeasureSpec.getMode(widthMeasureSpec)
         val heightSpecMode = View.MeasureSpec.getMode(heightMeasureSpec)
@@ -415,11 +380,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         setMeasuredDimension(width, height)
     }
 
-    /**
-     * Handle touch events. One finger pans, and two finger pinch and zoom plus panning.
-     */
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        // During non-interruptible anims, ignore all touch events
         if (anim?.interruptible == false) {
             parent?.requestDisallowInterceptTouchEvent(true)
             return true
@@ -427,13 +388,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim = null
         }
 
-        // Abort if not ready
         if (vTranslate == null) {
             singleDetector?.onTouchEvent(event)
             return true
         }
 
-        // Detect flings, taps and double taps
         if (!isQuickScaling && (detector == null || detector!!.onTouchEvent(event))) {
             isZooming = false
             isPanning = false
@@ -467,18 +426,15 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 maxTouchCount = Math.max(maxTouchCount, touchCount)
                 if (touchCount >= 2) {
                     if (isZoomEnabled) {
-                        // Start pinch to zoom. Calculate distance between touch points and center point of the pinch.
                         val distance = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
                         scaleStart = scale
                         vDistStart = distance
                         vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                         vCenterStart!!.set((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2)
                     } else {
-                        // Abort all gestures on second touch
                         maxTouchCount = 0
                     }
                 } else if (!isQuickScaling) {
-                    // Start one-finger pan
                     vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                     vCenterStart!!.set(event.x, event.y)
                 }
@@ -488,7 +444,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 var consumed = false
                 if (maxTouchCount > 0) {
                     if (touchCount >= 2) {
-                        // Calculate new distance between touch points, to scale and pan relative to start values.
                         val vDistEnd = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
                         val vCenterEndX = (event.getX(0) + event.getX(1)) / 2
                         val vCenterEndY = (event.getY(0) + event.getY(1)) / 2
@@ -502,14 +457,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             scale = Math.min(maxScale, vDistEnd / vDistStart * scaleStart)
 
                             if (scale <= minScale()) {
-                                // Minimum scale reached so don't pan. Adjust start settings so any expand will zoom in.
                                 vDistStart = vDistEnd
                                 scaleStart = minScale()
                                 vCenterStart!!.set(vCenterEndX, vCenterEndY)
                                 vTranslateStart!!.set(vTranslate)
                             } else {
-                                // Translate to place the source image coordinate that was at the center of the pinch at the start
-                                // at the center of the pinch now, to give simultaneous pan + zoom.
                                 val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
                                 val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
                                 val vLeftNow = vLeftStart * (scale / scaleStart)
@@ -529,8 +481,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             refreshRequiredTiles(eagerLoadingEnabled)
                         }
                     } else if (isQuickScaling) {
-                        // One finger zoom
-                        // Stole Google's Magical Formula™ to make sure it feels the exact same
                         var dist = Math.abs(quickScaleVStart!!.y - event.y) * 2 + quickScaleThreshold
 
                         if (quickScaleLastDistance == -1f) {
@@ -571,15 +521,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                         fitToBounds(true)
                         refreshRequiredTiles(eagerLoadingEnabled)
-
                         consumed = true
                     } else if (!isZooming) {
-                        // One finger pan - translate the image. We do this calculation even with pan disabled so click
-                        // and long click behaviour is preserved.
                         val dx = Math.abs(event.x - vCenterStart!!.x)
                         val dy = Math.abs(event.y - vCenterStart!!.y)
 
-                        //On the Samsung S6 long click event does not work, because the dx > 5 usually true
                         val offset = density * 5
                         if (dx > offset || dy > offset || isPanning) {
                             consumed = true
@@ -597,7 +543,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             if (!edgeXSwipe && !edgeYSwipe && (!atXEdge || !atYEdge || yPan || isPanning)) {
                                 isPanning = true
                             } else if (dx > offset || dy > offset) {
-                                // Haven't panned the image, and we're at the left or right edge. Switch to page swipe.
                                 maxTouchCount = 0
                                 parent?.requestDisallowInterceptTouchEvent(false)
                             }
@@ -621,7 +566,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
                     if (isZooming && touchCount == 2) {
-                        // Convert from zoom to pan with remaining touch
                         isPanning = true
                         vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                         if (event.actionIndex == 1) {
@@ -632,16 +576,14 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     }
 
                     if (touchCount < 3) {
-                        // End zooming when only one touch point
                         isZooming = false
                     }
 
                     if (touchCount < 2) {
-                        // End panning when no touch points
                         isPanning = false
                         maxTouchCount = 0
                     }
-                    // Trigger load of tiles now required
+
                     refreshRequiredTiles(true)
                     return true
                 }
@@ -656,10 +598,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return false
     }
 
-    /**
-     * Double tap zoom handler triggered from gesture detector or on touch, depending on whether
-     * quick scale is enabled.
-     */
     private fun doubleTapZoom(sCenter: PointF?, vFocus: PointF?) {
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale
@@ -687,37 +625,25 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         invalidate()
     }
 
-    /**
-     * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
-     * the scaling and tiling required. Once the view is setup, tiles are displayed as they are loaded.
-     */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         createPaints()
 
-        // If image or view dimensions are not known yet, abort.
         if (sWidth == 0 || sHeight == 0 || width == 0 || height == 0) {
             return
         }
 
-        // When using tiles, on first render with no tile map ready, initialise it and kick off async base image loading.
         if (tileMap == null && decoder != null) {
             initialiseBaseLayer(getMaxBitmapDimensions(canvas))
         }
 
-        // If image has been loaded or supplied as a bitmap, onDraw may be the first time the view has
-        // dimensions and therefore the first opportunity to set scale and translate. If this call returns
-        // false there is nothing to be drawn so return immediately.
         if (!checkReady()) {
             return
         }
 
-        // Set scale and translate before draw.
         preDraw()
 
-        // If animating scale, calculate current scale and center with easing equations
         if (anim != null && anim!!.vFocusStart != null) {
-            // Store current values so we can send an event if they change
             if (vTranslateBefore == null) {
                 vTranslateBefore = PointF(0f, 0f)
             }
@@ -728,14 +654,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             scaleElapsed = Math.min(scaleElapsed, anim!!.duration)
             scale = ease(anim!!.easing, scaleElapsed, anim!!.scaleStart, anim!!.scaleEnd - anim!!.scaleStart, anim!!.duration)
 
-            // Apply required animation to the focal point
             val vFocusNowX = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.x, anim!!.vFocusEnd!!.x - anim!!.vFocusStart!!.x, anim!!.duration)
             val vFocusNowY = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.y, anim!!.vFocusEnd!!.y - anim!!.vFocusStart!!.y, anim!!.duration)
-            // Find out where the focal point is at this scale and adjust its position to follow the animation path
             vTranslate!!.x -= sourceToViewX(anim!!.sCenterEnd!!.x) - vFocusNowX
             vTranslate!!.y -= sourceToViewY(anim!!.sCenterEnd!!.y) - vFocusNowY
 
-            // For translate anims, showing the image non-centered is never allowed, for scaling anims it is during the animation.
             fitToBounds(finished || anim!!.scaleStart == anim!!.scaleEnd)
             refreshRequiredTiles(finished)
             if (finished) {
@@ -745,10 +668,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (tileMap != null && getIsBaseLayerReady()) {
-            // Optimum sample size for current scale
             val sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize(scale))
-
-            // First check for missing tiles - if there are any we need the base layer underneath to avoid gaps
             var hasMissingTiles = false
             for ((key, value) in tileMap!!) {
                 if (key == sampleSize) {
@@ -760,7 +680,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
             }
 
-            // Render all loaded tiles. LinkedHashMap used for bottom up rendering - lower res tiles underneath.
             for ((key, value) in tileMap!!) {
                 if (key == sampleSize || hasMissingTiles) {
                     for (tile in value) {
@@ -861,9 +780,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Helper method for setting the values of a tile matrix array.
-     */
     private fun setMatrixArray(array: FloatArray, f0: Float, f1: Float, f2: Float, f3: Float, f4: Float, f5: Float, f6: Float, f7: Float) {
         array[0] = f0
         array[1] = f1
@@ -875,11 +791,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         array[7] = f7
     }
 
-    /**
-     * Check whether view and image dimensions are known and either a preview, full size image or
-     * base layer tiles are loaded. First time, send ready event to listener. The next draw will
-     * display an image.
-     */
     private fun checkReady(): Boolean {
         val ready = width > 0 && height > 0 && sWidth > 0 && sHeight > 0 && (bitmap != null || getIsBaseLayerReady())
         if (!isReady && ready) {
@@ -891,10 +802,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return ready
     }
 
-    /**
-     * Check whether either the full size bitmap or base layer tiles are loaded. First time, send image
-     * loaded event to listener.
-     */
     private fun checkImageLoaded(): Boolean {
         val imageLoaded = getIsBaseLayerReady()
         if (!isImageLoaded && imageLoaded) {
@@ -906,9 +813,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return imageLoaded
     }
 
-    /**
-     * Creates Paint objects once when first needed.
-     */
     private fun createPaints() {
         if (bitmapPaint == null) {
             bitmapPaint = Paint().apply {
@@ -933,10 +837,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Called on first draw when the view has dimensions. Calculates the initial sample size and starts async loading of
-     * the base layer image - the whole source subsampled as necessary.
-     */
     @Synchronized
     private fun initialiseBaseLayer(maxTileDimensions: Point) {
         debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
