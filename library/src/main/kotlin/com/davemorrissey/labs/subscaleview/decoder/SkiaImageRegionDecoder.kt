@@ -7,20 +7,8 @@ import android.net.Uri
 import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.InputStream
-import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-/**
- * Default implementation of [com.davemorrissey.labs.subscaleview.decoder.ImageRegionDecoder]
- * using Android's [android.graphics.BitmapRegionDecoder], based on the Skia library. This
- * works well in most circumstances and has reasonable performance due to the cached decoder instance,
- * however it has some problems with grayscale, indexed and CMYK images.
- *
- * A [ReadWriteLock] is used to delegate responsibility for multi threading behaviour to the
- * [BitmapRegionDecoder] instance on SDK &gt;= 21, whilst allowing this class to block until no
- * tiles are being loaded before recycling the decoder. In practice, [BitmapRegionDecoder] is
- * synchronized internally so this has no real impact on performance.
- */
 class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
     private val FILE_PREFIX = "file://"
     private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
@@ -45,7 +33,6 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
         }
     }
 
-    @Throws(Exception::class)
     override fun init(context: Context, uri: Uri): Point {
         val uriString = uri.toString()
         when {
@@ -53,7 +40,6 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
                 val assetName = uriString.substring(ASSET_PREFIX.length)
                 decoder = BitmapRegionDecoder.newInstance(context.assets.open(assetName, AssetManager.ACCESS_RANDOM), false)
             }
-            uriString.startsWith(FILE_PREFIX) -> decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_PREFIX.length), false)
             else -> {
                 var inputStream: InputStream? = null
                 try {
@@ -74,7 +60,7 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
     override fun decodeRegion(sRect: Rect, sampleSize: Int): Bitmap {
         decoderLock.readLock().lock()
         try {
-            if (decoder != null && !decoder!!.isRecycled) {
+            if (decoder?.isRecycled == false) {
                 val options = BitmapFactory.Options()
                 options.inSampleSize = sampleSize
                 options.inPreferredConfig = bitmapConfig

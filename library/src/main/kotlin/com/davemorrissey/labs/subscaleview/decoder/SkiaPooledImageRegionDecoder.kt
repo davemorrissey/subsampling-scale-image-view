@@ -1,48 +1,23 @@
 package com.davemorrissey.labs.subscaleview.decoder
 
 import android.app.ActivityManager
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
-import android.text.TextUtils
 import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executor
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-/**
- *
- *
- * An implementation of [ImageRegionDecoder] using a pool of [BitmapRegionDecoder]s,
- * to provide true parallel loading of tiles. This is only effective if parallel loading has been
- * enabled in the view by calling [com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.setExecutor]
- * with a multi-threaded [Executor] instance.
- *
- *
- * One decoder is initialised when the class is initialised. This is enough to decode base layer tiles.
- * Additional decoders are initialised when a subregion of the image is first requested, which indicates
- * interaction with the view. Creation of additional encoders stops when [.allowAdditionalDecoder]
- * returns false. The default implementation takes into account the file size, number of CPU cores,
- * low memory status and a hard limit of 4. Extend this class to customise this.
- *
- *
- * **WARNING:** This class is highly experimental and not proven to be stable on a wide range of
- * devices. You are advised to test it thoroughly on all available devices, and code your app to use
- * [SkiaImageRegionDecoder] on old or low powered devices you could not test.
- *
- */
 class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
     companion object {
-        private const val RESOURCE_PREFIX = "${ContentResolver.SCHEME_ANDROID_RESOURCE}://"
-        private val FILE_PREFIX = "file://"
+        private const val FILE_PREFIX = "file://"
         private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
     }
 
@@ -54,16 +29,12 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
     private var context: Context? = null
     private var uri: Uri? = null
 
-    private var fileLength = java.lang.Long.MAX_VALUE
+    private var fileLength = Long.MAX_VALUE
     private val imageDimensions = Point(0, 0)
     private val lazyInited = AtomicBoolean(false)
 
-    /**
-     * Holding a read lock to avoid returning true while the pool is being recycled, this returns
-     * true if the pool has at least one decoder available.
-     */
     @Synchronized
-    override fun isReady() = decoderPool != null && !decoderPool!!.getIsEmpty()
+    override fun isReady() = decoderPool?.getIsEmpty() == false
 
     private fun getNumberOfCores() = Runtime.getRuntime().availableProcessors()
 
@@ -86,12 +57,6 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         }
     }
 
-    /**
-     * Initialises the decoder pool. This method creates one decoder on the current thread and uses
-     * it to decode the bounds, then spawns an independent thread to populate the pool with an
-     * additional three decoders. The thread will abort if [.recycle] is called.
-     */
-    @Throws(Exception::class)
     override fun init(context: Context, uri: Uri): Point {
         this.context = context
         this.uri = uri
@@ -99,71 +64,26 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         return imageDimensions
     }
 
-    /**
-     * Initialises extra decoders for as long as [.allowAdditionalDecoder] returns
-     * true and the pool has not been recycled.
-     */
     private fun lazyInit() {
-        if (lazyInited.compareAndSet(false, true) && fileLength < java.lang.Long.MAX_VALUE) {
-            val thread = object : Thread() {
-                override fun run() {
-                    while (decoderPool != null && allowAdditionalDecoder(decoderPool!!.size(), fileLength)) {
-                        // New decoders can be created while reading tiles but this read lock prevents
-                        // them being initialised while the pool is being recycled.
-                        try {
-                            if (decoderPool != null) {
-                                initialiseDecoder()
-                            }
-                        } catch (e: Exception) {
+        if (lazyInited.compareAndSet(false, true) && fileLength < Long.MAX_VALUE) {
+            Thread {
+                while (decoderPool != null && allowAdditionalDecoder(decoderPool!!.size(), fileLength)) {
+                    try {
+                        if (decoderPool != null) {
+                            initialiseDecoder()
                         }
-
+                    } catch (e: Exception) {
                     }
                 }
-            }
-            thread.start()
+            }.start()
         }
     }
 
-    /**
-     * Initialises a new [BitmapRegionDecoder] and adds it to the pool, unless the pool has
-     * been recycled while it was created.
-     */
-    @Throws(Exception::class)
     private fun initialiseDecoder() {
         val uriString = uri!!.toString()
         val decoder: BitmapRegionDecoder
-        var fileLength = java.lang.Long.MAX_VALUE
+        var fileLength = Long.MAX_VALUE
         when {
-            uriString.startsWith(RESOURCE_PREFIX) -> {
-                val packageName = uri!!.authority
-                val res = if (context!!.packageName == packageName) {
-                    context!!.resources
-                } else {
-                    val pm = context!!.packageManager
-                    pm.getResourcesForApplication(packageName)
-                }
-
-                var id = 0
-                val segments = uri!!.pathSegments
-                val size = segments.size
-                if (size == 2 && segments[0] == "drawable") {
-                    val resName = segments[1]
-                    id = res.getIdentifier(resName, "drawable", packageName)
-                } else if (size == 1 && TextUtils.isDigitsOnly(segments[0])) {
-                    try {
-                        id = Integer.parseInt(segments[0])
-                    } catch (ignored: NumberFormatException) {
-                    }
-                }
-
-                try {
-                    val descriptor = context!!.resources.openRawResourceFd(id)
-                    fileLength = descriptor.length
-                } catch (e: Exception) {
-                }
-
-                decoder = BitmapRegionDecoder.newInstance(context!!.resources.openRawResource(id), false)
-            }
             uriString.startsWith(ASSET_PREFIX) -> {
                 val assetName = uriString.substring(ASSET_PREFIX.length)
                 try {
@@ -216,13 +136,6 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         }
     }
 
-    /**
-     * Acquire a read lock to prevent decoding overlapping with recycling, then check the pool still
-     * exists and acquire a decoder to load the requested region. There is no check whether the pool
-     * currently has decoders, because it's guaranteed to have one decoder after [.init]
-     * is called and be null once [.recycle] is called. In practice the view can't call this
-     * method until after [.init], so there will be no blocking on an empty pool.
-     */
     override fun decodeRegion(sRect: Rect, sampleSize: Int): Bitmap {
         if (sRect.width() < imageDimensions.x || sRect.height() < imageDimensions.y) {
             lazyInit()
@@ -252,10 +165,6 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         }
     }
 
-    /**
-     * Wait until all read locks held by [.decodeRegion] are released, then recycle
-     * and destroy the pool. Elsewhere, when a read lock is acquired, we must check the pool is not null.
-     */
     @Synchronized
     override fun recycle() {
         decoderLock.writeLock().lock()
@@ -269,15 +178,6 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         }
     }
 
-    /**
-     * Called before creating a new decoder. Based on number of CPU cores, available memory, and the
-     * size of the image file, determines whether another decoder can be created. Subclasses can
-     * override and customise this.
-     *
-     * @param numberOfDecoders the number of decoders that have been created so far
-     * @param fileLength       the size of the image file in bytes. Creating another decoder will use approximately this much native memory.
-     * @return true if another decoder can be created.
-     */
     private fun allowAdditionalDecoder(numberOfDecoders: Int, fileLength: Long): Boolean {
         return when {
             numberOfDecoders >= 4 -> false
@@ -288,16 +188,10 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         }
     }
 
-    /**
-     * A simple pool of [BitmapRegionDecoder] instances, all loading from the same source.
-     */
     class DecoderPool {
         private val available = Semaphore(0, true)
         private val decoders = ConcurrentHashMap<BitmapRegionDecoder, Boolean>()
 
-        /**
-         * Returns false if there is at least one decoder in the pool.
-         */
         @Synchronized
         fun getIsEmpty() = decoders.isEmpty()
 
@@ -315,39 +209,23 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
         @Synchronized
         fun size() = decoders.size
 
-        /**
-         * Acquire a decoder. Blocks until one is available.
-         */
         fun acquire(): BitmapRegionDecoder? {
             available.acquireUninterruptibly()
             return nextAvailable
         }
 
-        /**
-         * Release a decoder back to the pool.
-         */
         fun release(decoder: BitmapRegionDecoder) {
             if (markAsUnused(decoder)) {
                 available.release()
             }
         }
 
-        /**
-         * Adds a newly created decoder to the pool, releasing an additional permit.
-         */
         @Synchronized
         fun add(decoder: BitmapRegionDecoder) {
             decoders[decoder] = false
             available.release()
         }
 
-        /**
-         * While there are decoders in the map, wait until each is available before acquiring,
-         * recycling and removing it. After this is called, any call to [.acquire] will
-         * block forever, so this call should happen within a write lock, and all calls to
-         * [.acquire] should be made within a read lock so they cannot end up blocking on
-         * the semaphore when it has no permits.
-         */
         @Synchronized
         fun recycle() {
             while (!decoders.isEmpty()) {
