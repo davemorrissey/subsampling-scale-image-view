@@ -22,12 +22,8 @@
         android:label="@string/app.name"
         android:theme="@style/sampleTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app.name">
-        </activity>
 
-        <activity android:name=".basicfeatures.BasicFeaturesActivity">
+        <activity android:name=".BasicFeaturesActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

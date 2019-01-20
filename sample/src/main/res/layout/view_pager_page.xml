@@ -1,5 +1,0 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/fill">
-
-    <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView style="@style/fill" android:id="@+id/imageView"/>
-
-</RelativeLayout>
