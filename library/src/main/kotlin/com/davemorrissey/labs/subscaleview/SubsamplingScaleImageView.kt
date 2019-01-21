@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : View(context, attr) {
     companion object {
         const val FILE_SCHEME = "file://"
-        const val ASSET_PREFIX = "${FILE_SCHEME}/android_asset/"
+        const val ASSET_PREFIX = "$FILE_SCHEME/android_asset/"
 
         private val TAG = SubsamplingScaleImageView::class.java.simpleName
 
