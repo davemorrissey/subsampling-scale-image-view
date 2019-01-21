@@ -13,13 +13,17 @@ import android.view.MotionEvent
 import android.view.View
 import com.davemorrissey.labs.subscaleview.decoder.*
 import com.davemorrissey.labs.subscaleview.decoder.ImageDecoder
+import java.io.File
+import java.io.UnsupportedEncodingException
 import java.lang.ref.WeakReference
+import java.net.URLDecoder
 import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : View(context, attr) {
     companion object {
         private val TAG = SubsamplingScaleImageView::class.java.simpleName
+        private const val FILE_SCHEME = "file:///"
 
         private const val ORIENTATION_USE_EXIF = -1
         private const val ORIENTATION_0 = 0
@@ -147,9 +151,29 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return viewToSourceCoord(mX.toFloat(), mY.toFloat())
     }
 
-    fun setImage(imageSource: ImageSource) {
+    fun setImage(path: String) {
         reset(true)
-        uri = imageSource.uri
+
+        var newPath = path
+
+        if (!newPath.contains("://")) {
+            if (newPath.startsWith("/")) {
+                newPath = path.substring(1)
+            }
+            newPath = "$FILE_SCHEME$newPath"
+        }
+
+        if (newPath.startsWith(FILE_SCHEME)) {
+            val uriFile = File(newPath.substring(FILE_SCHEME.length - 1))
+            if (!uriFile.exists()) {
+                try {
+                    newPath = URLDecoder.decode(newPath, "UTF-8")
+                } catch (e: UnsupportedEncodingException) {
+                }
+            }
+        }
+
+        uri = Uri.parse(newPath)
         val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
         execute(task)
     }
