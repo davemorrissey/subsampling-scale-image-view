@@ -163,11 +163,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (previewSource.bitmap != null) {
                 onPreviewLoaded(previewSource.bitmap)
             } else {
-                var uri = previewSource.uri
-                if (uri == null && previewSource.resource != null) {
-                    uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${previewSource.resource}")
-                }
-                val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, true)
+                val task = BitmapLoadTask(this, context, bitmapDecoderFactory, previewSource.uri!!, true)
                 execute(task)
             }
         }
@@ -176,10 +172,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             onImageLoaded(imageSource.bitmap, ORIENTATION_0)
         } else {
             uri = imageSource.uri
-            if (uri == null && imageSource.resource != null) {
-                uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${imageSource.resource}")
-            }
-
             val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
             execute(task)
         }

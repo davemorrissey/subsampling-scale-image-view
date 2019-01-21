@@ -28,7 +28,6 @@ class ImageSource private constructor(uri: Uri) {
 
     val uri: Uri?
     val bitmap: Bitmap?
-    val resource: Int?
 
     init {
         var newUri = uri
@@ -44,6 +43,5 @@ class ImageSource private constructor(uri: Uri) {
         }
         this.uri = newUri
         bitmap = null
-        resource = null
     }
 }
