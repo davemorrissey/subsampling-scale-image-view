@@ -149,14 +149,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     fun setImage(imageSource: ImageSource) {
         reset(true)
-
-        if (imageSource.bitmap != null) {
-            onImageLoaded(imageSource.bitmap, ORIENTATION_0)
-        } else {
-            uri = imageSource.uri
-            val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
-            execute(task)
-        }
+        uri = imageSource.uri
+        val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
+        execute(task)
     }
 
     private fun reset(newImage: Boolean) {

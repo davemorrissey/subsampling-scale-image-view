@@ -10,6 +10,6 @@ class BasicFeaturesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.pages_activity)
         actionBar?.title = getString(R.string.basic_title)
-        imageView.setImage(ImageSource.asset("sanmartino.jpg"))
+        imageView.setImage(ImageSource.uri("file:///android_asset/sanmartino.jpg"))
     }
 }

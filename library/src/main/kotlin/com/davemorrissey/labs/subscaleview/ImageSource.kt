@@ -1,6 +1,5 @@
 package com.davemorrissey.labs.subscaleview
 
-import android.graphics.Bitmap
 import android.net.Uri
 import java.io.File
 import java.io.UnsupportedEncodingException
@@ -9,9 +8,6 @@ import java.net.URLDecoder
 class ImageSource private constructor(uri: Uri) {
     companion object {
         const val FILE_SCHEME = "file:///"
-        const val ASSET_SCHEME = "file:///android_asset/"
-
-        fun asset(assetName: String) = uri(ASSET_SCHEME + assetName)
 
         fun uri(uri: String): ImageSource {
             var newUri = uri
@@ -27,7 +23,6 @@ class ImageSource private constructor(uri: Uri) {
     }
 
     val uri: Uri?
-    val bitmap: Bitmap?
 
     init {
         var newUri = uri
@@ -42,6 +37,5 @@ class ImageSource private constructor(uri: Uri) {
             }
         }
         this.uri = newUri
-        bitmap = null
     }
 }
