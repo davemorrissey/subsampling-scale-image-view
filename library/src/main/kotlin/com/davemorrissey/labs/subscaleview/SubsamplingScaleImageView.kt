@@ -75,8 +75,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var sRequestedCenter: PointF? = null
 
     private var sOrientation = 0
-    private var sRegion: Rect? = null
-    private var pRegion: Rect? = null
 
     private var isZooming = false
     private var isPanning = false
@@ -168,7 +166,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
             sWidth = imageSource.sWidth
             sHeight = imageSource.sHeight
-            pRegion = previewSource.sRegion
             if (previewSource.bitmap != null) {
                 bitmapIsCached = previewSource.isCached
                 onPreviewLoaded(previewSource.bitmap)
@@ -182,17 +179,15 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
         }
 
-        if (imageSource.bitmap != null && imageSource.sRegion != null) {
-            onImageLoaded(Bitmap.createBitmap(imageSource.bitmap, imageSource.sRegion!!.left, imageSource.sRegion!!.top, imageSource.sRegion!!.width(), imageSource.sRegion!!.height()), ORIENTATION_0, false)
-        } else if (imageSource.bitmap != null) {
+        if (imageSource.bitmap != null) {
             onImageLoaded(imageSource.bitmap, ORIENTATION_0, imageSource.isCached)
         } else {
-            sRegion = imageSource.sRegion
             uri = imageSource.uri
             if (uri == null && imageSource.resource != null) {
                 uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${imageSource.resource}")
             }
-            if (imageSource.tile || sRegion != null) {
+
+            if (imageSource.tile) {
                 val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
                 execute(task)
             } else {
@@ -249,8 +244,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             sWidth = 0
             sHeight = 0
             sOrientation = 0
-            sRegion = null
-            pRegion = null
             isReady = false
             isImageLoaded = false
             bitmap = null
@@ -839,7 +832,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return
         }
 
-        if (fullImageSampleSize == 1 && sRegion == null && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
+        if (fullImageSampleSize == 1 && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
             decoder!!.recycle()
             decoder = null
             val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, false)
@@ -1070,17 +1063,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     view.debug("TilesInitTask.doInBackground")
                     decoder = decoderFactory.make()
                     val dimensions = decoder!!.init(context, source)
-                    var sWidth = dimensions.x
-                    var sHeight = dimensions.y
+                    val sWidth = dimensions.x
+                    val sHeight = dimensions.y
                     val exifOrientation = view.orientation
-                    view.sRegion?.apply {
-                        left = Math.max(0, left)
-                        top = Math.max(0, top)
-                        right = Math.min(sWidth, right)
-                        bottom = Math.min(sHeight, bottom)
-                        sWidth = width()
-                        sHeight = height()
-                    }
                     return intArrayOf(sWidth, sHeight, exifOrientation)
                 }
             } catch (e: Exception) {
@@ -1154,9 +1139,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     try {
                         if (decoder.isReady()) {
                             view.fileSRect(tile.sRect, tile.fileSRect)
-                            if (view.sRegion != null) {
-                                tile.fileSRect!!.offset(view.sRegion!!.left, view.sRegion!!.top)
-                            }
                             return decoder.decodeRegion(tile.fileSRect!!, tile.sampleSize)
                         } else {
                             tile.loading = false
@@ -1268,11 +1250,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return
         }
 
-        bitmap = if (pRegion != null) {
-            Bitmap.createBitmap(previewBitmap!!, pRegion!!.left, pRegion!!.top, pRegion!!.width(), pRegion!!.height())
-        } else {
-            previewBitmap
-        }
+        bitmap = previewBitmap
 
         bitmapIsPreview = true
         if (checkReady()) {
