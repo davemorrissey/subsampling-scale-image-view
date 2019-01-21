@@ -64,7 +64,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var minimumTileDpi = -1
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
-    private var isZoomEnabled = true
     private var scaleStart = 0f
 
     private var vTranslate: PointF? = null
@@ -73,7 +72,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private var pendingScale: Float? = null
     private var sPendingCenter: PointF? = null
-    private var sRequestedCenter: PointF? = null
 
     private var sOrientation = 0
 
@@ -108,7 +106,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private var satTemp: ScaleAndTranslate? = null
     private var objectMatrix: Matrix? = null
-    private var sRect: RectF? = null
     private val srcArray = FloatArray(8)
     private val dstArray = FloatArray(8)
 
@@ -186,7 +183,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         vTranslateBefore = null
         pendingScale = 0f
         sPendingCenter = null
-        sRequestedCenter = null
         isZooming = false
         isPanning = false
         isQuickScaling = false
@@ -202,7 +198,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         anim = null
         satTemp = null
         objectMatrix = null
-        sRect = null
 
         if (newImage) {
             uri = null
@@ -261,7 +256,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
 
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                if (isZoomEnabled && isReady && vTranslate != null) {
+                if (isReady && vTranslate != null) {
                     setGestureDetector(context)
                     if (isQuickScaleEnabled) {
                         vCenterStart = PointF(e.x, e.y)
@@ -377,15 +372,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 parent?.requestDisallowInterceptTouchEvent(true)
                 maxTouchCount = Math.max(maxTouchCount, touchCount)
                 if (touchCount >= 2) {
-                    if (isZoomEnabled) {
-                        val distance = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
-                        scaleStart = scale
-                        vDistStart = distance
-                        vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
-                        vCenterStart!!.set((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2)
-                    } else {
-                        maxTouchCount = 0
-                    }
+                    val distance = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
+                    scaleStart = scale
+                    vDistStart = distance
+                    vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
+                    vCenterStart!!.set((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2)
                 } else if (!isQuickScaling) {
                     vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                     vCenterStart!!.set(event.x, event.y)
@@ -400,7 +391,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         val vCenterEndX = (event.getX(0) + event.getX(1)) / 2
                         val vCenterEndY = (event.getY(0) + event.getY(1)) / 2
 
-                        if (isZoomEnabled && (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning)) {
+                        if (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
                             isZooming = true
                             isPanning = true
                             consumed = true
@@ -664,8 +655,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
             }
         } else if (bitmap?.isRecycled == false) {
-            var xScale = scale
-            var yScale = scale
+            val xScale = scale
+            val yScale = scale
 
             if (objectMatrix == null) {
                 objectMatrix = Matrix()
@@ -1431,7 +1422,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         anim = null
         pendingScale = scale
         sPendingCenter = sCenter
-        sRequestedCenter = sCenter
         invalidate()
     }
 
