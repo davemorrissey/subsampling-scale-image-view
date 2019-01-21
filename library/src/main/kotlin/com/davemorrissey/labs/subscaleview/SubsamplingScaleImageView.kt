@@ -11,8 +11,6 @@ import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import com.davemorrissey.labs.subscaleview.decoder.*
-import com.davemorrissey.labs.subscaleview.decoder.ImageDecoder
 import java.io.File
 import java.io.UnsupportedEncodingException
 import java.lang.ref.WeakReference

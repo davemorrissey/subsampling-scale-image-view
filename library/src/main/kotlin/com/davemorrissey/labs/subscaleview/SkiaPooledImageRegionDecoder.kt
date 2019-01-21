@@ -1,4 +1,4 @@
-package com.davemorrissey.labs.subscaleview.decoder
+package com.davemorrissey.labs.subscaleview
 
 import android.app.ActivityManager
 import android.content.Context
@@ -7,7 +7,6 @@ import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
 import androidx.annotation.Keep
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap

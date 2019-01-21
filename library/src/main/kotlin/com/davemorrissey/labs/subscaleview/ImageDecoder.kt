@@ -1,4 +1,4 @@
-package com.davemorrissey.labs.subscaleview.decoder
+package com.davemorrissey.labs.subscaleview
 
 import android.content.Context
 import android.graphics.Bitmap
