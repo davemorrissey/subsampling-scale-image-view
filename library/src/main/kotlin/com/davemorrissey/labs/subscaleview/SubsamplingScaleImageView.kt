@@ -51,6 +51,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var minScale = minScale()
     var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
     var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
+    var scale = 0f
 
     private var bitmap: Bitmap? = null
     private var bitmapIsPreview = false
@@ -63,7 +64,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
     private var isZoomEnabled = true
-    private var scale = 0f
     private var scaleStart = 0f
 
     private var vTranslate: PointF? = null
