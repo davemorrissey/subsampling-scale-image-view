@@ -5,12 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.annotation.Keep
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.Companion.ASSET_PREFIX
 import java.io.InputStream
 
 class SkiaImageDecoder(bitmapConfig: Bitmap.Config?) : ImageDecoder {
-    private val FILE_PREFIX = "file://"
-    private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
-
     private val bitmapConfig: Bitmap.Config
 
     @Keep

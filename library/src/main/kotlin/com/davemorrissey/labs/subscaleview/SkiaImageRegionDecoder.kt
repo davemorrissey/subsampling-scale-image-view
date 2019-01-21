@@ -5,20 +5,18 @@ import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
 import androidx.annotation.Keep
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.Companion.ASSET_PREFIX
 import java.io.InputStream
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
-    private val FILE_PREFIX = "file://"
-    private val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
+    private val bitmapConfig: Bitmap.Config
 
     private var decoder: BitmapRegionDecoder? = null
     private val decoderLock = ReentrantReadWriteLock(true)
 
-    private val bitmapConfig: Bitmap.Config
-
     @Synchronized
-    override fun isReady() = decoder != null && !decoder!!.isRecycled
+    override fun isReady() = decoder?.isRecycled == false
 
     @Keep
     constructor() : this(null)
@@ -77,7 +75,7 @@ class SkiaImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder 
     override fun recycle() {
         decoderLock.writeLock().lock()
         try {
-            decoder!!.recycle()
+            decoder?.recycle()
             decoder = null
         } finally {
             decoderLock.writeLock().unlock()

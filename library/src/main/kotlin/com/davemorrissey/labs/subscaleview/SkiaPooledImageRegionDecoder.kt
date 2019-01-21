@@ -7,6 +7,8 @@ import android.content.res.AssetManager
 import android.graphics.*
 import android.net.Uri
 import androidx.annotation.Keep
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.Companion.ASSET_PREFIX
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.Companion.FILE_SCHEME
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
@@ -15,15 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDecoder {
-    companion object {
-        private const val FILE_PREFIX = "file://"
-        private const val ASSET_PREFIX = "$FILE_PREFIX/android_asset/"
-    }
+    private val bitmapConfig: Bitmap.Config
 
     private var decoderPool: DecoderPool? = DecoderPool()
     private val decoderLock = ReentrantReadWriteLock(true)
-
-    private val bitmapConfig: Bitmap.Config
 
     private var context: Context? = null
     private var uri: Uri? = null
@@ -93,8 +90,8 @@ class SkiaPooledImageRegionDecoder(bitmapConfig: Bitmap.Config?) : ImageRegionDe
 
                 decoder = BitmapRegionDecoder.newInstance(context!!.assets.open(assetName, AssetManager.ACCESS_RANDOM), false)
             }
-            uriString.startsWith(FILE_PREFIX) -> {
-                decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_PREFIX.length), false)
+            uriString.startsWith(FILE_SCHEME) -> {
+                decoder = BitmapRegionDecoder.newInstance(uriString.substring(FILE_SCHEME.length), false)
                 try {
                     val file = File(uriString)
                     if (file.exists()) {

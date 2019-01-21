@@ -20,8 +20,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : View(context, attr) {
     companion object {
+        const val FILE_SCHEME = "file://"
+        const val ASSET_PREFIX = "${FILE_SCHEME}/android_asset/"
+
         private val TAG = SubsamplingScaleImageView::class.java.simpleName
-        private const val FILE_SCHEME = "file:///"
 
         private const val ORIENTATION_USE_EXIF = -1
         private const val ORIENTATION_0 = 0
@@ -158,11 +160,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (newPath.startsWith("/")) {
                 newPath = path.substring(1)
             }
-            newPath = "$FILE_SCHEME$newPath"
+            newPath = "$FILE_SCHEME/$newPath"
         }
 
         if (newPath.startsWith(FILE_SCHEME)) {
-            val uriFile = File(newPath.substring(FILE_SCHEME.length - 1))
+            val uriFile = File(newPath.substring(FILE_SCHEME.length))
             if (!uriFile.exists()) {
                 try {
                     newPath = URLDecoder.decode(newPath, "UTF-8")
