@@ -143,16 +143,15 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun getRequiredRotation() = if (orientation == ORIENTATION_USE_EXIF) sOrientation else orientation
 
     private fun getCenter(): PointF? {
-        val mX = width / 2
-        val mY = height / 2
-        return viewToSourceCoord(mX.toFloat(), mY.toFloat())
+        val centerX = width / 2
+        val centerY = height / 2
+        return viewToSourceCoord(centerX.toFloat(), centerY.toFloat())
     }
 
     fun setImage(path: String) {
         reset(true)
 
         var newPath = path
-
         if (!newPath.contains("://")) {
             if (newPath.startsWith("/")) {
                 newPath = path.substring(1)
@@ -219,22 +218,19 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             bitmap = null
         }
 
-        if (tileMap != null) {
-            for ((key, value) in tileMap!!) {
-                for (tile in value) {
-                    tile.visible = false
-                    tile.bitmap?.recycle()
-                    tile.bitmap = null
-                }
+        tileMap?.values?.forEach {
+            for (tile in it) {
+                tile.visible = false
+                tile.bitmap?.recycle()
+                tile.bitmap = null
             }
-            tileMap = null
         }
+        tileMap = null
         setGestureDetector(context)
     }
 
     private fun setGestureDetector(context: Context) {
         detector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-
             override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
                 if (isReady && vTranslate != null && (Math.abs(e1.x - e2.x) > 50 || Math.abs(e1.y - e2.y) > 50) && (Math.abs(velocityX) > 500 || Math.abs(velocityY) > 500) && !isZooming) {
                     val vTranslateEnd = PointF(vTranslate!!.x + velocityX * 0.25f, vTranslate!!.y + velocityY * 0.25f)
@@ -250,37 +246,37 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 return super.onFling(e1, e2, velocityX, velocityY)
             }
 
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            override fun onSingleTapConfirmed(event: MotionEvent): Boolean {
                 performClick()
                 return true
             }
 
-            override fun onDoubleTap(e: MotionEvent): Boolean {
+            override fun onDoubleTap(event: MotionEvent): Boolean {
                 if (isReady && vTranslate != null) {
                     setGestureDetector(context)
                     if (isQuickScaleEnabled) {
-                        vCenterStart = PointF(e.x, e.y)
+                        vCenterStart = PointF(event.x, event.y)
                         vTranslateStart = PointF(vTranslate!!.x, vTranslate!!.y)
                         scaleStart = scale
                         isQuickScaling = true
                         isZooming = true
                         quickScaleLastDistance = -1f
                         quickScaleSCenter = viewToSourceCoord(vCenterStart!!)
-                        quickScaleVStart = PointF(e.x, e.y)
+                        quickScaleVStart = PointF(event.x, event.y)
                         quickScaleVLastPoint = PointF(quickScaleSCenter!!.x, quickScaleSCenter!!.y)
                         quickScaleMoved = false
                         return false
                     } else {
-                        doubleTapZoom(viewToSourceCoord(PointF(e.x, e.y)), PointF(e.x, e.y))
+                        doubleTapZoom(viewToSourceCoord(PointF(event.x, event.y)), PointF(event.x, event.y))
                         return true
                     }
                 }
-                return super.onDoubleTapEvent(e)
+                return super.onDoubleTapEvent(event)
             }
         })
 
         singleDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            override fun onSingleTapConfirmed(event: MotionEvent): Boolean {
                 performClick()
                 return true
             }
@@ -360,8 +356,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         vTranslateBefore!!.set(vTranslate)
-        val handled = onTouchEventInternal(event)
-        return handled || super.onTouchEvent(event)
+        return onTouchEventInternal(event) || super.onTouchEvent(event)
     }
 
     private fun onTouchEventInternal(event: MotionEvent): Boolean {
@@ -816,8 +811,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         val sampleSize = Math.min(fullImageSampleSize, calculateInSampleSize(scale))
 
-        for ((key, value) in tileMap!!) {
-            for (tile in value) {
+        tileMap!!.values.forEach {
+            for (tile in it) {
                 if (tile.sampleSize < sampleSize || tile.sampleSize > sampleSize && tile.sampleSize != fullImageSampleSize) {
                     tile.visible = false
                     tile.bitmap?.recycle()
@@ -991,8 +986,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             x * sTileWidth,
                             y * sTileHeight,
                             if (x == xTiles - 1) sWidth() else (x + 1) * sTileWidth,
-                            if (y == yTiles - 1) sHeight() else (y + 1) * sTileHeight
-                    )
+                            if (y == yTiles - 1) sHeight() else (y + 1) * sTileHeight)
+
                     tile.vRect = Rect(0, 0, 0, 0)
                     tile.fileSRect = Rect(tile.sRect)
                     tileGrid.add(tile)
@@ -1052,10 +1047,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         debug("onTilesInited sWidth=$sWidth, sHeight=$sHeight, sOrientation=$orientation")
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false)
-            if (bitmap != null) {
-                bitmap!!.recycle()
-                bitmap = null
-            }
+            bitmap?.recycle()
+            bitmap = null
         }
         this.decoder = decoder
         this.sWidth = sWidth
@@ -1132,8 +1125,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         debug("onTileLoaded")
         checkReady()
         checkImageLoaded()
-        if (getIsBaseLayerReady() && bitmap != null) {
-            bitmap!!.recycle()
+        if (getIsBaseLayerReady()) {
+            bitmap?.recycle()
             bitmap = null
         }
         invalidate()
@@ -1519,7 +1512,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var sCenterEndRequested: PointF? = null
         var vFocusStart: PointF? = null
         var vFocusEnd: PointF? = null
-        var duration = 500L
+        var duration = DOUBLE_TAP_ZOOM_DURATION
         var interruptible = true
         var easing = EASE_IN_OUT_QUAD
         var time = System.currentTimeMillis()
