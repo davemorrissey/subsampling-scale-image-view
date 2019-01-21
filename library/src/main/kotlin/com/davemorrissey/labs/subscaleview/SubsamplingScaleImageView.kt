@@ -28,8 +28,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private const val ORIENTATION_180 = 180
         private const val ORIENTATION_270 = 270
 
-        private val VALID_ORIENTATIONS = Arrays.asList(ORIENTATION_0, ORIENTATION_90, ORIENTATION_180, ORIENTATION_270, ORIENTATION_USE_EXIF)
-
         private const val EASE_OUT_QUAD = 1
         private const val EASE_IN_OUT_QUAD = 2
 
@@ -54,6 +52,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var scale = 0f
     var sWidth = 0
     var sHeight = 0
+    var orientation = ORIENTATION_0
 
     private var bitmap: Bitmap? = null
     private var bitmapIsPreview = false
@@ -61,7 +60,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var uri: Uri? = null
     private var fullImageSampleSize = 0
     private var tileMap: MutableMap<Int, List<Tile>>? = null
-    private var orientation = ORIENTATION_0
     private var minimumTileDpi = -1
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
@@ -152,16 +150,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val mX = width / 2
         val mY = height / 2
         return viewToSourceCoord(mX.toFloat(), mY.toFloat())
-    }
-
-    fun setOrientation(orientation: Int) {
-        if (!VALID_ORIENTATIONS.contains(orientation)) {
-            throw IllegalArgumentException("Invalid orientation: $orientation")
-        }
-        this.orientation = orientation
-        reset(false)
-        invalidate()
-        requestLayout()
     }
 
     fun setImage(imageSource: ImageSource) {
