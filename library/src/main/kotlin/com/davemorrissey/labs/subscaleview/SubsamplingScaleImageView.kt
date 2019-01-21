@@ -33,10 +33,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         const val EASE_OUT_QUAD = 1
         const val EASE_IN_OUT_QUAD = 2
 
-        const val ORIGIN_ANIM = 1
-        const val ORIGIN_FLING = 2
-        const val ORIGIN_DOUBLE_TAP_ZOOM = 3
-
         const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val DOUBLE_TAP_ZOOM_DURATION = 300L
 
@@ -296,8 +292,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     val sCenterXEnd = (width / 2 - vTranslateEnd.x) / scale
                     val sCenterYEnd = (height / 2 - vTranslateEnd.y) / scale
                     AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).apply {
+                        interruptible = true
                         easing = EASE_OUT_QUAD
-                        origin = ORIGIN_FLING
                         start()
                     }
                     return true
@@ -607,41 +603,21 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
 
             if (zoomIn) {
-                AnimationBuilder(targetScale, sCenter!!, vFocus!!).apply {
-                    interruptible = false
-                    origin = ORIGIN_DOUBLE_TAP_ZOOM
-                    start()
-                }
+                AnimationBuilder(targetScale, sCenter!!, vFocus!!).start()
             } else {
-                AnimationBuilder(targetScale, sCenter!!).apply {
-                    interruptible = false
-                    origin = ORIGIN_DOUBLE_TAP_ZOOM
-                    start()
-                }
+                AnimationBuilder(targetScale, sCenter!!).start()
             }
         } else {
             val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else minScale()
 
             if (scale != 1f) {
                 if (zoomIn) {
-                    AnimationBuilder(targetScale, sCenter!!, vFocus!!).apply {
-                        interruptible = false
-                        origin = ORIGIN_DOUBLE_TAP_ZOOM
-                        start()
-                    }
+                    AnimationBuilder(targetScale, sCenter!!, vFocus!!).start()
                 } else {
-                    AnimationBuilder(1f, sCenter!!, vFocus!!).apply {
-                        interruptible = false
-                        origin = ORIGIN_DOUBLE_TAP_ZOOM
-                        start()
-                    }
+                    AnimationBuilder(1f, sCenter!!, vFocus!!).start()
                 }
             } else {
-                AnimationBuilder(targetScale, sCenter!!).apply {
-                    interruptible = false
-                    origin = ORIGIN_DOUBLE_TAP_ZOOM
-                    start()
-                }
+                AnimationBuilder(targetScale, sCenter!!).start()
             }
         }
         invalidate()
@@ -1601,8 +1577,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private val vFocus: PointF?
         private val duration = DOUBLE_TAP_ZOOM_DURATION
         var easing = EASE_IN_OUT_QUAD
-        var origin = ORIGIN_ANIM
-        var interruptible = true
+        var interruptible = false
 
         constructor(sCenter: PointF) {
             targetScale = scale
@@ -1645,7 +1620,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim!!.duration = duration
             anim!!.interruptible = interruptible
             anim!!.easing = easing
-            anim!!.origin = origin
 
             if (vFocus != null) {
                 val vTranslateXEnd = vFocus.x - targetScale * anim!!.sCenterStart!!.x
@@ -1673,7 +1647,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var duration = 500L
         var interruptible = true
         var easing = EASE_IN_OUT_QUAD
-        var origin = ORIGIN_ANIM
         var time = System.currentTimeMillis()
     }
 
