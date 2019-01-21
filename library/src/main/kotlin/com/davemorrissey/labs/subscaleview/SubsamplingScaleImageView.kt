@@ -43,7 +43,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var isOneToOneZoomEnabled = false
     var isQuickScaleEnabled = true
     var executor = AsyncTask.THREAD_POOL_EXECUTOR
-    var eagerLoadingEnabled = true
+    var eagerLoadingEnabled = false
     var debug = false
     var resetScaleOnSizeChange = false
     var onImageEventListener: OnImageEventListener? = null
