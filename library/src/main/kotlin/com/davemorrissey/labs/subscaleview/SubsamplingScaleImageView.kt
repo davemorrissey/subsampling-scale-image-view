@@ -16,7 +16,6 @@ import com.davemorrissey.labs.subscaleview.decoder.*
 import com.davemorrissey.labs.subscaleview.decoder.ImageDecoder
 import java.lang.ref.WeakReference
 import java.util.*
-import java.util.concurrent.Executor
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : View(context, attr) {
@@ -49,22 +48,27 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var maxScale = 2f
     var isOneToOneZoomEnabled = false
     var isQuickScaleEnabled = true
+    var executor = AsyncTask.THREAD_POOL_EXECUTOR
+    var eagerLoadingEnabled = true
+    var debug = false
+    var resetScaleOnSizeChange = false
+    var onImageEventListener: OnImageEventListener? = null
+    var doubleTapZoomScale = 1f
+    var minScale = minScale()
+    var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
+    var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
+
     private var bitmap: Bitmap? = null
     private var bitmapIsPreview = false
     private var bitmapIsCached = false
     private var uri: Uri? = null
     private var fullImageSampleSize = 0
     private var tileMap: MutableMap<Int, List<Tile>>? = null
-    private var debug = false
     private var orientation = ORIENTATION_0
-    private var minScale = minScale()
     private var minimumTileDpi = -1
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
-    private var executor = AsyncTask.THREAD_POOL_EXECUTOR
-    private var eagerLoadingEnabled = true
     private var isZoomEnabled = true
-    private var doubleTapZoomScale = 1f
     private var scale = 0f
     private var scaleStart = 0f
 
@@ -86,15 +90,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var isPanning = false
     private var isQuickScaling = false
     private var maxTouchCount = 0
-    private var resetScaleOnSizeChange = false
 
     private var detector: GestureDetector? = null
     private var singleDetector: GestureDetector? = null
 
     private var decoder: ImageRegionDecoder? = null
     private val decoderLock = ReentrantReadWriteLock(true)
-    private var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
-    private var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
 
     private var vCenterStart: PointF? = null
     private var vDistStart = 0f
@@ -109,7 +110,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var anim: Anim? = null
     private var isReady = false
     private var isImageLoaded = false
-    private var onImageEventListener: OnImageEventListener? = null
 
     private var bitmapPaint: Paint? = null
     private var debugTextPaint: Paint? = null
@@ -1334,7 +1334,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var bitmap: Bitmap? = null
         var loading = false
         var visible = false
-
         var vRect: Rect? = null
         var fileSRect: Rect? = null
     }
@@ -1538,18 +1537,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun px(px: Int) = (density * px).toInt()
 
-    fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<ImageRegionDecoder>) {
-        this.regionDecoderFactory = regionDecoderFactory
-    }
-
-    fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
-        this.bitmapDecoderFactory = bitmapDecoderFactory
-    }
-
-    fun setMinScale(minScale: Float) {
-        this.minScale = minScale
-    }
-
     fun setMinimumDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
@@ -1559,10 +1546,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     fun setMaximumDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
-        setMinScale(averageDpi / dpi)
+        minScale = averageDpi / dpi
     }
-
-    fun getMinScale() = minScale()
 
     fun setMinimumTileDpi(minimumTileDpi: Int) {
         val metrics = resources.displayMetrics
@@ -1597,44 +1582,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     protected fun onImageLoaded() {}
 
-    fun getOrientation() = orientation
-
-    fun setDoubleTapZoomScale(doubleTapZoomScale: Float) {
-        this.doubleTapZoomScale = doubleTapZoomScale
-    }
-
     fun setDoubleTapZoomDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
-        setDoubleTapZoomScale(averageDpi / dpi)
-    }
-
-    fun setResetScaleOnSizeChange(resetScaleOnSizeChange: Boolean) {
-        this.resetScaleOnSizeChange = resetScaleOnSizeChange
-    }
-
-    fun setExecutor(executor: Executor) {
-        this.executor = executor
-    }
-
-    fun setEagerLoadingEnabled(eagerLoadingEnabled: Boolean) {
-        this.eagerLoadingEnabled = eagerLoadingEnabled
-    }
-
-    fun setDebug(debug: Boolean) {
-        this.debug = debug
-    }
-
-    fun setOnImageEventListener(onImageEventListener: OnImageEventListener) {
-        this.onImageEventListener = onImageEventListener
-    }
-
-    fun animateScaleAndCenter(scale: Float, sCenter: PointF): AnimationBuilder? {
-        return if (!isReady) {
-            null
-        } else {
-            AnimationBuilder(scale, sCenter)
-        }
+        doubleTapZoomScale = averageDpi / dpi
     }
 
     inner class AnimationBuilder {
