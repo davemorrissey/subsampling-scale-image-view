@@ -56,7 +56,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private var bitmap: Bitmap? = null
     private var bitmapIsPreview = false
-    private var bitmapIsCached = false
     private var uri: Uri? = null
     private var fullImageSampleSize = 0
     private var tileMap: MutableMap<Int, List<Tile>>? = null
@@ -167,7 +166,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             sWidth = imageSource.sWidth
             sHeight = imageSource.sHeight
             if (previewSource.bitmap != null) {
-                bitmapIsCached = previewSource.isCached
                 onPreviewLoaded(previewSource.bitmap)
             } else {
                 var uri = previewSource.uri
@@ -180,20 +178,15 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (imageSource.bitmap != null) {
-            onImageLoaded(imageSource.bitmap, ORIENTATION_0, imageSource.isCached)
+            onImageLoaded(imageSource.bitmap, ORIENTATION_0)
         } else {
             uri = imageSource.uri
             if (uri == null && imageSource.resource != null) {
                 uri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${imageSource.resource}")
             }
 
-            if (imageSource.tile) {
-                val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
-                execute(task)
-            } else {
-                val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, false)
-                execute(task)
-            }
+            val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
+            execute(task)
         }
     }
 
@@ -233,13 +226,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 decoderLock.writeLock().unlock()
             }
 
-            if (!bitmapIsCached) {
-                bitmap?.recycle()
-            }
-
-            if (bitmap != null && bitmapIsCached) {
-                onImageEventListener?.onPreviewReleased()
-            }
+            bitmap?.recycle()
 
             sWidth = 0
             sHeight = 0
@@ -248,7 +235,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             isImageLoaded = false
             bitmap = null
             bitmapIsPreview = false
-            bitmapIsCached = false
         }
 
         if (tileMap != null) {
@@ -1093,16 +1079,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false)
             if (bitmap != null) {
-                if (!bitmapIsCached) {
-                    bitmap!!.recycle()
-                }
+                bitmap!!.recycle()
                 bitmap = null
-                if (bitmapIsCached) {
-                    onImageEventListener?.onPreviewReleased()
-                }
-
                 bitmapIsPreview = false
-                bitmapIsCached = false
             }
         }
         this.decoder = decoder
@@ -1181,16 +1160,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         checkReady()
         checkImageLoaded()
         if (getIsBaseLayerReady() && bitmap != null) {
-            if (!bitmapIsCached) {
-                bitmap!!.recycle()
-            }
+            bitmap!!.recycle()
             bitmap = null
-
-            if (bitmapIsCached) {
-                onImageEventListener?.onPreviewReleased()
-            }
             bitmapIsPreview = false
-            bitmapIsCached = false
         }
         invalidate()
     }
@@ -1230,7 +1202,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 if (preview) {
                     subsamplingScaleImageView?.onPreviewLoaded(bitmap)
                 } else {
-                    subsamplingScaleImageView?.onImageLoaded(bitmap, orientation, false)
+                    subsamplingScaleImageView?.onImageLoaded(bitmap, orientation)
                 }
             } else if (exception != null) {
                 if (preview) {
@@ -1260,21 +1232,13 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     @Synchronized
-    private fun onImageLoaded(bitmap: Bitmap?, sOrientation: Int, bitmapIsCached: Boolean) {
+    private fun onImageLoaded(bitmap: Bitmap?, sOrientation: Int) {
         debug("onImageLoaded")
         if (sWidth > 0 && sHeight > 0 && (sWidth != bitmap!!.width || sHeight != bitmap.height)) {
             reset(false)
         }
 
-        if (!this.bitmapIsCached) {
-            this.bitmap?.recycle()
-        }
-
-        if (this.bitmap != null && this.bitmapIsCached) {
-            onImageEventListener?.onPreviewReleased()
-        }
-
-        this.bitmapIsCached = bitmapIsCached
+        this.bitmap?.recycle()
         this.bitmap = bitmap
         bitmapIsPreview = false
         sWidth = bitmap!!.width
