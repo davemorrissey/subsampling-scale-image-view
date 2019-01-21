@@ -33,8 +33,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         const val EASE_OUT_QUAD = 1
         const val EASE_IN_OUT_QUAD = 2
 
-        private val VALID_EASING_STYLES = Arrays.asList(EASE_IN_OUT_QUAD, EASE_OUT_QUAD)
-
         const val ORIGIN_ANIM = 1
         const val ORIGIN_FLING = 2
         const val ORIGIN_DOUBLE_TAP_ZOOM = 3
@@ -297,7 +295,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     val vTranslateEnd = PointF(vTranslate!!.x + velocityX * 0.25f, vTranslate!!.y + velocityY * 0.25f)
                     val sCenterXEnd = (width / 2 - vTranslateEnd.x) / scale
                     val sCenterYEnd = (height / 2 - vTranslateEnd.y) / scale
-                    AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).withEasing(EASE_OUT_QUAD).withOrigin(ORIGIN_FLING).start()
+                    AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).apply {
+                        easing = EASE_OUT_QUAD
+                        origin = ORIGIN_FLING
+                        start()
+                    }
                     return true
                 }
                 return super.onFling(e1, e2, velocityX, velocityY)
@@ -605,21 +607,41 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
 
             if (zoomIn) {
-                AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+                AnimationBuilder(targetScale, sCenter!!, vFocus!!).apply {
+                    interruptible = false
+                    origin = ORIGIN_DOUBLE_TAP_ZOOM
+                    start()
+                }
             } else {
-                AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+                AnimationBuilder(targetScale, sCenter!!).apply {
+                    interruptible = false
+                    origin = ORIGIN_DOUBLE_TAP_ZOOM
+                    start()
+                }
             }
         } else {
             val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else minScale()
 
             if (scale != 1f) {
                 if (zoomIn) {
-                    AnimationBuilder(targetScale, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+                    AnimationBuilder(targetScale, sCenter!!, vFocus!!).apply {
+                        interruptible = false
+                        origin = ORIGIN_DOUBLE_TAP_ZOOM
+                        start()
+                    }
                 } else {
-                    AnimationBuilder(1f, sCenter!!, vFocus!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+                    AnimationBuilder(1f, sCenter!!, vFocus!!).apply {
+                        interruptible = false
+                        origin = ORIGIN_DOUBLE_TAP_ZOOM
+                        start()
+                    }
                 }
             } else {
-                AnimationBuilder(targetScale, sCenter!!).withInterruptible(false).withDuration(DOUBLE_TAP_ZOOM_DURATION).withOrigin(ORIGIN_DOUBLE_TAP_ZOOM).start()
+                AnimationBuilder(targetScale, sCenter!!).apply {
+                    interruptible = false
+                    origin = ORIGIN_DOUBLE_TAP_ZOOM
+                    start()
+                }
             }
         }
         invalidate()
@@ -1338,21 +1360,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var fileSRect: Rect? = null
     }
 
-    class Anim {
-        var scaleStart = 0f
-        var scaleEnd = 0f
-        var sCenterStart: PointF? = null
-        var sCenterEnd: PointF? = null
-        var sCenterEndRequested: PointF? = null
-        var vFocusStart: PointF? = null
-        var vFocusEnd: PointF? = null
-        var duration = 500L
-        var interruptible = true
-        var easing = EASE_IN_OUT_QUAD
-        var origin = ORIGIN_ANIM
-        var time = System.currentTimeMillis()
-    }
-
     class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF)
 
     fun setMaxTileSize(maxPixels: Int) {
@@ -1592,10 +1599,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private val targetScale: Float
         private val targetSCenter: PointF?
         private val vFocus: PointF?
-        private var duration = 500L
-        private var easing = EASE_IN_OUT_QUAD
-        private var origin = ORIGIN_ANIM
-        private var interruptible = true
+        private val duration = DOUBLE_TAP_ZOOM_DURATION
+        var easing = EASE_IN_OUT_QUAD
+        var origin = ORIGIN_ANIM
+        var interruptible = true
 
         constructor(sCenter: PointF) {
             targetScale = scale
@@ -1613,29 +1620,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             targetScale = scale
             targetSCenter = sCenter
             this.vFocus = vFocus
-        }
-
-        fun withDuration(duration: Long): AnimationBuilder {
-            this.duration = duration
-            return this
-        }
-
-        fun withInterruptible(interruptible: Boolean): AnimationBuilder {
-            this.interruptible = interruptible
-            return this
-        }
-
-        fun withEasing(easing: Int): AnimationBuilder {
-            if (!VALID_EASING_STYLES.contains(easing)) {
-                throw IllegalArgumentException("Unknown easing type: $easing")
-            }
-            this.easing = easing
-            return this
-        }
-
-        fun withOrigin(origin: Int): AnimationBuilder {
-            this.origin = origin
-            return this
         }
 
         fun start() {
@@ -1676,6 +1660,21 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             invalidate()
         }
+    }
+
+    class Anim {
+        var scaleStart = 0f
+        var scaleEnd = 0f
+        var sCenterStart: PointF? = null
+        var sCenterEnd: PointF? = null
+        var sCenterEndRequested: PointF? = null
+        var vFocusStart: PointF? = null
+        var vFocusEnd: PointF? = null
+        var duration = 500L
+        var interruptible = true
+        var easing = EASE_IN_OUT_QUAD
+        var origin = ORIGIN_ANIM
+        var time = System.currentTimeMillis()
     }
 
     interface OnImageEventListener {
