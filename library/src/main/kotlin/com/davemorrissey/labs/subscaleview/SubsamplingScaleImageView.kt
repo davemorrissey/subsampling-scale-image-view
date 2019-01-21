@@ -52,6 +52,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var bitmapDecoderFactory: DecoderFactory<out ImageDecoder> = CompatDecoderFactory(SkiaImageDecoder::class.java)
     var regionDecoderFactory: DecoderFactory<out ImageRegionDecoder> = CompatDecoderFactory(SkiaImageRegionDecoder::class.java)
     var scale = 0f
+    var sWidth = 0
+    var sHeight = 0
 
     private var bitmap: Bitmap? = null
     private var bitmapIsPreview = false
@@ -74,8 +76,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var sPendingCenter: PointF? = null
     private var sRequestedCenter: PointF? = null
 
-    private var sWidth = 0
-    private var sHeight = 0
     private var sOrientation = 0
     private var sRegion: Rect? = null
     private var pRegion: Rect? = null
