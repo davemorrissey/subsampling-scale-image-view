@@ -1,6 +1,5 @@
 package com.davemorrissey.labs.subscaleview
 
-import android.content.ContentResolver
 import android.content.Context
 import android.graphics.*
 import android.graphics.Paint.Style
@@ -55,7 +54,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var orientation = ORIENTATION_0
 
     private var bitmap: Bitmap? = null
-    private var bitmapIsPreview = false
     private var uri: Uri? = null
     private var fullImageSampleSize = 0
     private var tileMap: MutableMap<Int, List<Tile>>? = null
@@ -123,7 +121,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun getIsBaseLayerReady(): Boolean {
-        if (bitmap != null && !bitmapIsPreview) {
+        if (bitmap != null) {
             return true
         } else if (tileMap != null) {
             var baseLayerReady = true
@@ -150,23 +148,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     fun setImage(imageSource: ImageSource) {
-        setImage(imageSource, null)
-    }
-
-    fun setImage(imageSource: ImageSource, previewSource: ImageSource? = null) {
         reset(true)
-
-        if (previewSource != null) {
-            if (imageSource.bitmap != null) {
-                throw IllegalArgumentException("Preview image cannot be used when a bitmap is provided for the main image")
-            }
-            if (previewSource.bitmap != null) {
-                onPreviewLoaded(previewSource.bitmap)
-            } else {
-                val task = BitmapLoadTask(this, context, bitmapDecoderFactory, previewSource.uri!!, true)
-                execute(task)
-            }
-        }
 
         if (imageSource.bitmap != null) {
             onImageLoaded(imageSource.bitmap, ORIENTATION_0)
@@ -221,7 +203,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             isReady = false
             isImageLoaded = false
             bitmap = null
-            bitmapIsPreview = false
         }
 
         if (tileMap != null) {
@@ -666,10 +647,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         } else if (bitmap?.isRecycled == false) {
             var xScale = scale
             var yScale = scale
-            if (bitmapIsPreview) {
-                xScale = scale * (sWidth.toFloat() / bitmap!!.width)
-                yScale = scale * (sHeight.toFloat() / bitmap!!.height)
-            }
 
             if (objectMatrix == null) {
                 objectMatrix = Matrix()
@@ -808,7 +785,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (fullImageSampleSize == 1 && sWidth() < maxTileDimensions.x && sHeight() < maxTileDimensions.y) {
             decoder!!.recycle()
             decoder = null
-            val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!, false)
+            val task = BitmapLoadTask(this, context, bitmapDecoderFactory, uri!!)
             execute(task)
         } else {
             initialiseTileMap(maxTileDimensions)
@@ -1068,7 +1045,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (bitmap != null) {
                 bitmap!!.recycle()
                 bitmap = null
-                bitmapIsPreview = false
             }
         }
         this.decoder = decoder
@@ -1149,12 +1125,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (getIsBaseLayerReady() && bitmap != null) {
             bitmap!!.recycle()
             bitmap = null
-            bitmapIsPreview = false
         }
         invalidate()
     }
 
-    private class BitmapLoadTask internal constructor(view: SubsamplingScaleImageView, context: Context, decoderFactory: DecoderFactory<out ImageDecoder>, private val source: Uri, private val preview: Boolean) : AsyncTask<Void, Void, Int>() {
+    private class BitmapLoadTask internal constructor(view: SubsamplingScaleImageView, context: Context, decoderFactory: DecoderFactory<out ImageDecoder>, private val source: Uri) : AsyncTask<Void, Void, Int>() {
         private val viewRef = WeakReference(view)
         private val contextRef = WeakReference(context)
         private val decoderFactoryRef = WeakReference(decoderFactory)
@@ -1186,35 +1161,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         override fun onPostExecute(orientation: Int?) {
             val subsamplingScaleImageView = viewRef.get()
             if (bitmap != null && orientation != null) {
-                if (preview) {
-                    subsamplingScaleImageView?.onPreviewLoaded(bitmap)
-                } else {
-                    subsamplingScaleImageView?.onImageLoaded(bitmap, orientation)
-                }
+                subsamplingScaleImageView?.onImageLoaded(bitmap, orientation)
             } else if (exception != null) {
-                if (preview) {
-                    subsamplingScaleImageView?.onImageEventListener?.onPreviewLoadError(exception!!)
-                } else {
-                    subsamplingScaleImageView?.onImageEventListener?.onImageLoadError(exception!!)
-                }
+                subsamplingScaleImageView?.onImageEventListener?.onImageLoadError(exception!!)
             }
-        }
-    }
-
-    @Synchronized
-    private fun onPreviewLoaded(previewBitmap: Bitmap?) {
-        debug("onPreviewLoaded")
-        if (bitmap != null || isImageLoaded) {
-            previewBitmap!!.recycle()
-            return
-        }
-
-        bitmap = previewBitmap
-
-        bitmapIsPreview = true
-        if (checkReady()) {
-            invalidate()
-            requestLayout()
         }
     }
 
@@ -1227,7 +1177,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         this.bitmap?.recycle()
         this.bitmap = bitmap
-        bitmapIsPreview = false
         sWidth = bitmap!!.width
         sHeight = bitmap.height
         this.sOrientation = sOrientation
@@ -1570,7 +1519,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     interface OnImageEventListener {
         fun onReady()
         fun onImageLoaded()
-        fun onPreviewLoadError(e: Exception)
         fun onImageLoadError(e: Exception)
         fun onTileLoadError(e: Exception)
     }
