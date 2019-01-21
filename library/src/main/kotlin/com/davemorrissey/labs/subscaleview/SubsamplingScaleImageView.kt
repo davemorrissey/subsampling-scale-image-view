@@ -1729,15 +1729,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     interface OnImageEventListener {
         fun onReady()
-
         fun onImageLoaded()
-
         fun onPreviewLoadError(e: Exception)
-
         fun onImageLoadError(e: Exception)
-
         fun onTileLoadError(e: Exception)
-
         fun onPreviewReleased()
     }
 
