@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.davemorrissey.labs.subscaleview.test"
-          android:hardwareAccelerated="true"
-          android:versionCode="4"
-          android:versionName="3.1.0">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.davemorrissey.labs.subscaleview.test"
+    android:hardwareAccelerated="true">
 
     <uses-permission
         android:name="android.permission.READ_PHONE_STATE"

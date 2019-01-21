@@ -4,9 +4,12 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 28
+
     defaultConfig {
         minSdkVersion 21
         applicationId "com.davemorrissey.labs.subscaleview.test"
+        versionCode 4
+        versionName "3.1.0"
     }
 
     sourceSets {
@@ -22,6 +25,6 @@ android {
 
 dependencies {
     implementation project(':library')
-    api 'androidx.appcompat:appcompat:1.0.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    api 'androidx.appcompat:appcompat:1.0.2'
 }

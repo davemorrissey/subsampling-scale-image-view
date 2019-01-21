@@ -1,10 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-group = 'com.davemorrissey.labs'
-archivesBaseName = 'subsampling-scale-image-view'
-version = '4.0.2'
-
 android {
     compileSdkVersion 28
     buildToolsVersion '28.0.3'
@@ -12,6 +8,8 @@ android {
     defaultConfig {
         minSdkVersion 21
         consumerProguardFiles 'proguard-rules.txt'
+        versionCode 1
+        versionName "1.0"
     }
 
     sourceSets {
