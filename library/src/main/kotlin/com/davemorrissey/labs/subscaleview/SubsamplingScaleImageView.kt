@@ -1167,7 +1167,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     view.decoderLock.readLock().lock()
                     try {
                         if (decoder.isReady()) {
-                            // Update tile's file sRect according to rotation
                             view.fileSRect(tile.sRect, tile.fileSRect)
                             if (view.sRegion != null) {
                                 tile.fileSRect!!.offset(view.sRegion!!.left, view.sRegion!!.top)
@@ -1539,71 +1538,32 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun px(px: Int) = (density * px).toInt()
 
-    /**
-     * Swap the default region decoder implementation for one of your own. You must do this before setting the image file or
-     * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
-     * @param regionDecoderFactory The [DecoderFactory] implementation that produces [ImageRegionDecoder]
-     * instances.
-     */
     fun setRegionDecoderFactory(regionDecoderFactory: DecoderFactory<ImageRegionDecoder>) {
         this.regionDecoderFactory = regionDecoderFactory
     }
 
-    /**
-     * Swap the default bitmap decoder implementation for one of your own. You must do this before setting the image file or
-     * asset, and you cannot use a custom decoder when using layout XML to set an asset name.
-     * @param bitmapDecoderFactory The [DecoderFactory] implementation that produces [ImageDecoder] instances.
-     */
     fun setBitmapDecoderFactory(bitmapDecoderFactory: DecoderFactory<out ImageDecoder>) {
         this.bitmapDecoderFactory = bitmapDecoderFactory
     }
 
-    /**
-     * Set the minimum scale allowed. A value of 1 means 1:1 pixels at minimum scale. You may wish to set this according
-     * to screen density. Consider using [.setMaximumDpi], which is density aware.
-     * @param minScale minimum scale expressed as a source/view pixels ratio.
-     */
     fun setMinScale(minScale: Float) {
         this.minScale = minScale
     }
 
-    /**
-     * This is a screen density aware alternative to [.setMaxScale]; it allows you to express the maximum
-     * allowed scale in terms of the minimum pixel density. This avoids the problem of 1:1 scale still being
-     * too small on a high density screen. A sensible starting point is 160 - the default used by this view.
-     * @param dpi Source image pixel density at maximum zoom.
-     */
     fun setMinimumDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
         maxScale = averageDpi / dpi
     }
 
-    /**
-     * This is a screen density aware alternative to [.setMinScale]; it allows you to express the minimum
-     * allowed scale in terms of the maximum pixel density.
-     * @param dpi Source image pixel density at minimum zoom.
-     */
     fun setMaximumDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
         setMinScale(averageDpi / dpi)
     }
 
-    /**
-     * Returns the minimum allowed scale.
-     * @return the minimum scale as a source/view pixels ratio.
-     */
     fun getMinScale() = minScale()
 
-    /**
-     * By default, image tiles are at least as high resolution as the screen. For a retina screen this may not be
-     * necessary, and may increase the likelihood of an OutOfMemoryError. This method sets a DPI at which higher
-     * resolution tiles should be loaded. Using a lower number will on average use less memory but result in a lower
-     * quality image. 160-240dpi will usually be enough. This should be called before setting the image source,
-     * because it affects which tiles get loaded. When using an untiled source image this method has no effect.
-     * @param minimumTileDpi Tile loading threshold.
-     */
     fun setMinimumTileDpi(minimumTileDpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
@@ -1614,12 +1574,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Externally change the scale and translation of the source image. This may be used with getCenter() and getScale()
-     * to restore the scale and zoom after a screen rotate.
-     * @param scale New scale to set.
-     * @param sCenter New source image coordinate to center on the screen, subject to boundaries.
-     */
     fun setScaleAndCenter(scale: Float, sCenter: PointF?) {
         anim = null
         pendingScale = scale
@@ -1628,10 +1582,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         invalidate()
     }
 
-    /**
-     * Fully zoom out and return the image to the middle of the screen. This might be useful if you have a view pager
-     * and want images to be reset when the user has moved to another page.
-     */
     fun resetScaleAndCenter() {
         anim = null
         pendingScale = limitedScale(0f)
@@ -1643,41 +1593,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         invalidate()
     }
 
-    /**
-     * Called once when the view is initialised, has dimensions, and will display an image on the
-     * next draw. This is triggered at the same time as [OnImageEventListener.onReady] but
-     * allows a subclass to receive this event without using a listener.
-     */
     protected fun onReady() {}
 
-    /**
-     * Called once when the full size image or its base layer tiles have been loaded.
-     */
     protected fun onImageLoaded() {}
 
-    /**
-     * Returns the orientation setting. This can return [.ORIENTATION_USE_EXIF], in which case it doesn't tell you
-     * the applied orientation of the image. For that, use [.getAppliedOrientation].
-     * @return the orientation setting. See static fields.
-     */
     fun getOrientation() = orientation
 
-    /**
-     * Set the scale the image will zoom in to when double tapped. This also the scale point where a double tap is interpreted
-     * as a zoom out gesture - if the scale is greater than 90% of this value, a double tap zooms out. Avoid using values
-     * greater than the max zoom.
-     * @param doubleTapZoomScale New value for double tap gesture zoom scale.
-     */
     fun setDoubleTapZoomScale(doubleTapZoomScale: Float) {
         this.doubleTapZoomScale = doubleTapZoomScale
     }
 
-    /**
-     * A density aware alternative to [.setDoubleTapZoomScale]; this allows you to express the scale the
-     * image will zoom in to when double tapped in terms of the image pixel density. Values lower than the max scale will
-     * be ignored. A sensible starting point is 160 - the default used by this view.
-     * @param dpi New value for double tap gesture zoom scale.
-     */
     fun setDoubleTapZoomDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
@@ -1688,66 +1613,22 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         this.resetScaleOnSizeChange = resetScaleOnSizeChange
     }
 
-    /**
-     *
-     *
-     * Provide an [Executor] to be used for loading images. By default, [AsyncTask.THREAD_POOL_EXECUTOR]
-     * is used to minimise contention with other background work the app is doing. You can also choose
-     * to use [AsyncTask.SERIAL_EXECUTOR] if you want to limit concurrent background tasks.
-     * Alternatively you can supply an [Executor] of your own to avoid any contention. It is
-     * strongly recommended to use a single executor instance for the life of your application, not
-     * one per view instance.
-     *
-     *
-     * **Warning:** If you are using a custom implementation of [ImageRegionDecoder], and you
-     * supply an executor with more than one thread, you must make sure your implementation supports
-     * multi-threaded bitmap decoding or has appropriate internal synchronization. From SDK 21, Android's
-     * [android.graphics.BitmapRegionDecoder] uses an internal lock so it is thread safe but
-     * there is no advantage to using multiple threads.
-     *
-     * @param executor an [Executor] for image loading.
-     */
     fun setExecutor(executor: Executor) {
         this.executor = executor
     }
 
-    /**
-     * Enable or disable eager loading of tiles that appear on screen during gestures or animations,
-     * while the gesture or animation is still in progress. By default this is enabled to improve
-     * responsiveness, but it can result in tiles being loaded and discarded more rapidly than
-     * necessary and reduce the animation frame rate on old/cheap devices. Disable this on older
-     * devices if you see poor performance. Tiles will then be loaded only when gestures and animations
-     * are completed.
-     * @param eagerLoadingEnabled true to enable loading during gestures, false to delay loading until gestures end
-     */
     fun setEagerLoadingEnabled(eagerLoadingEnabled: Boolean) {
         this.eagerLoadingEnabled = eagerLoadingEnabled
     }
 
-    /**
-     * Enables visual debugging, showing tile boundaries and sizes.
-     * @param debug true to enable debugging, false to disable.
-     */
     fun setDebug(debug: Boolean) {
         this.debug = debug
     }
 
-    /**
-     * Add a listener allowing notification of load and error events. Extend [DefaultOnImageEventListener]
-     * to simplify implementation.
-     * @param onImageEventListener an [OnImageEventListener] instance.
-     */
     fun setOnImageEventListener(onImageEventListener: OnImageEventListener) {
         this.onImageEventListener = onImageEventListener
     }
 
-    /**
-     * Creates a scale animation builder, that when started will animate a zoom in or out. If this would move the image
-     * beyond the panning limits, the image is automatically panned during the animation.
-     * @param scale Target scale.
-     * @param sCenter Target source center.
-     * @return [AnimationBuilder] instance. Call [SubsamplingScaleImageView.AnimationBuilder.start] to start the anim.
-     */
     fun animateScaleAndCenter(scale: Float, sCenter: PointF): AnimationBuilder? {
         return if (!isReady) {
             null
@@ -1756,10 +1637,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * Builder class used to set additional options for a scale animation. Create an instance using [.animateScale],
-     * then set your options and call [.start].
-     */
     inner class AnimationBuilder {
         private val targetScale: Float
         private val targetSCenter: PointF?
@@ -1787,31 +1664,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             this.vFocus = vFocus
         }
 
-        /**
-         * Desired duration of the anim in milliseconds. Default is 500.
-         * @param duration duration in milliseconds.
-         * @return this builder for method chaining.
-         */
         fun withDuration(duration: Long): AnimationBuilder {
             this.duration = duration
             return this
         }
 
-        /**
-         * Whether the animation can be interrupted with a touch. Default is true.
-         * @param interruptible interruptible flag.
-         * @return this builder for method chaining.
-         */
         fun withInterruptible(interruptible: Boolean): AnimationBuilder {
             this.interruptible = interruptible
             return this
         }
 
-        /**
-         * Set the easing style. See static fields. [.EASE_IN_OUT_QUAD] is recommended, and the default.
-         * @param easing easing style.
-         * @return this builder for method chaining.
-         */
         fun withEasing(easing: Int): AnimationBuilder {
             if (!VALID_EASING_STYLES.contains(easing)) {
                 throw IllegalArgumentException("Unknown easing type: $easing")
@@ -1820,17 +1682,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return this
         }
 
-        /**
-         * Only for internal use. Indicates what caused the animation.
-         */
         fun withOrigin(origin: Int): AnimationBuilder {
             this.origin = origin
             return this
         }
 
-        /**
-         * Starts the animation.
-         */
         fun start() {
             val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
             val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
@@ -1857,13 +1713,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim!!.origin = origin
 
             if (vFocus != null) {
-                // Calculate where translation will be at the end of the anim
                 val vTranslateXEnd = vFocus.x - targetScale * anim!!.sCenterStart!!.x
                 val vTranslateYEnd = vFocus.y - targetScale * anim!!.sCenterStart!!.y
                 val satEnd = ScaleAndTranslate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd))
-                // Fit the end translation into bounds
                 fitToBounds(true, satEnd)
-                // Adjust the position of the focus point at end so image will be in bounds
                 anim!!.vFocusEnd = PointF(
                         vFocus.x + (satEnd.vTranslate.x - vTranslateXEnd),
                         vFocus.y + (satEnd.vTranslate.y - vTranslateYEnd)
@@ -1874,66 +1727,21 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
     }
 
-    /**
-     * An event listener, allowing subclasses and activities to be notified of significant events.
-     */
     interface OnImageEventListener {
-
-        /**
-         * Called when the dimensions of the image and view are known, and either a preview image,
-         * the full size image, or base layer tiles are loaded. This indicates the scale and translate
-         * are known and the next draw will display an image. This event can be used to hide a loading
-         * graphic, or inform a subclass that it is safe to draw overlays.
-         */
         fun onReady()
 
-        /**
-         * Called when the full size image is ready. When using tiling, this means the lowest resolution
-         * base layer of tiles are loaded, and when tiling is disabled, the image bitmap is loaded.
-         * This event could be used as a trigger to enable gestures if you wanted interaction disabled
-         * while only a preview is displayed, otherwise for most cases [.onReady] is the best
-         * event to listen to.
-         */
         fun onImageLoaded()
 
-        /**
-         * Called when a preview image could not be loaded. This method cannot be relied upon; certain
-         * encoding types of supported image formats can result in corrupt or blank images being loaded
-         * and displayed with no detectable error. The view will continue to load the full size image.
-         * @param e The exception thrown. This error is logged by the view.
-         */
         fun onPreviewLoadError(e: Exception)
 
-        /**
-         * Indicates an error initiliasing the decoder when using a tiling, or when loading the full
-         * size bitmap when tiling is disabled. This method cannot be relied upon; certain encoding
-         * types of supported image formats can result in corrupt or blank images being loaded and
-         * displayed with no detectable error.
-         * @param e The exception thrown. This error is also logged by the view.
-         */
         fun onImageLoadError(e: Exception)
 
-        /**
-         * Called when an image tile could not be loaded. This method cannot be relied upon; certain
-         * encoding types of supported image formats can result in corrupt or blank images being loaded
-         * and displayed with no detectable error. Most cases where an unsupported file is used will
-         * result in an error caught by [.onImageLoadError].
-         * @param e The exception thrown. This error is logged by the view.
-         */
         fun onTileLoadError(e: Exception)
 
-        /**
-         * Called when a bitmap set using ImageSource.cachedBitmap is no longer being used by the View.
-         * This is useful if you wish to manage the bitmap after the preview is shown
-         */
         fun onPreviewReleased()
     }
 
-    /**
-     * Default implementation of [OnImageEventListener] for extension. This does nothing in any method.
-     */
     class DefaultOnImageEventListener : OnImageEventListener {
-
         override fun onReady() {}
         override fun onImageLoaded() {}
         override fun onPreviewLoadError(e: Exception) {}
