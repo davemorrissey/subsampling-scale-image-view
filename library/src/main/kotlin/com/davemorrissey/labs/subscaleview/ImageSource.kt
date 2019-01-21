@@ -29,8 +29,6 @@ class ImageSource private constructor(uri: Uri) {
     val uri: Uri?
     val bitmap: Bitmap?
     val resource: Int?
-    var sWidth = 0
-    var sHeight = 0
 
     init {
         var newUri = uri

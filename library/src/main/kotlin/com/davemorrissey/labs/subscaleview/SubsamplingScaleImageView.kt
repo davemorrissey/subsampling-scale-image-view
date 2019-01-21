@@ -160,11 +160,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (imageSource.bitmap != null) {
                 throw IllegalArgumentException("Preview image cannot be used when a bitmap is provided for the main image")
             }
-            if (imageSource.sWidth <= 0 || imageSource.sHeight <= 0) {
-                throw IllegalArgumentException("Preview image cannot be used unless dimensions are provided for the main image")
-            }
-            sWidth = imageSource.sWidth
-            sHeight = imageSource.sHeight
             if (previewSource.bitmap != null) {
                 onPreviewLoaded(previewSource.bitmap)
             } else {
