@@ -22,18 +22,18 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     companion object {
         private val TAG = SubsamplingScaleImageView::class.java.simpleName
 
-        const val ORIENTATION_USE_EXIF = -1
-        const val ORIENTATION_0 = 0
-        const val ORIENTATION_90 = 90
-        const val ORIENTATION_180 = 180
-        const val ORIENTATION_270 = 270
+        private const val ORIENTATION_USE_EXIF = -1
+        private const val ORIENTATION_0 = 0
+        private const val ORIENTATION_90 = 90
+        private const val ORIENTATION_180 = 180
+        private const val ORIENTATION_270 = 270
 
         private val VALID_ORIENTATIONS = Arrays.asList(ORIENTATION_0, ORIENTATION_90, ORIENTATION_180, ORIENTATION_270, ORIENTATION_USE_EXIF)
 
-        const val EASE_OUT_QUAD = 1
-        const val EASE_IN_OUT_QUAD = 2
+        private const val EASE_OUT_QUAD = 1
+        private const val EASE_IN_OUT_QUAD = 2
 
-        const val TILE_SIZE_AUTO = Integer.MAX_VALUE
+        private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val DOUBLE_TAP_ZOOM_DURATION = 300L
 
         var preferredBitmapConfig: Bitmap.Config? = null
