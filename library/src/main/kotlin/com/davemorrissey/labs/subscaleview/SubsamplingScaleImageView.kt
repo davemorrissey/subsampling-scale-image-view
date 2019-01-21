@@ -1586,15 +1586,5 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         fun onPreviewLoadError(e: Exception)
         fun onImageLoadError(e: Exception)
         fun onTileLoadError(e: Exception)
-        fun onPreviewReleased()
-    }
-
-    class DefaultOnImageEventListener : OnImageEventListener {
-        override fun onReady() {}
-        override fun onImageLoaded() {}
-        override fun onPreviewLoadError(e: Exception) {}
-        override fun onImageLoadError(e: Exception) {}
-        override fun onTileLoadError(e: Exception) {}
-        override fun onPreviewReleased() {}
     }
 }
