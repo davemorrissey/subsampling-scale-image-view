@@ -46,7 +46,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var executor = AsyncTask.THREAD_POOL_EXECUTOR
     var eagerLoadingEnabled = false
     var debug = false
-    var resetScaleOnSizeChange = false
     var onImageEventListener: OnImageEventListener? = null
     var doubleTapZoomScale = 1f
     var minScale = minScale()
@@ -112,7 +111,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private val density: Float
 
     init {
-        resetScaleOnSizeChange = true
         density = resources.displayMetrics.density
         setMinimumDpi(160)
         setDoubleTapZoomDpi(160)
@@ -284,18 +282,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        if (resetScaleOnSizeChange) {
-            super.onSizeChanged(w, h, oldw, oldh)
-            if (oldh != 0 && oldw != 0) {
-                resetScaleAndCenter()
-            }
-        } else {
-            val sCenter = getCenter()
-            if (isReady && sCenter != null) {
-                anim = null
-                pendingScale = scale
-                sPendingCenter = sCenter
-            }
+        val sCenter = getCenter()
+        if (isReady && sCenter != null) {
+            anim = null
+            pendingScale = scale
+            sPendingCenter = sCenter
         }
     }
 
@@ -1409,24 +1400,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             reset(false)
             invalidate()
         }
-    }
-
-    fun setScaleAndCenter(scale: Float, sCenter: PointF?) {
-        anim = null
-        pendingScale = scale
-        sPendingCenter = sCenter
-        invalidate()
-    }
-
-    fun resetScaleAndCenter() {
-        anim = null
-        pendingScale = limitedScale(0f)
-        sPendingCenter = if (isReady) {
-            PointF((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat())
-        } else {
-            PointF(0f, 0f)
-        }
-        invalidate()
     }
 
     protected fun onReady() {}
