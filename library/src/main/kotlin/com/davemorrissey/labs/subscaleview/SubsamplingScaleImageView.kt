@@ -975,14 +975,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate.y = Math.max(vTranslate.y, -scaleHeight)
         }
 
-        val xPaddingRatio = if (paddingLeft > 0 || paddingRight > 0) paddingLeft / (paddingLeft + paddingRight).toFloat() else 0.5f
-        val yPaddingRatio = if (paddingTop > 0 || paddingBottom > 0) paddingTop / (paddingTop + paddingBottom).toFloat() else 0.5f
-
         val maxTx: Float
         val maxTy: Float
         if (center) {
-            maxTx = Math.max(0f, (width - scaleWidth) * xPaddingRatio)
-            maxTy = Math.max(0f, (height - scaleHeight) * yPaddingRatio)
+            maxTx = Math.max(0f, (width - scaleWidth) / 2f)
+            maxTy = Math.max(0f, (height - scaleHeight) / 2f)
         } else {
             maxTx = Math.max(0, width).toFloat()
             maxTy = Math.max(0, height).toFloat()
@@ -1415,8 +1412,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun vTranslateForSCenter(sCenterX: Float, sCenterY: Float, scale: Float): PointF {
-        val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
-        val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
+        val vxCenter = width / 2
+        val vyCenter = height / 2
         if (satTemp == null) {
             satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
         }
@@ -1429,8 +1426,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun limitedSCenter(sCenterX: Float, sCenterY: Float, scale: Float, sTarget: PointF): PointF {
         val vTranslate = vTranslateForSCenter(sCenterX, sCenterY, scale)
-        val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
-        val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
+        val vxCenter = width / 2
+        val vyCenter = height / 2
         val sx = (vxCenter - vTranslate.x) / scale
         val sy = (vyCenter - vTranslate.y) / scale
         sTarget.set(sx, sy)
@@ -1438,9 +1435,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun minScale(): Float {
-        val vPadding = paddingBottom + paddingTop
-        val hPadding = paddingLeft + paddingRight
-        return Math.min((width - hPadding) / sWidth().toFloat(), (height - vPadding) / sHeight().toFloat())
+        return Math.min(width / sWidth().toFloat(), height / sHeight().toFloat())
     }
 
     private fun limitedScale(targetScale: Float): Float {
@@ -1545,8 +1540,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         fun start() {
-            val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
-            val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
+            val vxCenter = width / 2
+            val vyCenter = height / 2
             val targetScale = limitedScale(targetScale)
             val targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF())
             anim = Anim().apply {
