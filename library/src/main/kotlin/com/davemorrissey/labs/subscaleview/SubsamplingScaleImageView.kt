@@ -389,9 +389,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                         if (rotationEnabled) {
                             val angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
-                            setRotationInternal(imageRotation + angle - lastAngle)
-                            lastAngle = angle
-                            consumed = true
+                            if (Math.abs(angle - lastAngle) < 1.0) {    // avoid some glitches flipping images
+                                setRotationInternal(imageRotation + angle - lastAngle)
+                                lastAngle = angle
+                                consumed = true
+                            }
                         }
 
                         if (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
