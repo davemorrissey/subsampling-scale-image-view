@@ -512,6 +512,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         doubleTapZoom(quickScaleSCenter, vCenterStart)
                     }
                 }
+
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
                     if (isZooming && touchCount == 2) {
                         isPanning = true
@@ -560,21 +561,21 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
 
             if (zoomIn) {
-                AnimationBuilder(targetScale, sCenter!!, vFocus!!).start()
+                AnimationBuilder(sCenter!!, targetScale, vFocus!!).start()
             } else {
-                AnimationBuilder(targetScale, sCenter!!).start()
+                AnimationBuilder(sCenter!!, targetScale).start()
             }
         } else {
             val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else minScale()
 
             if (scale != 1f) {
                 if (zoomIn) {
-                    AnimationBuilder(targetScale, sCenter!!, vFocus!!).start()
+                    AnimationBuilder(sCenter!!, targetScale, vFocus!!).start()
                 } else {
-                    AnimationBuilder(1f, sCenter!!, vFocus!!).start()
+                    AnimationBuilder(sCenter!!, 1f, vFocus!!).start()
                 }
             } else {
-                AnimationBuilder(targetScale, sCenter!!).start()
+                AnimationBuilder(sCenter!!, targetScale).start()
             }
         }
         invalidate()
@@ -1526,12 +1527,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             targetSCenter = sCenter
         }
 
-        constructor(scale: Float, sCenter: PointF) {
+        constructor(sCenter: PointF, scale: Float) {
             targetScale = scale
             targetSCenter = sCenter
         }
 
-        constructor(scale: Float, sCenter: PointF, vFocus: PointF) {
+        constructor(sCenter: PointF, scale: Float, vFocus: PointF) {
             targetScale = scale
             targetSCenter = sCenter
             this.vFocus = vFocus
