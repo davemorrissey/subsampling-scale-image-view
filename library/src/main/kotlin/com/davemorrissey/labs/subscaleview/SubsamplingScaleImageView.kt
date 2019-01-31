@@ -1508,8 +1508,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     inner class AnimationBuilder {
         private val targetScale: Float
         private val targetSCenter: PointF?
-        private val targetRotation = imageRotation
-        private val vFocus: PointF?
+        private var targetRotation = imageRotation
+        private var vFocus: PointF? = null
         private val duration = DOUBLE_TAP_ZOOM_DURATION
         var easing = EASE_IN_OUT_QUAD
         var interruptible = false
@@ -1517,19 +1517,23 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         constructor(sCenter: PointF) {
             targetScale = scale
             targetSCenter = sCenter
-            vFocus = null
         }
 
         constructor(scale: Float, sCenter: PointF) {
             targetScale = scale
             targetSCenter = sCenter
-            vFocus = null
         }
 
         constructor(scale: Float, sCenter: PointF, vFocus: PointF) {
             targetScale = scale
             targetSCenter = sCenter
             this.vFocus = vFocus
+        }
+
+        constructor(sCenter: PointF, degrees: Double) {
+            targetScale = scale
+            targetSCenter = sCenter
+            targetRotation = Math.toRadians(degrees).toFloat()
         }
 
         fun start() {
@@ -1559,13 +1563,13 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim!!.easing = easing
 
             if (vFocus != null) {
-                val vTranslateXEnd = vFocus.x - targetScale * anim!!.sCenterStart!!.x
-                val vTranslateYEnd = vFocus.y - targetScale * anim!!.sCenterStart!!.y
+                val vTranslateXEnd = vFocus!!.x - targetScale * anim!!.sCenterStart!!.x
+                val vTranslateYEnd = vFocus!!.y - targetScale * anim!!.sCenterStart!!.y
                 val satEnd = ScaleAndTranslate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
                 fitToBounds(true, satEnd)
                 anim!!.vFocusEnd = PointF(
-                        vFocus.x + (satEnd.vTranslate.x - vTranslateXEnd),
-                        vFocus.y + (satEnd.vTranslate.y - vTranslateYEnd)
+                        vFocus!!.x + (satEnd.vTranslate.x - vTranslateXEnd),
+                        vFocus!!.y + (satEnd.vTranslate.y - vTranslateYEnd)
                 )
             }
 
