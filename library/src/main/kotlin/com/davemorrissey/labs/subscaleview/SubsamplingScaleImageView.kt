@@ -514,30 +514,34 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
 
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
-                    if (isZooming && touchCount == 2) {
-                        isPanning = true
+                    if (touchCount == 2) {
+                        if (isZooming) {
+                            isPanning = true
 
-                        val degrees = Math.toDegrees(imageRotation.toDouble())
-                        val rightAngle = getClosestRightAngle(degrees)
-                        val realWidth = if (rightAngle == 90.0 || rightAngle == 270.0) sHeight else sWidth
-                        val realHeight = if (rightAngle == 90.0 || rightAngle == 270.0) sWidth else sHeight
-
-                        if (realWidth * scale == width.toFloat() || realHeight * scale == height.toFloat()) {
-                            val center = PointF(sWidth / 2f, sHeight / 2f)
-                            val widthRatio = width / realWidth.toFloat()
-                            val heightRatio = height / realHeight.toFloat()
-                            val ratio = Math.min(widthRatio, heightRatio)
-                            AnimationBuilder(center, ratio, rightAngle).start()
-                        } else {
-                            val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
-                            AnimationBuilder(center, rightAngle).start()
+                            vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
+                            if (event.actionIndex == 1) {
+                                vCenterStart!!.set(event.getX(0), event.getY(0))
+                            } else {
+                                vCenterStart!!.set(event.getX(1), event.getY(1))
+                            }
                         }
 
-                        vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
-                        if (event.actionIndex == 1) {
-                            vCenterStart!!.set(event.getX(0), event.getY(0))
-                        } else {
-                            vCenterStart!!.set(event.getX(1), event.getY(1))
+                        if (rotationEnabled) {
+                            val degrees = Math.toDegrees(imageRotation.toDouble())
+                            val rightAngle = getClosestRightAngle(degrees)
+                            val realWidth = if (rightAngle == 90.0 || rightAngle == 270.0) sHeight else sWidth
+                            val realHeight = if (rightAngle == 90.0 || rightAngle == 270.0) sWidth else sHeight
+
+                            if (realWidth * scale == width.toFloat() || realHeight * scale == height.toFloat()) {
+                                val center = PointF(sWidth / 2f, sHeight / 2f)
+                                val widthRatio = width / realWidth.toFloat()
+                                val heightRatio = height / realHeight.toFloat()
+                                val ratio = Math.min(widthRatio, heightRatio)
+                                AnimationBuilder(center, ratio, rightAngle).start()
+                            } else {
+                                val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
+                                AnimationBuilder(center, rightAngle).start()
+                            }
                         }
                     }
 
