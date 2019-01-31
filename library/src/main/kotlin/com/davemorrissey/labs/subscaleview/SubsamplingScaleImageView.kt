@@ -521,6 +521,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         } else {
                             vCenterStart!!.set(event.getX(1), event.getY(1))
                         }
+
+                        val degrees = Math.toDegrees(imageRotation.toDouble())
+                        val rightAngle = getClosestRightAngle(degrees)
+                        val center = PointF(sWidth / 2f, sHeight / 2f)
+                        AnimationBuilder(center, rightAngle).start()
                     }
 
                     if (touchCount < 3) {
@@ -545,6 +550,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
         return false
     }
+
+    private fun getClosestRightAngle(degrees: Double) = Math.round(degrees / 90f) * 90.0
 
     private fun doubleTapZoom(sCenter: PointF?, vFocus: PointF?) {
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
