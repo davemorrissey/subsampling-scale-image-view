@@ -11,6 +11,7 @@ import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.widget.ImageView
 import java.io.File
 import java.io.UnsupportedEncodingException
 import java.lang.ref.WeakReference
@@ -18,7 +19,8 @@ import java.net.URLDecoder
 import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : View(context, attr) {
+// rotation inspired by https://github.com/IndoorAtlas/subsampling-scale-image-view/tree/feature_rotation
+open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context, attr: AttributeSet? = null) : ImageView(context, attr) {
     companion object {
         const val FILE_SCHEME = "file://"
         const val ASSET_PREFIX = "$FILE_SCHEME/android_asset/"
@@ -43,6 +45,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var maxScale = 2f
     var isOneToOneZoomEnabled = false
     var isQuickScaleEnabled = true
+    var rotationEnabled = true
     var executor = AsyncTask.THREAD_POOL_EXECUTOR
     var eagerLoadingEnabled = false
     var debug = false
@@ -64,6 +67,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var maxTileWidth = TILE_SIZE_AUTO
     private var maxTileHeight = TILE_SIZE_AUTO
     private var scaleStart = 0f
+
+    private var imageRotation = 0f
+    private var cos = Math.cos(0.0)
+    private var sin = Math.sin(0.0)
 
     private var vTranslate: PointF? = null
     private var vTranslateStart: PointF? = null
@@ -87,6 +94,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private var vCenterStart: PointF? = null
     private var vDistStart = 0f
+    private var lastAngle = 0f
 
     private val quickScaleThreshold: Float
     private var quickScaleLastDistance = 0f
@@ -108,10 +116,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private val srcArray = FloatArray(8)
     private val dstArray = FloatArray(8)
 
-    private val density: Float
+    private val density = resources.displayMetrics.density
 
     init {
-        density = resources.displayMetrics.density
         setMinimumDpi(160)
         setDoubleTapZoomDpi(160)
         setMinimumTileDpi(320)
@@ -175,6 +182,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun reset(newImage: Boolean) {
         scale = 0f
         scaleStart = 0f
+        imageRotation = 0f
         vTranslate = null
         vTranslateStart = null
         vTranslateBefore = null
@@ -363,6 +371,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     vDistStart = distance
                     vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                     vCenterStart!!.set((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2)
+
+                    if (rotationEnabled) {
+                        lastAngle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
+                    }
                 } else if (!isQuickScaling) {
                     vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
                     vCenterStart!!.set(event.x, event.y)
@@ -376,6 +388,13 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         val vDistEnd = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
                         val vCenterEndX = (event.getX(0) + event.getX(1)) / 2
                         val vCenterEndY = (event.getY(0) + event.getY(1)) / 2
+
+                        if (rotationEnabled) {
+                            val angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
+                            setRotationInternal(imageRotation + angle - lastAngle)
+                            lastAngle = angle
+                            consumed = true
+                        }
 
                         if (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
                             isZooming = true
@@ -585,6 +604,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             val vFocusNowX = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.x, anim!!.vFocusEnd!!.x - anim!!.vFocusStart!!.x, anim!!.duration)
             val vFocusNowY = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.y, anim!!.vFocusEnd!!.y - anim!!.vFocusStart!!.y, anim!!.duration)
+
+            if (rotationEnabled) {
+                setRotationInternal(ease(anim!!.easing, scaleElapsed, anim!!.rotationStart, anim!!.rotationEnd - anim!!.rotationStart, anim!!.duration))
+            }
+
             vTranslate!!.x -= sourceToViewX(anim!!.sCenterEnd!!.x) - vFocusNowX
             vTranslate!!.y -= sourceToViewY(anim!!.sCenterEnd!!.y) - vFocusNowY
 
@@ -627,6 +651,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 ORIENTATION_270 -> setMatrixArray(dstArray, tile.vRect!!.left.toFloat(), tile.vRect!!.bottom.toFloat(), tile.vRect!!.left.toFloat(), tile.vRect!!.top.toFloat(), tile.vRect!!.right.toFloat(), tile.vRect!!.top.toFloat(), tile.vRect!!.right.toFloat(), tile.vRect!!.bottom.toFloat())
                             }
                             objectMatrix!!.setPolyToPoly(srcArray, 0, dstArray, 0, 4)
+                            objectMatrix!!.postRotate(Math.toDegrees(imageRotation.toDouble()).toFloat(), (width / 2).toFloat(), (height / 2).toFloat())
                             canvas.drawBitmap(tile.bitmap!!, objectMatrix!!, bitmapPaint)
                             if (debug) {
                                 canvas.drawRect(tile.vRect!!, debugLinePaint!!)
@@ -659,7 +684,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     ORIENTATION_180 -> postTranslate(scale * sWidth, scale * sHeight)
                     ORIENTATION_270 -> postTranslate(0f, scale * sWidth)
                 }
+                postRotate(Math.toDegrees(imageRotation.toDouble()).toFloat(), (width / 2).toFloat(), (height / 2).toFloat())
             }
+
 
             canvas.drawBitmap(bitmap!!, objectMatrix!!, bitmapPaint)
         }
@@ -727,6 +754,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return ready
     }
 
+    private fun setRotationInternal(rot: Float) {
+        imageRotation = rot % (Math.PI * 2).toFloat()
+        if (imageRotation < 0) {
+            imageRotation += (Math.PI * 2).toFloat()
+        }
+
+        cos = Math.cos(rot.toDouble())
+        sin = Math.sin(rot.toDouble())
+    }
+
     private fun checkImageLoaded(): Boolean {
         val imageLoaded = getIsBaseLayerReady()
         if (!isImageLoaded && imageLoaded) {
@@ -766,7 +803,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun initialiseBaseLayer(maxTileDimensions: Point) {
         debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
 
-        satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
+        satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
         fitToBounds(true, satTemp!!)
 
         fullImageSampleSize = calculateInSampleSize(satTemp!!.scale)
@@ -830,11 +867,39 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun tileVisible(tile: Tile): Boolean {
-        val sVisLeft = viewToSourceX(0f)
+        if (this.imageRotation == 0f) {
+            val sVisLeft = viewToSourceX(0f)
+            val sVisRight = viewToSourceX(width.toFloat())
+            val sVisTop = viewToSourceY(0f)
+            val sVisBottom = viewToSourceY(height.toFloat())
+            return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)
+        }
+
+        /*val sVisLeft = viewToSourceX(0f)
         val sVisRight = viewToSourceX(width.toFloat())
         val sVisTop = viewToSourceY(0f)
         val sVisBottom = viewToSourceY(height.toFloat())
-        return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)
+        return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)*/
+        val corners = arrayOf(
+                sourceToViewCoord(tile.sRect!!.left.toFloat(), tile.sRect!!.top.toFloat()),
+                sourceToViewCoord(tile.sRect!!.right.toFloat(), tile.sRect!!.top.toFloat()),
+                sourceToViewCoord(tile.sRect!!.right.toFloat(), tile.sRect!!.bottom.toFloat()),
+                sourceToViewCoord(tile.sRect!!.left.toFloat(), tile.sRect!!.bottom.toFloat()))
+
+        for (pointF in corners) {
+            if (pointF == null) {
+                return false
+            }
+        }
+
+        val rotation = this.imageRotation % (Math.PI * 2)
+
+        return when {
+            rotation < Math.PI / 2 -> !(corners[0]!!.y > height || corners[1]!!.x < 0 || corners[2]!!.y < 0 || corners[3]!!.x > width)
+            rotation < Math.PI -> !(corners[3]!!.y > height || corners[0]!!.x < 0 || corners[1]!!.y < 0 || corners[2]!!.x > width)
+            rotation < Math.PI * 3 / 2 -> !(corners[2]!!.y > height || corners[3]!!.x < 0 || corners[0]!!.y < 0 || corners[1]!!.x > width)
+            else -> !(corners[1]!!.y > height || corners[2]!!.x < 0 || corners[3]!!.y < 0 || corners[0]!!.x > width)
+        }
     }
 
     private fun preDraw() {
@@ -929,14 +994,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (satTemp == null) {
-            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
+            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
         }
 
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vTranslate)
+        satTemp!!.rotate = imageRotation
         fitToBounds(center, satTemp!!)
         scale = satTemp!!.scale
         vTranslate!!.set(satTemp!!.vTranslate)
+        setRotationInternal(satTemp!!.rotate)
 
         if (init) {
             vTranslate!!.set(vTranslateForSCenter((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat(), scale))
@@ -1196,7 +1263,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var fileSRect: Rect? = null
     }
 
-    class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF)
+    class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF, var rotate: Float)
 
     fun setMaxTileSize(maxPixels: Int) {
         maxTileWidth = maxPixels
@@ -1273,7 +1340,20 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return null
         }
 
-        sTarget.set(viewToSourceX(vx), viewToSourceY(vy))
+        var sXPreRotate = viewToSourceX(vx)
+        var sYPreRotate = viewToSourceY(vy)
+
+        if (imageRotation == 0f) {
+            sTarget.set(sXPreRotate, sYPreRotate)
+        } else {
+            val sourceVCenterX = viewToSourceX((width / 2).toFloat())
+            val sourceVCenterY = viewToSourceY((height / 2).toFloat())
+            sXPreRotate -= sourceVCenterX
+            sYPreRotate -= sourceVCenterY
+            sTarget.x = (sXPreRotate * cos + sYPreRotate * sin).toFloat() + sourceVCenterX
+            sTarget.y = (-sXPreRotate * sin + sYPreRotate * cos).toFloat() + sourceVCenterY
+        }
+
         return sTarget
     }
 
@@ -1300,7 +1380,20 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return null
         }
 
-        vTarget.set(sourceToViewX(sx), sourceToViewY(sy))
+        var xPreRotate = sourceToViewX(sx)
+        var yPreRotate = sourceToViewY(sy)
+
+        if (imageRotation == 0f) {
+            vTarget.set(xPreRotate, yPreRotate)
+        } else {
+            val vCenterX = (width / 2).toFloat()
+            val vCenterY = (height / 2).toFloat()
+            xPreRotate -= vCenterX
+            yPreRotate -= vCenterY
+            vTarget.x = (xPreRotate * cos - yPreRotate * sin).toFloat() + vCenterX
+            vTarget.y = (xPreRotate * sin + yPreRotate * cos).toFloat() + vCenterY
+        }
+
         return vTarget
     }
 
@@ -1317,7 +1410,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val vxCenter = paddingLeft + (width - paddingRight - paddingLeft) / 2
         val vyCenter = paddingTop + (height - paddingBottom - paddingTop) / 2
         if (satTemp == null) {
-            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f))
+            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
         }
 
         satTemp!!.scale = scale
@@ -1415,6 +1508,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     inner class AnimationBuilder {
         private val targetScale: Float
         private val targetSCenter: PointF?
+        private val targetRotation = imageRotation
         private val vFocus: PointF?
         private val duration = DOUBLE_TAP_ZOOM_DURATION
         var easing = EASE_IN_OUT_QUAD
@@ -1446,6 +1540,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim = Anim().apply {
                 scaleStart = scale
                 scaleEnd = targetScale
+                rotationStart = imageRotation
+                rotationEnd = targetRotation
                 time = System.currentTimeMillis()
                 sCenterEndRequested = targetSCenter
                 sCenterStart = getCenter()
@@ -1465,7 +1561,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (vFocus != null) {
                 val vTranslateXEnd = vFocus.x - targetScale * anim!!.sCenterStart!!.x
                 val vTranslateYEnd = vFocus.y - targetScale * anim!!.sCenterStart!!.y
-                val satEnd = ScaleAndTranslate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd))
+                val satEnd = ScaleAndTranslate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
                 fitToBounds(true, satEnd)
                 anim!!.vFocusEnd = PointF(
                         vFocus.x + (satEnd.vTranslate.x - vTranslateXEnd),
@@ -1480,6 +1576,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     class Anim {
         var scaleStart = 0f
         var scaleEnd = 0f
+        var rotationStart = 0f
+        var rotationEnd = 0f
         var sCenterStart: PointF? = null
         var sCenterEnd: PointF? = null
         var sCenterEndRequested: PointF? = null
