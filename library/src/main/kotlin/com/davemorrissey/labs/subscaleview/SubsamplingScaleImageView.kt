@@ -1441,7 +1441,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var sourceHeight = sHeight()
         val degrees = Math.round(Math.toDegrees(imageRotation.toDouble())).toDouble()
         val closest = getClosestRightAngle(degrees)
-        if (closest == 90.0 || closest == 270.0) {
+        if ((closest == 90.0 || closest == 270.0) && !isZooming) {
             val tmpWidth = sourceWidth
             sourceWidth = sourceHeight
             sourceHeight = tmpWidth
