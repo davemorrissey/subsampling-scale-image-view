@@ -634,7 +634,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate!!.x -= sourceToViewX(anim!!.sCenterEnd!!.x) - vFocusNowX
             vTranslate!!.y -= sourceToViewY(anim!!.sCenterEnd!!.y) - vFocusNowY
 
-            fitToBounds(finished || anim!!.scaleStart == anim!!.scaleEnd)
             refreshRequiredTiles(finished)
             if (finished) {
                 anim = null
