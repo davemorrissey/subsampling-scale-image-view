@@ -110,7 +110,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var debugTextPaint: Paint? = null
     private var debugLinePaint: Paint? = null
 
-    private var satTemp: ScaleAndTranslate? = null
+    private var satTemp: ScaleTranslateRotate? = null
     private var objectMatrix: Matrix? = null
     private val srcArray = FloatArray(8)
     private val dstArray = FloatArray(8)
@@ -825,7 +825,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun initialiseBaseLayer(maxTileDimensions: Point) {
         debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
 
-        satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
+        satTemp = ScaleTranslateRotate(0f, PointF(0f, 0f), 0f)
         fitToBounds(true, satTemp!!)
 
         fullImageSampleSize = calculateInSampleSize(satTemp!!.scale)
@@ -975,7 +975,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return power
     }
 
-    private fun fitToBounds(center: Boolean, sat: ScaleAndTranslate) {
+    private fun fitToBounds(center: Boolean, sat: ScaleTranslateRotate) {
         val vTranslate = sat.vTranslate
         val scale = limitedScale(sat.scale)
         val scaleWidth = scale * sWidth()
@@ -1013,7 +1013,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (satTemp == null) {
-            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
+            satTemp = ScaleTranslateRotate(0f, PointF(0f, 0f), 0f)
         }
 
         satTemp!!.scale = scale
@@ -1272,18 +1272,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         asyncTask.executeOnExecutor(executor)
     }
 
-    class Tile {
-        var sRect: Rect? = null
-        var sampleSize = 0
-        var bitmap: Bitmap? = null
-        var loading = false
-        var visible = false
-        var vRect: Rect? = null
-        var fileSRect: Rect? = null
-    }
-
-    class ScaleAndTranslate constructor(var scale: Float, var vTranslate: PointF, var rotate: Float)
-
     fun setMaxTileSize(maxPixels: Int) {
         maxTileWidth = maxPixels
         maxTileHeight = maxPixels
@@ -1429,7 +1417,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val vxCenter = width / 2
         val vyCenter = height / 2
         if (satTemp == null) {
-            satTemp = ScaleAndTranslate(0f, PointF(0f, 0f), 0f)
+            satTemp = ScaleTranslateRotate(0f, PointF(0f, 0f), 0f)
         }
 
         satTemp!!.scale = scale
@@ -1591,7 +1579,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (vFocus != null) {
                 val vTranslateXEnd = vFocus!!.x - targetScale * anim!!.sCenterStart!!.x
                 val vTranslateYEnd = vFocus!!.y - targetScale * anim!!.sCenterStart!!.y
-                val satEnd = ScaleAndTranslate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
+                val satEnd = ScaleTranslateRotate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
                 fitToBounds(true, satEnd)
                 anim!!.vFocusEnd = PointF(
                         vFocus!!.x + (satEnd.vTranslate.x - vTranslateXEnd),
@@ -1601,6 +1589,18 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             invalidate()
         }
+    }
+
+    data class ScaleTranslateRotate(var scale: Float, var vTranslate: PointF, var rotate: Float)
+
+    class Tile {
+        var sRect: Rect? = null
+        var sampleSize = 0
+        var bitmap: Bitmap? = null
+        var loading = false
+        var visible = false
+        var vRect: Rect? = null
+        var fileSRect: Rect? = null
     }
 
     class Anim {
