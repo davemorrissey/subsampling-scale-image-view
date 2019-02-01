@@ -415,7 +415,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 vTranslate!!.x = vCenterEndX - vLeftNow
                                 vTranslate!!.y = vCenterEndY - vTopNow
                                 if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
-                                    fitToBounds(true)
                                     vCenterStart!!.set(vCenterEndX, vCenterEndY)
                                     vTranslateStart!!.set(vTranslate)
                                     scaleStart = scale
@@ -423,7 +422,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 }
                             }
 
-                            fitToBounds(true)
                             refreshRequiredTiles(eagerLoadingEnabled)
                         }
                     } else if (isQuickScaling) {
@@ -455,7 +453,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             vTranslate!!.x = vCenterStart!!.x - vLeftNow
                             vTranslate!!.y = vCenterStart!!.y - vTopNow
                             if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
-                                fitToBounds(true)
                                 vCenterStart!!.set(sourceToViewCoord(quickScaleSCenter!!))
                                 vTranslateStart!!.set(vTranslate)
                                 scaleStart = scale
@@ -465,7 +462,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                         quickScaleLastDistance = dist
 
-                        fitToBounds(true)
                         refreshRequiredTiles(eagerLoadingEnabled)
                         consumed = true
                     } else if (!isZooming) {
@@ -896,11 +892,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)
         }
 
-        /*val sVisLeft = viewToSourceX(0f)
-        val sVisRight = viewToSourceX(width.toFloat())
-        val sVisTop = viewToSourceY(0f)
-        val sVisBottom = viewToSourceY(height.toFloat())
-        return !(sVisLeft > tile.sRect!!.right || tile.sRect!!.left > sVisRight || sVisTop > tile.sRect!!.bottom || tile.sRect!!.top > sVisBottom)*/
         val corners = arrayOf(
                 sourceToViewCoord(tile.sRect!!.left.toFloat(), tile.sRect!!.top.toFloat()),
                 sourceToViewCoord(tile.sRect!!.right.toFloat(), tile.sRect!!.top.toFloat()),
@@ -937,7 +928,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate!!.y = height / 2 - scale * sPendingCenter!!.y
             sPendingCenter = null
             pendingScale = null
-            fitToBounds(true)
             refreshRequiredTiles(true)
         }
 
@@ -1579,7 +1569,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 val vTranslateXEnd = vFocus!!.x - targetScale * anim!!.sCenterStart!!.x
                 val vTranslateYEnd = vFocus!!.y - targetScale * anim!!.sCenterStart!!.y
                 val satEnd = ScaleTranslateRotate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
-                fitToBounds(true, satEnd)
                 anim!!.vFocusEnd = PointF(
                         vFocus!!.x + (satEnd.vTranslate.x - vTranslateXEnd),
                         vFocus!!.y + (satEnd.vTranslate.y - vTranslateYEnd)
