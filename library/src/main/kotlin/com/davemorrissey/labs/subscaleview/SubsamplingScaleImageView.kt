@@ -324,7 +324,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (anim?.interruptible == false) {
             parent?.requestDisallowInterceptTouchEvent(true)
-            return true
+            return false
         } else {
             anim = null
         }
@@ -673,7 +673,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                                 ORIENTATION_270 -> setMatrixArray(dstArray, tile.vRect!!.left.toFloat(), tile.vRect!!.bottom.toFloat(), tile.vRect!!.left.toFloat(), tile.vRect!!.top.toFloat(), tile.vRect!!.right.toFloat(), tile.vRect!!.top.toFloat(), tile.vRect!!.right.toFloat(), tile.vRect!!.bottom.toFloat())
                             }
                             objectMatrix!!.setPolyToPoly(srcArray, 0, dstArray, 0, 4)
-                            objectMatrix!!.postRotate(Math.toDegrees(imageRotation.toDouble()).toFloat(), (width / 2).toFloat(), (height / 2).toFloat())
+                            objectMatrix!!.postRotate(Math.toDegrees(imageRotation.toDouble()).toFloat(), width / 2f, height / 2f)
                             canvas.drawBitmap(tile.bitmap!!, objectMatrix!!, bitmapPaint)
                             if (debug) {
                                 canvas.drawRect(tile.vRect!!, debugLinePaint!!)
