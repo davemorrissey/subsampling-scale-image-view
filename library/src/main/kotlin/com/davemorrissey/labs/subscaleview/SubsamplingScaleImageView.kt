@@ -116,6 +116,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private val dstArray = FloatArray(8)
 
     private val density = resources.displayMetrics.density
+    private var originalVWidth = 0f
+    private var originalVHeight = 0f
+    private var originalVScale = 0f
 
     init {
         setMinimumDpi(160)
@@ -1015,6 +1018,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         if (init) {
             vTranslate!!.set(vTranslateForSCenter((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat(), scale))
+            originalVWidth = sWidth() * scale
+            originalVHeight = sHeight() * scale
+            originalVScale = scale
         }
     }
 
