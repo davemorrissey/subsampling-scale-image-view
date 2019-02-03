@@ -610,8 +610,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return
         }
 
-        preDraw()
-
         if (anim != null && anim!!.vFocusStart != null) {
             if (vTranslateBefore == null) {
                 vTranslateBefore = PointF(0f, 0f)
