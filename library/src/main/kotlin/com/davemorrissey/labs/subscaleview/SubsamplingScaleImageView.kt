@@ -116,9 +116,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private val dstArray = FloatArray(8)
 
     private val density = resources.displayMetrics.density
-    private var originalVWidth = 0f
-    private var originalVHeight = 0f
-    private var originalVScale = 0f
 
     init {
         setMinimumDpi(160)
@@ -991,9 +988,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         if (init) {
             vTranslate!!.set(vTranslateForSCenter((sWidth() / 2).toFloat(), (sHeight() / 2).toFloat(), scale))
-            originalVWidth = sWidth() * scale
-            originalVHeight = sHeight() * scale
-            originalVScale = scale
         }
     }
 
@@ -1001,11 +995,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
         val degrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(degrees)
+        val fullScale = if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
+            Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
+        } else {
+            Math.min(width / sHeight.toFloat(), height / sWidth.toFloat())
+        }
 
-        if (scale >= originalVScale) {
+        if (scale >= fullScale) {
             AnimationBuilder(center, rightAngle).start()
         } else {
-            AnimationBuilder(center, originalVScale, rightAngle).start()
+            AnimationBuilder(center, fullScale, rightAngle).start()
         }
     }
 
