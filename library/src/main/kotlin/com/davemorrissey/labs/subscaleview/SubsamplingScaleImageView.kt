@@ -338,13 +338,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return true
         }
 
-        if (!isQuickScaling && (detector == null || detector!!.onTouchEvent(event))) {
-            isZooming = false
-            isPanning = false
-            maxTouchCount = 0
-            return true
-        }
-
+        detector?.onTouchEvent(event)
         if (vTranslateStart == null) {
             vTranslateStart = PointF(0f, 0f)
         }
@@ -553,9 +547,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (touchCount < 2) {
                         isPanning = false
                         maxTouchCount = 0
-                        if (didZoomInGesture) {
-                            animateToBounds()
-                        }
                     }
 
                     refreshRequiredTiles(true)
