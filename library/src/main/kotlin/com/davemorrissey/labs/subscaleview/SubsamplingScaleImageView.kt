@@ -404,25 +404,19 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                             val previousScale = scale.toDouble()
                             scale = Math.min(maxScale, vDistEnd / vDistStart * scaleStart)
+                            scale = Math.max(scale, minScale() / 2f)
 
-                            if (scale <= minScale()) {
-                                vDistStart = vDistEnd
-                                scaleStart = minScale()
+                            val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
+                            val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
+                            val vLeftNow = vLeftStart * (scale / scaleStart)
+                            val vTopNow = vTopStart * (scale / scaleStart)
+                            vTranslate!!.x = vCenterEndX - vLeftNow
+                            vTranslate!!.y = vCenterEndY - vTopNow
+                            if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
                                 vCenterStart!!.set(vCenterEndX, vCenterEndY)
                                 vTranslateStart!!.set(vTranslate)
-                            } else {
-                                val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
-                                val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
-                                val vLeftNow = vLeftStart * (scale / scaleStart)
-                                val vTopNow = vTopStart * (scale / scaleStart)
-                                vTranslate!!.x = vCenterEndX - vLeftNow
-                                vTranslate!!.y = vCenterEndY - vTopNow
-                                if (previousScale * sHeight() < height && scale * sHeight() >= height || previousScale * sWidth() < width && scale * sWidth() >= width) {
-                                    vCenterStart!!.set(vCenterEndX, vCenterEndY)
-                                    vTranslateStart!!.set(vTranslate)
-                                    scaleStart = scale
-                                    vDistStart = vDistEnd
-                                }
+                                scaleStart = scale
+                                vDistStart = vDistEnd
                             }
 
                             refreshRequiredTiles(eagerLoadingEnabled)
@@ -447,7 +441,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             }
 
                             val previousScale = scale.toDouble()
-                            scale = Math.max(minScale(), Math.min(maxScale, scale * multiplier))
+                            scale = Math.max(minScale() / 2f, Math.min(maxScale, scale * multiplier))
 
                             val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
                             val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
@@ -476,10 +470,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             consumed = true
                             vTranslate!!.x = vTranslateStart!!.x + (event.x - vCenterStart!!.x)
                             vTranslate!!.y = vTranslateStart!!.y + (event.y - vCenterStart!!.y)
-
                             val lastX = vTranslate!!.x
                             val lastY = vTranslate!!.y
-                            fitToBounds(true)
+                            if (scale >= minScale()) {
+                                fitToBounds(true)
+                            }
                             val atXEdge = lastX != vTranslate!!.x
                             val atYEdge = lastY != vTranslate!!.y
                             val edgeXSwipe = atXEdge && dx > dy && !isPanning
