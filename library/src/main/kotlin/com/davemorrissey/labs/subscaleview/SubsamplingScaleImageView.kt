@@ -84,6 +84,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var isPanning = false
     private var isQuickScaling = false
     private var maxTouchCount = 0
+    private var didZoomInGesture = false
 
     private var detector: GestureDetector? = null
     private var singleDetector: GestureDetector? = null
@@ -398,6 +399,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         }
 
                         if (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
+                            didZoomInGesture = true
                             isZooming = true
                             isPanning = true
                             consumed = true
@@ -472,7 +474,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             vTranslate!!.y = vTranslateStart!!.y + (event.y - vCenterStart!!.y)
                             val lastX = vTranslate!!.x
                             val lastY = vTranslate!!.y
-                            if (scale >= minScale()) {
+                            if (scale >= minScale() && !didZoomInGesture) {
                                 fitToBounds(true)
                             }
                             val atXEdge = lastX != vTranslate!!.x
@@ -503,6 +505,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (!quickScaleMoved) {
                         doubleTapZoom(quickScaleSCenter, vCenterStart)
                     }
+                }
+
+                if (touchCount == 1) {
+                    didZoomInGesture = false
+                    animateToBounds()
                 }
 
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
@@ -544,11 +551,13 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (touchCount < 2) {
                         isPanning = false
                         maxTouchCount = 0
+                        animateToBounds()
                     }
 
                     refreshRequiredTiles(true)
                     return true
                 }
+
                 if (touchCount == 1) {
                     isZooming = false
                     isPanning = false
@@ -1014,6 +1023,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             originalVWidth = sWidth() * scale
             originalVHeight = sHeight() * scale
             originalVScale = scale
+        }
+    }
+
+    private fun animateToBounds() {
+        if (scale >= originalVScale) {
+            val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
+            AnimationBuilder(center).start()
+        } else {
+            val center = PointF(width / 2f, height / 2f)
+            AnimationBuilder(center, originalVScale).start()
         }
     }
 
