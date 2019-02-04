@@ -494,17 +494,17 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_POINTER_2_UP -> {
+                if (touchCount == 1) {
+                    if (didZoomInGesture || isQuickScaling) {
+                        didZoomInGesture = false
+                        animateToBounds()
+                    }
+                }
+
                 if (isQuickScaling) {
                     isQuickScaling = false
                     if (!quickScaleMoved) {
                         doubleTapZoom(quickScaleSCenter, vCenterStart)
-                    }
-                }
-
-                if (touchCount == 1) {
-                    if (didZoomInGesture) {
-                        didZoomInGesture = false
-                        animateToBounds()
                     }
                 }
 
