@@ -511,32 +511,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (touchCount == 2) {
                         if (isZooming) {
                             isPanning = true
-
-                            vTranslateStart!!.set(vTranslate!!.x, vTranslate!!.y)
-                            if (event.actionIndex == 1) {
-                                vCenterStart!!.set(event.getX(0), event.getY(0))
-                            } else {
-                                vCenterStart!!.set(event.getX(1), event.getY(1))
-                            }
                         }
 
-                        if (rotationEnabled) {
-                            val degrees = Math.toDegrees(imageRotation.toDouble())
-                            val rightAngle = getClosestRightAngle(degrees)
-                            val realWidth = if (rightAngle == 90.0 || rightAngle == 270.0) sHeight else sWidth
-                            val realHeight = if (rightAngle == 90.0 || rightAngle == 270.0) sWidth else sHeight
-
-                            if (realWidth * scale == width.toFloat() || realHeight * scale == height.toFloat()) {
-                                val center = PointF(sWidth / 2f, sHeight / 2f)
-                                val widthRatio = width / realWidth.toFloat()
-                                val heightRatio = height / realHeight.toFloat()
-                                val ratio = Math.min(widthRatio, heightRatio)
-                                AnimationBuilder(center, ratio, rightAngle).start()
-                            } else {
-                                val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
-                                AnimationBuilder(center, rightAngle).start()
-                            }
-                        }
+                        animateToBounds()
                     }
 
                     if (touchCount < 3) {
@@ -1021,12 +998,14 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun animateToBounds() {
+        val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
+        val degrees = Math.toDegrees(imageRotation.toDouble())
+        val rightAngle = getClosestRightAngle(degrees)
+
         if (scale >= originalVScale) {
-            val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
-            AnimationBuilder(center).start()
+            AnimationBuilder(center, rightAngle).start()
         } else {
-            val center = PointF(width / 2f, height / 2f)
-            AnimationBuilder(center, originalVScale).start()
+            AnimationBuilder(center, originalVScale, rightAngle).start()
         }
     }
 
