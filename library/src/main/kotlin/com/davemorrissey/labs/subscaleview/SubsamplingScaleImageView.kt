@@ -38,6 +38,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val DOUBLE_TAP_ZOOM_DURATION = 300L
+        private val TEN_DEGREES = Math.toRadians(10.0)
 
         var preferredBitmapConfig: Bitmap.Config? = null
     }
@@ -377,17 +378,24 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 var consumed = false
                 if (maxTouchCount > 0) {
                     if (touchCount >= 2) {
+                        if (rotationEnabled) {
+                            var angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
+                            val diff = imageRotation + angle - lastAngle
+                            if (Math.abs(diff) > TEN_DEGREES) {
+                                if (lastAngle - angle > 0) {
+                                    angle += TEN_DEGREES.toFloat()
+                                } else {
+                                    angle -= TEN_DEGREES.toFloat()
+                                }
+                                setRotationInternal(imageRotation + angle - lastAngle)
+                                lastAngle = angle
+                                consumed = true
+                            }
+                        }
+
                         val vDistEnd = distance(event.getX(0), event.getX(1), event.getY(0), event.getY(1))
                         val vCenterEndX = (event.getX(0) + event.getX(1)) / 2
                         val vCenterEndY = (event.getY(0) + event.getY(1)) / 2
-
-                        if (rotationEnabled) {
-                            val angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
-                            setRotationInternal(imageRotation + angle - lastAngle)
-                            lastAngle = angle
-                            consumed = true
-                        }
-
                         if (distance(vCenterStart!!.x, vCenterEndX, vCenterStart!!.y, vCenterEndY) > 5 || Math.abs(vDistEnd - vDistStart) > 5 || isPanning) {
                             didZoomInGesture = true
                             isZooming = true
@@ -419,11 +427,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         if (quickScaleLastDistance == -1f) {
                             quickScaleLastDistance = dist
                         }
+
                         val isUpwards = event.y > quickScaleVLastPoint!!.y
                         quickScaleVLastPoint!!.set(0f, event.y)
 
                         val spanDiff = Math.abs(1 - dist / quickScaleLastDistance) * 0.5f
-
                         if (spanDiff > 0.03f || quickScaleMoved) {
                             quickScaleMoved = true
 
