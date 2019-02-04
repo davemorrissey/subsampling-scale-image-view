@@ -1541,8 +1541,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         fun start() {
             val vxCenter = width / 2
             val vyCenter = height / 2
-            val targetScale = limitedScale(targetScale)
             val targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF())
+
             anim = Anim().apply {
                 scaleStart = scale
                 scaleEnd = targetScale
