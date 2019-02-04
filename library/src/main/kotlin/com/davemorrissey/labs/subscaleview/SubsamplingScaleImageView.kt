@@ -992,7 +992,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun animateToBounds() {
-        val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
         val degrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(degrees)
         val fullScale = if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
@@ -1002,9 +1001,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (scale >= fullScale) {
+            val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
             AnimationBuilder(center, rightAngle).start()
         } else {
-            AnimationBuilder(center, fullScale, rightAngle).start()
+            val newCenter = PointF(sWidth / 2f, sHeight / 2f)
+            AnimationBuilder(newCenter, fullScale, rightAngle).start()
         }
     }
 
