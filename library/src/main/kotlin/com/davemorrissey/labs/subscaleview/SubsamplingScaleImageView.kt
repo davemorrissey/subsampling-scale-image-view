@@ -46,7 +46,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     var isOneToOneZoomEnabled = false
     var isQuickScaleEnabled = true
     var rotationEnabled = true
-    var executor = AsyncTask.THREAD_POOL_EXECUTOR
     var eagerLoadingEnabled = false
     var debug = false
     var onImageEventListener: OnImageEventListener? = null
@@ -1271,7 +1270,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun execute(asyncTask: AsyncTask<Void, Void, *>) {
-        asyncTask.executeOnExecutor(executor)
+        asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
     fun setMaxTileSize(maxPixels: Int) {
