@@ -280,7 +280,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         quickScaleMoved = false
                         return false
                     } else {
-                        doubleTapZoom(viewToSourceCoord(PointF(event.x, event.y)), PointF(event.x, event.y))
+                        doubleTapZoom(viewToSourceCoord(PointF(event.x, event.y)))
                         return true
                     }
                 }
@@ -529,7 +529,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (quickScaleMoved) {
                         animateToBounds()
                     } else {
-                        doubleTapZoom(quickScaleSCenter, vCenterStart)
+                        doubleTapZoom(quickScaleSCenter)
                     }
                 }
 
@@ -576,25 +576,19 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun getClosestRightAngle(degrees: Double) = Math.round(degrees / 90f) * 90.0
 
-    private fun doubleTapZoom(sCenter: PointF?, vFocus: PointF?) {
+    private fun doubleTapZoom(sCenter: PointF?) {
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
         val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == getFullScale()
         if (sWidth == sHeight || !isOneToOneZoomEnabled) {
             val targetScale = if (zoomIn) doubleTapZoomScale else getFullScale()
-
-            if (zoomIn) {
-                AnimationBuilder(sCenter!!, targetScale, vFocus!!).start()
-            } else {
-                AnimationBuilder(sCenter!!, targetScale).start()
-            }
+            AnimationBuilder(sCenter!!, targetScale).start()
         } else {
             val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else getFullScale()
-
             if (scale != 1f) {
                 if (zoomIn) {
-                    AnimationBuilder(sCenter!!, targetScale, vFocus!!).start()
+                    AnimationBuilder(sCenter!!, targetScale).start()
                 } else {
-                    AnimationBuilder(sCenter!!, 1f, vFocus!!).start()
+                    AnimationBuilder(sCenter!!, 1f).start()
                 }
             } else {
                 AnimationBuilder(sCenter!!, targetScale).start()
