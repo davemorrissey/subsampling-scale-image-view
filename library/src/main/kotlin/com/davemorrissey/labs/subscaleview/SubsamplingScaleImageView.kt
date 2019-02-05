@@ -622,13 +622,14 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             var scaleElapsed = System.currentTimeMillis() - anim!!.time
             val finished = scaleElapsed > anim!!.duration
             scaleElapsed = Math.min(scaleElapsed, anim!!.duration)
-            scale = ease(anim!!.easing, scaleElapsed, anim!!.scaleStart, anim!!.scaleEnd - anim!!.scaleStart, anim!!.duration)
+            scale = ease(anim!!.easing, scaleElapsed, anim!!.scaleStart, anim!!.scaleEnd - anim!!.scaleStart, anim!!.duration, anim!!.scaleEnd)
 
-            val vFocusNowX = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.x, anim!!.vFocusEnd!!.x - anim!!.vFocusStart!!.x, anim!!.duration)
-            val vFocusNowY = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.y, anim!!.vFocusEnd!!.y - anim!!.vFocusStart!!.y, anim!!.duration)
+            val vFocusNowX = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.x, anim!!.vFocusEnd!!.x - anim!!.vFocusStart!!.x, anim!!.duration, anim!!.vFocusEnd!!.x)
+            val vFocusNowY = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.y, anim!!.vFocusEnd!!.y - anim!!.vFocusStart!!.y, anim!!.duration, anim!!.vFocusEnd!!.y)
 
             if (rotationEnabled) {
-                setRotationInternal(ease(anim!!.easing, scaleElapsed, anim!!.rotationStart, anim!!.rotationEnd - anim!!.rotationStart, anim!!.duration))
+                val easeValue = ease(anim!!.easing, scaleElapsed, anim!!.rotationStart, anim!!.rotationEnd - anim!!.rotationStart, anim!!.duration, anim!!.rotationEnd)
+                setRotationInternal(easeValue)
             }
 
             val animVCenterEnd = sourceToViewCoord(anim!!.sCenterEnd!!)
@@ -1467,11 +1468,14 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return newTargetScale
     }
 
-    private fun ease(type: Int, time: Long, from: Float, change: Float, duration: Long): Float {
-        return when (type) {
-            EASE_IN_OUT_QUAD -> easeInOutQuad(time, from, change, duration)
-            EASE_OUT_QUAD -> easeOutQuad(time, from, change, duration)
-            else -> throw IllegalStateException("Unexpected easing type: $type")
+    private fun ease(type: Int, time: Long, from: Float, change: Float, duration: Long, finalValue: Float): Float {
+        return if (time == duration) {
+            finalValue
+        } else {
+            when (type) {
+                EASE_OUT_QUAD -> easeOutQuad(time, from, change, duration)
+                else -> easeInOutQuad(time, from, change, duration)
+            }
         }
     }
 
