@@ -419,7 +419,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                             val previousScale = scale.toDouble()
                             scale = Math.min(maxScale, vDistEnd / vDistStart * scaleStart)
-                            scale = Math.max(scale, minScale() / 2f)
+                            scale = Math.max(scale, getFullScale() / 2f)
 
                             sourceToViewCoord(sCenterStart!!, vCenterStartNow!!)
 
@@ -461,7 +461,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             }
 
                             val previousScale = scale.toDouble()
-                            scale = Math.max(minScale() / 2f, Math.min(maxScale, scale * multiplier))
+                            scale = Math.max(getFullScale() / 2f, Math.min(maxScale, scale * multiplier))
 
                             val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
                             val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
@@ -498,7 +498,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                             val lastX = vTranslate!!.x
                             val lastY = vTranslate!!.y
-                            if (scale >= minScale() && !didZoomInGesture) {
+                            if (scale >= getFullScale() && !didZoomInGesture) {
                                 fitToBounds(true)
                             }
                             val atXEdge = lastX != vTranslate!!.x
@@ -578,9 +578,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun doubleTapZoom(sCenter: PointF?, vFocus: PointF?) {
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
-        val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == minScale()
+        val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == getFullScale()
         if (sWidth == sHeight || !isOneToOneZoomEnabled) {
-            val targetScale = if (zoomIn) doubleTapZoomScale else minScale()
+            val targetScale = if (zoomIn) doubleTapZoomScale else getFullScale()
 
             if (zoomIn) {
                 AnimationBuilder(sCenter!!, targetScale, vFocus!!).start()
@@ -588,7 +588,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 AnimationBuilder(sCenter!!, targetScale).start()
             }
         } else {
-            val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else minScale()
+            val targetScale = if (zoomIn && scale != 1f) doubleTapZoomScale else getFullScale()
 
             if (scale != 1f) {
                 if (zoomIn) {
@@ -722,7 +722,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (debug) {
-            canvas.drawText("Scale: ${String.format(Locale.ENGLISH, "%.2f", scale)} (${String.format(Locale.ENGLISH, "%.2f", minScale())} - ${String.format(Locale.ENGLISH, "%.2f", maxScale)})", px(5).toFloat(), px(15).toFloat(), debugTextPaint!!)
+            canvas.drawText("Scale: ${String.format(Locale.ENGLISH, "%.2f", scale)} (${String.format(Locale.ENGLISH, "%.2f", getFullScale())} - ${String.format(Locale.ENGLISH, "%.2f", maxScale)})", px(5).toFloat(), px(15).toFloat(), debugTextPaint!!)
             canvas.drawText("Translate: ${String.format(Locale.ENGLISH, "%.2f", vTranslate!!.x)}:${String.format(Locale.ENGLISH, "%.2f", vTranslate!!.y)}", px(5).toFloat(), px(30).toFloat(), debugTextPaint!!)
             val center = getCenter()
 
@@ -1034,11 +1034,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private fun animateToBounds() {
         val degrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(degrees)
-        val fullScale = if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
-            Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
-        } else {
-            Math.min(width / sHeight.toFloat(), height / sWidth.toFloat())
-        }
+        val fullScale = getFullScale()
 
         if (scale >= fullScale) {
             val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
@@ -1046,6 +1042,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         } else {
             val newCenter = PointF(sWidth / 2f, sHeight / 2f)
             AnimationBuilder(newCenter, fullScale, rightAngle).start()
+        }
+    }
+
+    private fun getFullScale(): Float {
+        val degrees = Math.toDegrees(imageRotation.toDouble())
+        val rightAngle = getClosestRightAngle(degrees)
+        return if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
+            Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
+        } else {
+            Math.min(width / sHeight.toFloat(), height / sWidth.toFloat())
         }
     }
 
@@ -1460,22 +1466,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return sTarget
     }
 
-    private fun minScale(): Float {
-        var sourceWidth = sWidth()
-        var sourceHeight = sHeight()
-        val degrees = Math.round(Math.toDegrees(imageRotation.toDouble())).toDouble()
-        val closest = getClosestRightAngle(degrees)
-        if ((closest == 90.0 || closest == 270.0) && !isZooming) {
-            val tmpWidth = sourceWidth
-            sourceWidth = sourceHeight
-            sourceHeight = tmpWidth
-        }
-        return Math.min(width / sourceWidth.toFloat(), height / sourceHeight.toFloat())
-    }
-
     private fun limitedScale(targetScale: Float): Float {
         var newTargetScale = targetScale
-        newTargetScale = Math.max(minScale(), newTargetScale)
+        newTargetScale = Math.max(getFullScale(), newTargetScale)
         newTargetScale = Math.min(maxScale, newTargetScale)
         return newTargetScale
     }
