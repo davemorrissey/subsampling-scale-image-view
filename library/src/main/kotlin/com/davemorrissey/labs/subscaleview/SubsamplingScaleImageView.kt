@@ -508,7 +508,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             val yPan = lastY == vTranslate!!.y && dy > offset * 3
                             if (!edgeXSwipe && !edgeYSwipe && (!atXEdge || !atYEdge || yPan || isPanning)) {
                                 isPanning = true
-                            } else if (dx > offset || dy > offset) {
+                            } else if (dxA > offset || dyA > offset) {
                                 maxTouchCount = 0
                                 parent?.requestDisallowInterceptTouchEvent(false)
                             }
