@@ -396,8 +396,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (touchCount >= 2) {
                         if (rotationEnabled) {
                             var angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
-                            val diff = imageRotation + angle - lastAngle
-                            if (Math.abs(diff) > TEN_DEGREES) {
+                            if (Math.abs(lastAngle - angle.toDouble()) > TEN_DEGREES) {
                                 if (lastAngle - angle > 0) {
                                     angle += TEN_DEGREES.toFloat()
                                 } else {
