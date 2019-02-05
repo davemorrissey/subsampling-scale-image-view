@@ -1046,7 +1046,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun getFullScale(): Float {
-        val degrees = Math.toDegrees(imageRotation.toDouble())
+        val degrees = Math.toDegrees(imageRotation.toDouble()) + orientation
         val rightAngle = getClosestRightAngle(degrees)
         return if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
             Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
