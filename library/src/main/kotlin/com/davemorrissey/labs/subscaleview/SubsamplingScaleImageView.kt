@@ -524,19 +524,22 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_POINTER_2_UP -> {
+                if (isQuickScaling) {
+                    isQuickScaling = false
+                    if (quickScaleMoved) {
+                        animateToBounds()
+                    } else {
+                        doubleTapZoom(quickScaleSCenter, vCenterStart)
+                    }
+                }
+
                 if (touchCount == 1) {
-                    if (didZoomInGesture || isQuickScaling) {
-                        didZoomInGesture = false
+                    if (didZoomInGesture) {
                         animateToBounds()
                     }
                 }
 
-                if (isQuickScaling) {
-                    isQuickScaling = false
-                    if (!quickScaleMoved) {
-                        doubleTapZoom(quickScaleSCenter, vCenterStart)
-                    }
-                }
+                didZoomInGesture = false
 
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
                     if (touchCount == 2) {
