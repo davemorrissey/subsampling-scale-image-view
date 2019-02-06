@@ -792,8 +792,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         if (!isImageLoaded && imageLoaded) {
             preDraw()
             isImageLoaded = true
-            onImageLoaded()
-            onImageEventListener?.onImageLoaded()
         }
         return imageLoaded
     }
@@ -1220,8 +1218,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     tile.bitmap = bitmap
                     tile.loading = false
                     subsamplingScaleImageView.onTileLoaded()
-                } else if (exception != null) {
-                    subsamplingScaleImageView.onImageEventListener?.onTileLoadError(exception!!)
                 }
             }
         }
@@ -1529,8 +1525,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     protected fun onReady() {}
 
-    protected fun onImageLoaded() {}
-
     fun setDoubleTapZoomDpi(dpi: Int) {
         val metrics = resources.displayMetrics
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
@@ -1627,8 +1621,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     interface OnImageEventListener {
         fun onReady()
-        fun onImageLoaded()
         fun onImageLoadError(e: Exception)
-        fun onTileLoadError(e: Exception)
     }
 }
