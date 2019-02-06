@@ -419,7 +419,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                             val previousScale = scale.toDouble()
                             scale = Math.min(maxScale, vDistEnd / vDistStart * scaleStart)
-                            scale = Math.max(scale, getFullScale() / 2f)
 
                             sourceToViewCoord(sCenterStart!!, vCenterStartNow!!)
 
@@ -461,7 +460,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             }
 
                             val previousScale = scale.toDouble()
-                            scale = Math.max(getFullScale() / 2f, Math.min(maxScale, scale * multiplier))
+                            scale = Math.min(maxScale, scale * multiplier)
 
                             val vLeftStart = vCenterStart!!.x - vTranslateStart!!.x
                             val vTopStart = vCenterStart!!.y - vTranslateStart!!.y
@@ -498,7 +497,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                             val lastX = vTranslate!!.x
                             val lastY = vTranslate!!.y
-                            if (scale >= getFullScale() && !didZoomInGesture) {
+                            if (!didZoomInGesture && scale >= getFullScale()) {
                                 fitToBounds()
                             }
 
