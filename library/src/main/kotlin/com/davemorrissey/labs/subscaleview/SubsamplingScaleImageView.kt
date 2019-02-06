@@ -827,7 +827,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
 
         satTemp = ScaleTranslateRotate(0f, PointF(0f, 0f), 0f)
-        fitToBounds(satTemp!!)
+        fitToBounds(false, satTemp!!)
 
         fullImageSampleSize = calculateInSampleSize(satTemp!!.scale)
         if (fullImageSampleSize > 1) {
@@ -970,21 +970,21 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return power
     }
 
-    private fun fitToBounds(sat: ScaleTranslateRotate) {
+    private fun fitToBounds(center: Boolean, sat: ScaleTranslateRotate) {
         val vTranslate = sat.vTranslate
         val scale = limitedScale(sat.scale)
-        val scaleWidth = scale * sWidth()
-        val scaleHeight = scale * sHeight()
+        val scaledWidth = scale * sWidth()
+        val scaledHeight = scale * sHeight()
         val degrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(degrees)
 
         // right, bottom
         if (rightAngle == 90.0 || rightAngle == 270.0) {
-            vTranslate.x = Math.max(vTranslate.x, width - scaleWidth + (height - width) / 2f)
+            vTranslate.x = Math.max(vTranslate.x, width - scaledWidth + (height - width) / 2f)
             vTranslate.y = Math.min(vTranslate.y, (height - width) / 2f)
         } else {
-            vTranslate.x = Math.max(vTranslate.x, width - scaleWidth)
-            vTranslate.y = Math.max(vTranslate.y, height - scaleHeight)
+            vTranslate.x = Math.max(vTranslate.x, width - scaledWidth)
+            vTranslate.y = Math.max(vTranslate.y, height - scaledHeight)
         }
 
         // left, top
@@ -992,13 +992,19 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val maxTy: Float
         if (rightAngle == 90.0 || rightAngle == 270.0) {
             vTranslate.x = Math.min(vTranslate.x, -(height - width) / 2f)
-            vTranslate.y = Math.max(vTranslate.y, (height - width) / 2f - scaleHeight + width)
+            vTranslate.y = Math.max(vTranslate.y, (height - width) / 2f - scaledHeight + width)
         } else {
-            maxTx = Math.max(0f, (width - scaleWidth) / 2f)
-            maxTy = Math.max(0f, (height - scaleHeight) / 2f)
+            maxTx = Math.max(0f, (width - scaledWidth) / 2f)
+            maxTy = Math.max(0f, (height - scaledHeight) / 2f)
 
             vTranslate.x = Math.min(vTranslate.x, maxTx)
             vTranslate.y = Math.min(vTranslate.y, maxTy)
+        }
+
+        if (center && rightAngle == 90.0 || rightAngle == 270.0) {
+            if (scaledWidth >= width || scaledHeight >= width) {
+                vTranslate.x = -(scaledWidth - width) / 2f
+            }
         }
 
         sat.scale = scale
@@ -1018,7 +1024,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vTranslate)
         satTemp!!.rotate = imageRotation
-        fitToBounds(satTemp!!)
+        fitToBounds(false, satTemp!!)
         scale = satTemp!!.scale
         vTranslate!!.set(satTemp!!.vTranslate)
         setRotationInternal(satTemp!!.rotate)
@@ -1450,7 +1456,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vxCenter - sCenterX * scale, vyCenter - sCenterY * scale)
-        fitToBounds(satTemp!!)
+        fitToBounds(true, satTemp!!)
         return satTemp!!.vTranslate
     }
 
