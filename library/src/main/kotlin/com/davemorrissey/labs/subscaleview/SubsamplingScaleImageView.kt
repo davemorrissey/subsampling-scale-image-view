@@ -827,7 +827,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         debug("initialiseBaseLayer maxTileDimensions=${maxTileDimensions.x}x${maxTileDimensions.y}")
 
         satTemp = ScaleTranslateRotate(0f, PointF(0f, 0f), 0f)
-        fitToBounds(false, satTemp!!)
+        fitToBounds(satTemp!!)
 
         fullImageSampleSize = calculateInSampleSize(satTemp!!.scale)
         if (fullImageSampleSize > 1) {
@@ -970,7 +970,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         return power
     }
 
-    private fun fitToBounds(center: Boolean, sat: ScaleTranslateRotate) {
+    private fun fitToBounds(sat: ScaleTranslateRotate) {
         val vTranslate = sat.vTranslate
         val scale = limitedScale(sat.scale)
         val scaledWidth = scale * sWidth()
@@ -1001,8 +1001,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate.y = Math.min(vTranslate.y, maxTy)
         }
 
-        if (center && rightAngle == 90.0 || rightAngle == 270.0) {
-            if (scaledWidth >= width || scaledHeight >= width) {
+        if (rightAngle == 90.0 || rightAngle == 270.0) {
+            if ((scaledWidth >= width || scaledHeight >= width) && scaledWidth < height) {
                 vTranslate.x = -(scaledWidth - width) / 2f
             }
         }
@@ -1024,7 +1024,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vTranslate)
         satTemp!!.rotate = imageRotation
-        fitToBounds(false, satTemp!!)
+        fitToBounds(satTemp!!)
         scale = satTemp!!.scale
         vTranslate!!.set(satTemp!!.vTranslate)
         setRotationInternal(satTemp!!.rotate)
@@ -1456,7 +1456,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         satTemp!!.scale = scale
         satTemp!!.vTranslate.set(vxCenter - sCenterX * scale, vyCenter - sCenterY * scale)
-        fitToBounds(true, satTemp!!)
+        fitToBounds(satTemp!!)
         return satTemp!!.vTranslate
     }
 
