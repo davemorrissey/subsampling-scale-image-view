@@ -638,6 +638,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             refreshRequiredTiles(finished)
             if (finished) {
                 anim = null
+                val degrees = Math.round(Math.toDegrees(imageRotation.toDouble())).toInt()
+                onImageEventListener?.onImageRotation(degrees)
             }
             invalidate()
         }
@@ -1621,5 +1623,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     interface OnImageEventListener {
         fun onReady()
         fun onImageLoadError(e: Exception)
+        fun onImageRotation(degrees: Int)
     }
 }
