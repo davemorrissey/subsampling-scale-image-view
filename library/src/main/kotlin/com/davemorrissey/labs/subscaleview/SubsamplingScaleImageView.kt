@@ -1051,8 +1051,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
             AnimationBuilder(center, rightAngle).start()
         } else {
-            val newCenter = PointF(sWidth / 2f, sHeight / 2f)
-            AnimationBuilder(newCenter, fullScale, rightAngle).start()
+            val center = PointF(sWidth / 2f, sHeight / 2f)
+            AnimationBuilder(center, fullScale, rightAngle).start()
         }
     }
 
