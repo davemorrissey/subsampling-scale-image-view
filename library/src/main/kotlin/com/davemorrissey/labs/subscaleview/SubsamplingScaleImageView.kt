@@ -499,7 +499,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             val lastX = vTranslate!!.x
                             val lastY = vTranslate!!.y
                             if (scale >= getFullScale() && !didZoomInGesture) {
-                                fitToBounds(true)
+                                fitToBounds()
                             }
 
                             val degrees = Math.toDegrees(imageRotation.toDouble())
@@ -937,7 +937,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             refreshRequiredTiles(true)
         }
 
-        fitToBounds(true)
+        fitToBounds()
     }
 
     private fun calculateInSampleSize(scale: Float): Int {
@@ -1004,7 +1004,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         sat.scale = scale
     }
 
-    private fun fitToBounds(center: Boolean) {
+    private fun fitToBounds() {
         var init = false
         if (vTranslate == null) {
             init = true
