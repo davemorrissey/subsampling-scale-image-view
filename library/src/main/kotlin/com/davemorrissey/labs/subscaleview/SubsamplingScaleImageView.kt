@@ -43,7 +43,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     var maxScale = 2f
     var isOneToOneZoomEnabled = false
-    var isQuickScaleEnabled = true
     var rotationEnabled = true
     var eagerLoadingEnabled = false
     var debug = false
@@ -268,22 +267,17 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             override fun onDoubleTap(event: MotionEvent): Boolean {
                 if (isReady && vTranslate != null) {
                     setGestureDetector(context)
-                    if (isQuickScaleEnabled) {
-                        vCenterStart = PointF(event.x, event.y)
-                        vTranslateStart = PointF(vTranslate!!.x, vTranslate!!.y)
-                        scaleStart = scale
-                        isQuickScaling = true
-                        isZooming = true
-                        quickScaleLastDistance = -1f
-                        quickScaleSCenter = viewToSourceCoord(vCenterStart!!)
-                        quickScaleVStart = PointF(event.x, event.y)
-                        quickScaleVLastPoint = PointF(quickScaleSCenter!!.x, quickScaleSCenter!!.y)
-                        quickScaleMoved = false
-                        return false
-                    } else {
-                        doubleTapZoom(viewToSourceCoord(PointF(event.x, event.y)))
-                        return true
-                    }
+                    vCenterStart = PointF(event.x, event.y)
+                    vTranslateStart = PointF(vTranslate!!.x, vTranslate!!.y)
+                    scaleStart = scale
+                    isQuickScaling = true
+                    isZooming = true
+                    quickScaleLastDistance = -1f
+                    quickScaleSCenter = viewToSourceCoord(vCenterStart!!)
+                    quickScaleVStart = PointF(event.x, event.y)
+                    quickScaleVLastPoint = PointF(quickScaleSCenter!!.x, quickScaleSCenter!!.y)
+                    quickScaleMoved = false
+                    return false
                 }
                 return super.onDoubleTapEvent(event)
             }
