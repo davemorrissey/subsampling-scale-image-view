@@ -977,27 +977,44 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val scale = limitedScale(sat.scale)
         val scaleWidth = scale * sWidth()
         val scaleHeight = scale * sHeight()
+        val degrees = Math.toDegrees(imageRotation.toDouble())
+        val rightAngle = getClosestRightAngle(degrees)
 
+        // right, bottom
         if (center) {
-            vTranslate.x = Math.max(vTranslate.x, width - scaleWidth)
-            vTranslate.y = Math.max(vTranslate.y, height - scaleHeight)
+            if (rightAngle == 90.0 || rightAngle == 270.0) {
+                vTranslate.x = Math.max(vTranslate.x, width - scaleWidth + (height - width) / 2f)
+                vTranslate.y = Math.min(vTranslate.y, (height - width) / 2f)
+            } else {
+                vTranslate.x = Math.max(vTranslate.x, width - scaleWidth)
+                vTranslate.y = Math.max(vTranslate.y, height - scaleHeight)
+            }
         } else {
             vTranslate.x = Math.max(vTranslate.x, -scaleWidth)
             vTranslate.y = Math.max(vTranslate.y, -scaleHeight)
         }
 
+        // left, top
         val maxTx: Float
         val maxTy: Float
         if (center) {
-            maxTx = Math.max(0f, (width - scaleWidth) / 2f)
-            maxTy = Math.max(0f, (height - scaleHeight) / 2f)
+            if (rightAngle == 90.0 || rightAngle == 270.0) {
+                vTranslate.x = Math.min(vTranslate.x, -(height - width) / 2f)
+                vTranslate.y = Math.max(vTranslate.y, (height - width) / 2f - scaleHeight + width)
+            } else {
+                maxTx = Math.max(0f, (width - scaleWidth) / 2f)
+                maxTy = Math.max(0f, (height - scaleHeight) / 2f)
+
+                vTranslate.x = Math.min(vTranslate.x, maxTx)
+                vTranslate.y = Math.min(vTranslate.y, maxTy)
+            }
         } else {
             maxTx = Math.max(0, width).toFloat()
             maxTy = Math.max(0, height).toFloat()
-        }
 
-        vTranslate.x = Math.min(vTranslate.x, maxTx)
-        vTranslate.y = Math.min(vTranslate.y, maxTy)
+            vTranslate.x = Math.min(vTranslate.x, maxTx)
+            vTranslate.y = Math.min(vTranslate.y, maxTy)
+        }
 
         sat.scale = scale
     }
