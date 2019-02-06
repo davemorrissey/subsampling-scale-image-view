@@ -506,10 +506,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                             val rightAngle = getClosestRightAngle(degrees)
                             val atXEdge = if (rightAngle == 90.0 || rightAngle == 270.0) lastY != vTranslate!!.y else lastX != vTranslate!!.x
                             val atYEdge = if (rightAngle == 90.0 || rightAngle == 270.0) lastX != vTranslate!!.x else lastY != vTranslate!!.y
-                            val edgeXSwipe = atXEdge && dx > dy && !isPanning
-                            val edgeYSwipe = atYEdge && dy > dx && !isPanning
-                            val yPan = lastY == vTranslate!!.y && dy > offset * 3
-                            if (!edgeXSwipe && !edgeYSwipe && (!atXEdge || !atYEdge || yPan || isPanning)) {
+                            val edgeXSwipe = atXEdge && dxA > dyA && !isPanning
+                            val edgeYSwipe = atYEdge && dyA > dxA && !isPanning
+                            if (!edgeXSwipe && !edgeYSwipe && (!atXEdge || !atYEdge || isPanning)) {
                                 isPanning = true
                             } else if ((dxA > offset && atXEdge && dxA > dyA) || (dyA > offset && atYEdge && dyA > dxA)) {
                                 maxTouchCount = 0
@@ -546,10 +545,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
                 if (maxTouchCount > 0 && (isZooming || isPanning)) {
                     if (touchCount == 2) {
-                        if (isZooming) {
-                            isPanning = true
-                        }
-
                         animateToBounds()
                     }
 
@@ -558,10 +553,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     }
 
                     if (touchCount < 2) {
-                        isPanning = false
                         maxTouchCount = 0
                     }
 
+                    isPanning = false
                     refreshRequiredTiles(true)
                     return true
                 }
@@ -1047,6 +1042,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     private fun animateToBounds() {
+        isPanning = false
         val degrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(degrees)
         val fullScale = getFullScale()
