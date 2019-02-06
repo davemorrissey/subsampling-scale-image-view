@@ -4,30 +4,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.annotation.Keep
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.Companion.ASSET_PREFIX
 import java.io.InputStream
 
-class SkiaImageDecoder(bitmapConfig: Bitmap.Config?) : ImageDecoder {
-    private val bitmapConfig: Bitmap.Config
-
-    @Keep
-    constructor() : this(null)
-
-    init {
-        val globalBitmapConfig = SubsamplingScaleImageView.preferredBitmapConfig
-        when {
-            bitmapConfig != null -> this.bitmapConfig = bitmapConfig
-            globalBitmapConfig != null -> this.bitmapConfig = globalBitmapConfig
-            else -> this.bitmapConfig = Bitmap.Config.RGB_565
-        }
-    }
-
+class SkiaImageDecoder : ImageDecoder {
     override fun decode(context: Context, uri: Uri): Bitmap {
         val uriString = uri.toString()
         val options = BitmapFactory.Options()
         val bitmap: Bitmap?
-        options.inPreferredConfig = bitmapConfig
+        options.inPreferredConfig = Bitmap.Config.RGB_565
         when {
             uriString.startsWith(ASSET_PREFIX) -> {
                 val assetName = uriString.substring(ASSET_PREFIX.length)
