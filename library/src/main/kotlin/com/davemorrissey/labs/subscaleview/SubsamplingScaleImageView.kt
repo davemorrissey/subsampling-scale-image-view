@@ -1548,7 +1548,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private val targetScale: Float
         private val targetSCenter: PointF?
         private var targetRotation = imageRotation
-        private var vFocus: PointF? = null
         private val duration = DOUBLE_TAP_ZOOM_DURATION
         var easing = EASE_IN_OUT_QUAD
         var interruptible = false
@@ -1561,12 +1560,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         constructor(sCenter: PointF, scale: Float) {
             targetScale = scale
             targetSCenter = sCenter
-        }
-
-        constructor(sCenter: PointF, scale: Float, vFocus: PointF) {
-            targetScale = scale
-            targetSCenter = sCenter
-            this.vFocus = vFocus
         }
 
         constructor(sCenter: PointF, degrees: Double) {
@@ -1606,16 +1599,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             anim!!.duration = duration
             anim!!.interruptible = interruptible
             anim!!.easing = easing
-
-            if (vFocus != null) {
-                val vTranslateXEnd = vFocus!!.x - targetScale * anim!!.sCenterStart!!.x
-                val vTranslateYEnd = vFocus!!.y - targetScale * anim!!.sCenterStart!!.y
-                val satEnd = ScaleTranslateRotate(targetScale, PointF(vTranslateXEnd, vTranslateYEnd), targetRotation)
-                anim!!.vFocusEnd = PointF(
-                        vFocus!!.x + (satEnd.vTranslate.x - vTranslateXEnd),
-                        vFocus!!.y + (satEnd.vTranslate.y - vTranslateYEnd)
-                )
-            }
 
             invalidate()
         }
