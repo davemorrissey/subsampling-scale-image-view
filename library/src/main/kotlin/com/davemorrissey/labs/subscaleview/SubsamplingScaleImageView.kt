@@ -576,7 +576,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     private fun doubleTapZoom(sCenter: PointF?) {
         val doubleTapZoomScale = Math.min(maxScale, doubleTapZoomScale)
-        val zoomIn = scale <= doubleTapZoomScale * 0.9 || scale == getFullScale()
+        val zoomIn = scale <= doubleTapZoomScale * 0.9 || isZoomedOut()
         if (sWidth == sHeight || !isOneToOneZoomEnabled) {
             val targetScale = if (zoomIn) doubleTapZoomScale else getFullScale()
             AnimationBuilder(sCenter!!, targetScale).start()
@@ -1532,6 +1532,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val averageDpi = (metrics.xdpi + metrics.ydpi) / 2
         doubleTapZoomScale = averageDpi / dpi
     }
+
+    fun isZoomedOut() = scale == getFullScale()
 
     inner class AnimationBuilder {
         private val targetScale: Float
