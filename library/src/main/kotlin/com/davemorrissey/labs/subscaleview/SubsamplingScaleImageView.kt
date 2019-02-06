@@ -186,7 +186,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         vTranslate = null
         vTranslateStart = null
         vTranslateBefore = null
-        pendingScale = 0f
+        pendingScale = null
         sPendingCenter = null
         isZooming = false
         isPanning = false
@@ -197,6 +197,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         vCenterStart = null
         vCenterStartNow = null
         vDistStart = 0f
+        lastAngle = 0f
         quickScaleLastDistance = 0f
         quickScaleMoved = false
         quickScaleSCenter = null
@@ -224,6 +225,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             isReady = false
             isImageLoaded = false
             bitmap = null
+            cos = Math.cos(0.0)
+            sin = Math.sin(0.0)
         }
 
         tileMap?.values?.forEach {
