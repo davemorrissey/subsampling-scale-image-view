@@ -39,8 +39,6 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val DOUBLE_TAP_ZOOM_DURATION = 300L
         private val TEN_DEGREES = Math.toRadians(10.0)
-
-        var preferredBitmapConfig: Bitmap.Config? = null
     }
 
     var maxScale = 2f
