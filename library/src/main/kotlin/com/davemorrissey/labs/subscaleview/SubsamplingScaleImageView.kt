@@ -1553,10 +1553,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             return
         }
 
-        val oldDegrees = Math.toDegrees(imageRotation.toDouble()) + orientation
+        val oldDegrees = Math.toDegrees(imageRotation.toDouble())
         val rightAngle = getClosestRightAngle(oldDegrees)
         val newDegrees = ((rightAngle + degrees).toInt())
-        val center = PointF(sWidth / 2f, sHeight / 2f)
+        val center = PointF(sWidth() / 2f, sHeight() / 2f)
         val scale = if (degrees == 90 || degrees == 270) getRotatedFullScale() else scale
         AnimationBuilder(center, scale, newDegrees.toDouble()).start(true)
     }
