@@ -82,6 +82,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var isQuickScaling = false
     private var maxTouchCount = 0
     private var didZoomInGesture = false
+    private var prevDegrees = -1
 
     private var detector: GestureDetector? = null
     private var singleDetector: GestureDetector? = null
@@ -634,7 +635,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             if (finished) {
                 anim = null
                 val degrees = Math.round(Math.toDegrees(imageRotation.toDouble())).toInt()
-                onImageEventListener?.onImageRotation(degrees)
+                if (degrees != prevDegrees) {
+                    onImageEventListener?.onImageRotation(degrees - prevDegrees)
+                    prevDegrees = degrees
+                }
             }
             invalidate()
         }
@@ -1563,6 +1567,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val vxCenter = width / 2
             val vyCenter = height / 2
             val targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF())
+
+            if (prevDegrees == -1) {
+                prevDegrees = Math.round(Math.toDegrees(imageRotation.toDouble())).toInt()
+            }
 
             anim = Anim().apply {
                 scaleStart = scale
