@@ -1006,10 +1006,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate.y = Math.min(vTranslate.y, maxTy)
         }
 
-        if (rightAngle == 90.0 || rightAngle == 270.0) {
-            if ((scaledWidth >= width || scaledHeight >= width) && scaledWidth < height) {
-                vTranslate.x = -(scaledWidth - width) / 2f
-            }
+        if ((scaledWidth >= width || scaledHeight >= width) && scaledWidth < height) {
+            vTranslate.x = -(scaledWidth - width) / 2f
         }
 
         sat.scale = scale
@@ -1061,6 +1059,16 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
         } else {
             Math.min(width / sHeight.toFloat(), height / sWidth.toFloat())
+        }
+    }
+
+    private fun getRotatedFullScale(): Float {
+        val degrees = Math.toDegrees(imageRotation.toDouble()) + orientation
+        val rightAngle = getClosestRightAngle(degrees)
+        return if (rightAngle % 360 == 0.0 || rightAngle == 180.0) {
+            Math.min(width / sHeight.toFloat(), height / sWidth.toFloat())
+        } else {
+            Math.min(width / sWidth.toFloat(), height / sHeight.toFloat())
         }
     }
 
@@ -1540,9 +1548,22 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     fun isZoomedOut() = scale == getFullScale()
 
+    fun rotateBy(degrees: Int) {
+        if (anim != null) {
+            return
+        }
+
+        val oldDegrees = Math.toDegrees(imageRotation.toDouble()) + orientation
+        val rightAngle = getClosestRightAngle(oldDegrees)
+        val newDegrees = ((rightAngle + degrees).toInt())
+        val center = PointF(sWidth / 2f, sHeight / 2f)
+        val scale = if (degrees == 90 || degrees == 270) getRotatedFullScale() else scale
+        AnimationBuilder(center, scale, newDegrees.toDouble()).start(true)
+    }
+
     inner class AnimationBuilder {
         private val targetScale: Float
-        private val targetSCenter: PointF?
+        private var targetSCenter: PointF?
         private var targetRotation = imageRotation
         private val duration = DOUBLE_TAP_ZOOM_DURATION
         var easing = EASE_IN_OUT_QUAD
@@ -1570,10 +1591,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             targetRotation = Math.toRadians(degrees).toFloat()
         }
 
-        fun start() {
+        fun start(skipCenterLimiting: Boolean = false) {
             val vxCenter = width / 2
             val vyCenter = height / 2
-            val targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter.y, targetScale, PointF())
+            if (!skipCenterLimiting) {
+                targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter!!.y, targetScale, PointF())
+            }
 
             anim = Anim().apply {
                 scaleStart = scale
@@ -1584,7 +1607,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                 sCenterEndRequested = targetSCenter
                 sCenterStart = getCenter()
                 sCenterEnd = targetSCenter
-                vFocusStart = sourceToViewCoord(targetSCenter)
+                vFocusStart = sourceToViewCoord(targetSCenter!!)
                 vFocusEnd = PointF(
                         vxCenter.toFloat(),
                         vyCenter.toFloat()
