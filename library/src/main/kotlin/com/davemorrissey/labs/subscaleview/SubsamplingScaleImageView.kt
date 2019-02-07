@@ -219,6 +219,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
             bitmap?.recycle()
 
+            prevDegrees = 0
             sWidth = 0
             sHeight = 0
             sOrientation = 0
