@@ -1006,8 +1006,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             vTranslate.y = Math.min(vTranslate.y, maxTy)
         }
 
-        if ((scaledWidth >= width || scaledHeight >= width) && scaledWidth < height) {
-            vTranslate.x = -(scaledWidth - width) / 2f
+        if (rightAngle == 90.0 || rightAngle == 270.0) {
+            if ((scaledWidth >= width || scaledHeight >= width) && scaledWidth < height) {
+                vTranslate.x = -(scaledWidth - width) / 2f
+            }
         }
 
         sat.scale = scale
@@ -1594,6 +1596,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         fun start(skipCenterLimiting: Boolean = false) {
             val vxCenter = width / 2
             val vyCenter = height / 2
+
             if (!skipCenterLimiting) {
                 targetSCenter = limitedSCenter(targetSCenter!!.x, targetSCenter!!.y, targetScale, PointF())
             }
