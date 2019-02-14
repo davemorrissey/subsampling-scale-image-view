@@ -621,10 +621,8 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             val vFocusNowX = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.x, anim!!.vFocusEnd!!.x - anim!!.vFocusStart!!.x, anim!!.duration, anim!!.vFocusEnd!!.x)
             val vFocusNowY = ease(anim!!.easing, scaleElapsed, anim!!.vFocusStart!!.y, anim!!.vFocusEnd!!.y - anim!!.vFocusStart!!.y, anim!!.duration, anim!!.vFocusEnd!!.y)
 
-            if (rotationEnabled) {
-                val easeValue = ease(anim!!.easing, scaleElapsed, anim!!.rotationStart, anim!!.rotationEnd - anim!!.rotationStart, anim!!.duration, anim!!.rotationEnd)
-                setRotationInternal(easeValue)
-            }
+            val easeValue = ease(anim!!.easing, scaleElapsed, anim!!.rotationStart, anim!!.rotationEnd - anim!!.rotationStart, anim!!.duration, anim!!.rotationEnd)
+            setRotationInternal(easeValue)
 
             val animVCenterEnd = sourceToViewCoord(anim!!.sCenterEnd!!)
             val dX = animVCenterEnd!!.x - vFocusNowX
