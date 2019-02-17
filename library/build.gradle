@@ -2,12 +2,14 @@ apply plugin: 'com.android.library'
 
 group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view'
-version = '3.10.0'
+version = '3.10.1'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
+        minSdkVersion 17
+        targetSdkVersion 28
         consumerProguardFiles 'proguard-rules.txt'
     }
 }
@@ -17,10 +19,10 @@ configurations {
 }
 
 dependencies {
-    javadocs 'com.android.support:support-annotations:27.1.0'
-    javadocs 'com.android.support:exifinterface:27.1.0'
-    implementation 'com.android.support:support-annotations:27.1.0'
-    implementation 'com.android.support:exifinterface:27.1.0'
+    javadocs 'com.android.support:support-annotations:28.0.0'
+    javadocs 'com.android.support:exifinterface:28.0.0'
+    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'com.android.support:exifinterface:28.0.0'
 }
 
 task javadoc(type: Javadoc) {

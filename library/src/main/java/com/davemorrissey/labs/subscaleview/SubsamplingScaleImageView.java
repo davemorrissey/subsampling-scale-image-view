@@ -272,6 +272,8 @@ public class SubsamplingScaleImageView extends View {
 
     // Volatile fields used to reduce object creation
     private ScaleAndTranslate satTemp;
+    private Matrix tileMatrix;
+    private boolean matrixDirty = false;
     private Matrix matrix;
     private RectF sRect;
     private final float[] srcArray = new float[8];
@@ -501,6 +503,7 @@ public class SubsamplingScaleImageView extends View {
         anim = null;
         satTemp = null;
         matrix = null;
+        tileMatrix = null;
         sRect = null;
         if (newImage) {
             uri = null;
@@ -962,6 +965,38 @@ public class SubsamplingScaleImageView extends View {
         invalidate();
     }
 
+    @Override
+    public Matrix getMatrix() {
+        if (matrix == null || matrixDirty) {
+            matrix = calculateMatrix();
+            matrixDirty = false;
+        }
+        return matrix;
+    }
+
+    private Matrix calculateMatrix() {
+        float xScale = scale, yScale = scale;
+        if (bitmapIsPreview) {
+            xScale = scale * ((float)sWidth/bitmap.getWidth());
+            yScale = scale * ((float)sHeight/bitmap.getHeight());
+        }
+
+        if (matrix == null) { matrix = new Matrix(); }
+        matrix.reset();
+        matrix.postScale(xScale, yScale);
+        matrix.postRotate(getRequiredRotation());
+        matrix.postTranslate(vTranslate.x, vTranslate.y);
+
+        if (getRequiredRotation() == ORIENTATION_180) {
+            matrix.postTranslate(scale * sWidth, scale * sHeight);
+        } else if (getRequiredRotation() == ORIENTATION_90) {
+            matrix.postTranslate(scale * sHeight, 0);
+        } else if (getRequiredRotation() == ORIENTATION_270) {
+            matrix.postTranslate(0, scale * sWidth);
+        }
+        return matrix;
+    }
+
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
      * the scaling and tiling required. Once the view is setup, tiles are displayed as they are loaded.
@@ -1053,8 +1088,8 @@ public class SubsamplingScaleImageView extends View {
                             if (tileBgPaint != null) {
                                 canvas.drawRect(tile.vRect, tileBgPaint);
                             }
-                            if (matrix == null) { matrix = new Matrix(); }
-                            matrix.reset();
+                            if (tileMatrix == null) { tileMatrix = new Matrix(); }
+                            tileMatrix.reset();
                             setMatrixArray(srcArray, 0, 0, tile.bitmap.getWidth(), 0, tile.bitmap.getWidth(), tile.bitmap.getHeight(), 0, tile.bitmap.getHeight());
                             if (getRequiredRotation() == ORIENTATION_0) {
                                 setMatrixArray(dstArray, tile.vRect.left, tile.vRect.top, tile.vRect.right, tile.vRect.top, tile.vRect.right, tile.vRect.bottom, tile.vRect.left, tile.vRect.bottom);
@@ -1065,8 +1100,8 @@ public class SubsamplingScaleImageView extends View {
                             } else if (getRequiredRotation() == ORIENTATION_270) {
                                 setMatrixArray(dstArray, tile.vRect.left, tile.vRect.bottom, tile.vRect.left, tile.vRect.top, tile.vRect.right, tile.vRect.top, tile.vRect.right, tile.vRect.bottom);
                             }
-                            matrix.setPolyToPoly(srcArray, 0, dstArray, 0, 4);
-                            canvas.drawBitmap(tile.bitmap, matrix, bitmapPaint);
+                            tileMatrix.setPolyToPoly(srcArray, 0, dstArray, 0, 4);
+                            canvas.drawBitmap(tile.bitmap, tileMatrix, bitmapPaint);
                             if (debug) {
                                 canvas.drawRect(tile.vRect, debugLinePaint);
                             }
@@ -1081,26 +1116,7 @@ public class SubsamplingScaleImageView extends View {
             }
 
         } else if (bitmap != null) {
-
-            float xScale = scale, yScale = scale;
-            if (bitmapIsPreview) {
-                xScale = scale * ((float)sWidth/bitmap.getWidth());
-                yScale = scale * ((float)sHeight/bitmap.getHeight());
-            }
-
-            if (matrix == null) { matrix = new Matrix(); }
-            matrix.reset();
-            matrix.postScale(xScale, yScale);
-            matrix.postRotate(getRequiredRotation());
-            matrix.postTranslate(vTranslate.x, vTranslate.y);
-
-            if (getRequiredRotation() == ORIENTATION_180) {
-                matrix.postTranslate(scale * sWidth, scale * sHeight);
-            } else if (getRequiredRotation() == ORIENTATION_90) {
-                matrix.postTranslate(scale * sHeight, 0);
-            } else if (getRequiredRotation() == ORIENTATION_270) {
-                matrix.postTranslate(0, scale * sWidth);
-            }
+            Matrix matrix = getMatrix();
 
             if (tileBgPaint != null) {
                 if (sRect == null) { sRect = new RectF(); }
@@ -1109,7 +1125,6 @@ public class SubsamplingScaleImageView extends View {
                 canvas.drawRect(sRect, tileBgPaint);
             }
             canvas.drawBitmap(bitmap, matrix, bitmapPaint);
-
         }
 
         if (debug) {
@@ -2220,7 +2235,7 @@ public class SubsamplingScaleImageView extends View {
     /**
      * Convert source rect to screen rect, integer values.
      */
-    private void sourceToViewRect(@NonNull Rect sRect, @NonNull Rect vTarget) {
+    protected void sourceToViewRect(@NonNull Rect sRect, @NonNull Rect vTarget) {
         vTarget.set(
             (int)sourceToViewX(sRect.left),
             (int)sourceToViewY(sRect.top),
@@ -2878,6 +2893,7 @@ public class SubsamplingScaleImageView extends View {
     }
 
     private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
+        matrixDirty = true;
         if (onStateChangedListener != null && scale != oldScale) {
             onStateChangedListener.onScaleChanged(scale, origin);
         }
