@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.*;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
