@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.*;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
-import androidx.annotation.NonNull;
+
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,6 +13,8 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 public class FreehandView extends SubsamplingScaleImageView implements OnTouchListener {
 
@@ -24,6 +26,8 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
     private PointF vStart;
     private boolean drawing = false;
 
+    private Matrix initialMatrix;
+
     private int strokeWidth;
 
     private List<PointF> sPoints;
@@ -31,6 +35,12 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
     public FreehandView(Context context, AttributeSet attr) {
         super(context, attr);
         initialise();
+    }
+
+    @Override
+    protected void onReady() {
+        super.onReady();
+        initialMatrix = new Matrix(getMatrix());
     }
 
     public FreehandView(Context context) {
@@ -113,13 +123,19 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
         paint.setAntiAlias(true);
 
         if (sPoints != null && sPoints.size() >= 2) {
+            canvas.save();
+
+            canvas.setMatrix(getMatrix());
             vPath.reset();
-            sourceToViewCoord(sPoints.get(0).x, sPoints.get(0).y, vPrev);
-            vPath.moveTo(vPrev.x, vPrev.y);
+            // sourceToViewCoord(sPoints.get(0).x, sPoints.get(0).y, vPrev);
+            vPath.moveTo(sPoints.get(0).x, sPoints.get(0).y);
+            // vPath.moveTo(vPrev.x, vPrev.y);
             for (int i = 1; i < sPoints.size(); i++) {
-                sourceToViewCoord(sPoints.get(i).x, sPoints.get(i).y, vPoint);
-                vPath.quadTo(vPrev.x, vPrev.y, (vPoint.x + vPrev.x) / 2, (vPoint.y + vPrev.y) / 2);
-                vPrev = vPoint;
+                // sourceToViewCoord(sPoints.get(i).x, sPoints.get(i).y, vPoint);
+                // vPath.quadTo(vPrev.x, vPrev.y, (vPoint.x + vPrev.x) / 2, (vPoint.y + vPrev.y) / 2);
+                vPath.quadTo(vPrev.x, vPrev.y, (sPoints.get(i).x + vPrev.x) / 2, (sPoints.get(i).x + vPrev.y) / 2);
+                // vPrev = vPoint;
+                vPrev = sPoints.get(i);
             }
             paint.setStyle(Style.STROKE);
             paint.setStrokeCap(Cap.ROUND);
@@ -129,6 +145,8 @@ public class FreehandView extends SubsamplingScaleImageView implements OnTouchLi
             paint.setStrokeWidth(strokeWidth);
             paint.setColor(Color.argb(255, 51, 181, 229));
             canvas.drawPath(vPath, paint);
+
+            canvas.restore();
         }
 
     }

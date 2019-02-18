@@ -1,6 +1,6 @@
 package com.davemorrissey.labs.subscaleview.test.imagedisplay;
 
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 
 import com.davemorrissey.labs.subscaleview.test.AbstractFragmentsActivity;
