@@ -36,5 +36,5 @@ task javadoc(type: Javadoc) {
     options.links = ['https://developer.android.com/reference/']
 }
 
-//apply from: projectDir.getParentFile()
+apply from: project.file('../release.gradle')
 //apply from: rootProject.file('release.gradle')
