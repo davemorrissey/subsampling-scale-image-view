@@ -174,6 +174,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
         }
 
+        if (!context.packageName.startsWith("com.davemorrissey") && !context.packageName.startsWith("com.simplemobiletools")) {
+            newPath = path
+        }
+
         uri = Uri.parse(newPath)
         val task = TilesInitTask(this, context, regionDecoderFactory, uri!!)
         execute(task)
@@ -968,6 +972,10 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var power = 1
         while (power * 2 < inSampleSize) {
             power *= 2
+        }
+
+        if (!context.packageName.startsWith("com.davemorrissey") && !context.packageName.startsWith("com.simplemobiletools")) {
+            power *= 4
         }
 
         return power
