@@ -37,7 +37,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private const val EASE_IN_OUT_QUAD = 2
 
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
-        private const val DOUBLE_TAP_ZOOM_DURATION = 300L
+        private const val ANIMATION_DURATION = 300L
         private val FIFTEEN_DEGREES = Math.toRadians(15.0)
     }
 
@@ -1573,7 +1573,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private val targetScale: Float
         private var targetSCenter: PointF?
         private var targetRotation = imageRotation
-        private val duration = DOUBLE_TAP_ZOOM_DURATION
+        private val duration = ANIMATION_DURATION
         var easing = EASE_IN_OUT_QUAD
         var interruptible = false
 
@@ -1654,7 +1654,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         var sCenterEndRequested: PointF? = null
         var vFocusStart: PointF? = null
         var vFocusEnd: PointF? = null
-        var duration = DOUBLE_TAP_ZOOM_DURATION
+        var duration = ANIMATION_DURATION
         var interruptible = true
         var easing = EASE_IN_OUT_QUAD
         var time = System.currentTimeMillis()
