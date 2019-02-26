@@ -966,16 +966,19 @@ public class SubsamplingScaleImageView extends View {
         invalidate();
     }
 
-    @Override
-    public Matrix getMatrix() {
+    @Nullable
+    public Matrix getImageMatrix() {
         if (matrix == null || matrixDirty) {
             matrix = calculateMatrix();
-            matrixDirty = false;
+            matrixDirty = (matrix != null);
         }
         return matrix;
     }
 
+    @Nullable
     private Matrix calculateMatrix() {
+        if (!isReady()) return null;
+
         float xScale = scale, yScale = scale;
         if (bitmapIsPreview) {
             xScale = scale * ((float)sWidth/bitmap.getWidth());
@@ -986,6 +989,12 @@ public class SubsamplingScaleImageView extends View {
         matrix.reset();
         matrix.postScale(xScale, yScale);
         matrix.postRotate(getRequiredRotation());
+        if (vTranslate == null) {
+            vTranslate = new PointF();
+            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
+            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
+        }
+
         matrix.postTranslate(vTranslate.x, vTranslate.y);
 
         if (getRequiredRotation() == ORIENTATION_180) {
@@ -1117,7 +1126,7 @@ public class SubsamplingScaleImageView extends View {
             }
 
         } else if (bitmap != null) {
-            Matrix matrix = getMatrix();
+            Matrix matrix = getImageMatrix();
 
             if (tileBgPaint != null) {
                 if (sRect == null) { sRect = new RectF(); }
@@ -1610,7 +1619,7 @@ public class SubsamplingScaleImageView extends View {
      * Called by worker task when decoder is ready and image size and EXIF orientation is known.
      */
     private synchronized void onTilesInited(ImageRegionDecoder decoder, int sWidth, int sHeight, int sOrientation) {
-        debug("onTilesInited sWidth=%d, sHeight=%d, sOrientation=%d", sWidth, sHeight, orientation);
+        debug("onTilesInited sWidth=%d, sHeight=%d, sOrientation=%d, isReadySent=%s", sWidth, sHeight, orientation, String.valueOf(readySent));
         // If actual dimensions don't match the declared size, reset everything.
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != sWidth || this.sHeight != sHeight)) {
             reset(false);
@@ -1710,7 +1719,7 @@ public class SubsamplingScaleImageView extends View {
      * Called by worker task when a tile has loaded. Redraws the view.
      */
     private synchronized void onTileLoaded() {
-        debug("onTileLoaded");
+        debug("onTileLoaded, isReadySent:%s", readySent);
         checkReady();
         checkImageLoaded();
         if (isBaseLayerReady() && bitmap != null) {
