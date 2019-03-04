@@ -20,8 +20,8 @@ configurations {
 
 dependencies {
     javadocs 'androidx.exifinterface:exifinterface:1.0.0'
-    javadocs 'androidx.annotation:annotation:1.0.0'
-    implementation 'androidx.annotation:annotation:1.0.0'
+    javadocs 'androidx.annotation:annotation:1.1.0-alpha01'
+    implementation 'androidx.annotation:annotation:1.1.0-alpha01'
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
 }
 

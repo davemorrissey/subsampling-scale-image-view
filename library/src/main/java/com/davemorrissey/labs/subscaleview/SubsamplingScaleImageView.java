@@ -2904,11 +2904,16 @@ public class SubsamplingScaleImageView extends View {
 
     private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
         matrixDirty = true;
-        if (onStateChangedListener != null && scale != oldScale) {
-            onStateChangedListener.onScaleChanged(scale, origin);
-        }
-        if (onStateChangedListener != null && !vTranslate.equals(oldVTranslate)) {
-            onStateChangedListener.onCenterChanged(getCenter(), origin);
+        if (onStateChangedListener != null) {
+            if (scale != oldScale) {
+                onStateChangedListener.onScaleChanged(scale, origin);
+            }
+            if (!vTranslate.equals(oldVTranslate)) {
+                onStateChangedListener.onCenterChanged(getCenter(), origin);
+            }
+            if (scale != oldScale || !vTranslate.equals(oldVTranslate)) {
+                onStateChangedListener.onStateChanged(scale, getCenter(), origin);
+            }
         }
     }
 
@@ -3250,6 +3255,8 @@ public class SubsamplingScaleImageView extends View {
          */
         void onCenterChanged(PointF newCenter, int origin);
 
+
+        void onStateChanged(float newScale, PointF newCenter, int origin);
     }
 
     /**
@@ -3259,7 +3266,7 @@ public class SubsamplingScaleImageView extends View {
 
         @Override public void onCenterChanged(PointF newCenter, int origin) { }
         @Override public void onScaleChanged(float newScale, int origin) { }
-
+        @Override public void onStateChanged(float newScale, PointF newCenter, int origin) { }
     }
 
 }
