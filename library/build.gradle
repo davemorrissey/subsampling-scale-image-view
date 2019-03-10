@@ -17,6 +17,7 @@ configurations {
 }
 
 dependencies {
+    implementation "androidx.appcompat:appcompat:1.0.2"
     javadocs 'androidx.annotation:annotation:1.0.0'
     javadocs 'androidx.exifinterface:exifinterface:1.0.0'
     implementation 'androidx.annotation:annotation:1.0.0'
