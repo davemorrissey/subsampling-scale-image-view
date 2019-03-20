@@ -131,6 +131,8 @@ public class SubsamplingScaleImageView extends View {
     public static final int ORIGIN_FLING = 3;
     /** State change originated from a double tap zoom anim. */
     public static final int ORIGIN_DOUBLE_TAP_ZOOM = 4;
+    /** resetScaleAndCenter() */
+    public static final int ORIGIN_PROGRAMMATIC = 5;
 
     // Bitmap (preview or full image)
     private Bitmap bitmap;
@@ -1372,6 +1374,9 @@ public class SubsamplingScaleImageView extends View {
 
         // If waiting to translate to new center position, set translate now
         if (sPendingCenter != null && pendingScale != null) {
+            float oldScale = scale;
+            PointF oldVTranslate = new PointF(vTranslate.x, vTranslate.y);
+
             scale = pendingScale;
             if (vTranslate == null) {
                 vTranslate = new PointF();
@@ -1382,6 +1387,7 @@ public class SubsamplingScaleImageView extends View {
             pendingScale = null;
             fitToBounds(true);
             refreshRequiredTiles(true);
+            sendStateChanged(oldScale, oldVTranslate, ORIGIN_PROGRAMMATIC);
         }
 
         // On first display of base image set up position, and in other cases make sure scale is correct.
@@ -2620,6 +2626,16 @@ public class SubsamplingScaleImageView extends View {
         }
         invalidate();
     }
+
+    public final void zoomOutAndCenterAnim() {
+        new AnimationBuilder(getMinScale(), getCenter()).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_PROGRAMMATIC).start();
+    }
+
+    public final void zoomInAndCenterAnim() {
+        new AnimationBuilder(getMaxScale(), getCenter()).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_PROGRAMMATIC).start();
+    }
+
+
 
     /**
      * Call to find whether the view is initialised, has dimensions, and will display an image on
