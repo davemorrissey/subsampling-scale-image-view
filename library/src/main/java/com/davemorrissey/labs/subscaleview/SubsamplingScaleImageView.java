@@ -2628,11 +2628,34 @@ public class SubsamplingScaleImageView extends View {
     }
 
     public final void zoomOutAndCenterAnim() {
-        new AnimationBuilder(getMinScale(), getCenter()).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_PROGRAMMATIC).start();
+        zoomOutAndCenterAnim(null);
+    }
+
+    public final void zoomOutAndCenterAnim(OnAnimationEventListener listener) {
+        if (!checkReady()) {
+            Log.e(TAG, "view is not ready, unable to zoomOutAndCenterAnim");
+        }
+        new AnimationBuilder(getMinScale(), getCenter())
+                .withInterruptible(false)
+                .withDuration(doubleTapZoomDuration)
+                .withOrigin(ORIGIN_PROGRAMMATIC)
+                .withOnAnimationEventListener(listener)
+                .start();
     }
 
     public final void zoomInAndCenterAnim() {
-        new AnimationBuilder(getMaxScale(), getCenter()).withInterruptible(false).withDuration(doubleTapZoomDuration).withOrigin(ORIGIN_PROGRAMMATIC).start();
+        zoomInAndCenterAnim(null);
+    }
+    public final void zoomInAndCenterAnim(OnAnimationEventListener listener) {
+        if (!checkReady()) {
+            Log.e(TAG, "view is not ready, unable to zoomInAndCenterAnim");
+        }
+        new AnimationBuilder(getMaxScale(), getCenter())
+                .withInterruptible(false)
+                .withDuration(doubleTapZoomDuration)
+                .withOrigin(ORIGIN_PROGRAMMATIC)
+                .withOnAnimationEventListener(listener)
+                .start();
     }
 
 

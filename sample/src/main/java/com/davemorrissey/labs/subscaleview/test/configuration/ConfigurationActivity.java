@@ -2,6 +2,8 @@ package com.davemorrissey.labs.subscaleview.test.configuration;
 
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.annotation.Nullable;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
@@ -40,6 +42,8 @@ public class ConfigurationActivity extends AbstractPagesActivity {
         view = findViewById(id.imageView);
         view.setImage(ImageSource.asset("card.png"));
     }
+
+    boolean currentlyZoomedIn = true;
 
     @Override
     protected void onPageChanged(int page) {
@@ -84,8 +88,22 @@ public class ConfigurationActivity extends AbstractPagesActivity {
             view.setPanEnabled(true);
         }
         if (page == 3) {
-            view.setScaleAndCenter(1f, new PointF(3900, 3120));
+            // view.setScaleAndCenter(1f, new PointF(3900, 3120));
+            // view.resetScaleAndCenterAnim();
+            // view.resetScaleAndCenter();
             view.setZoomEnabled(false);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (currentlyZoomedIn) {
+                        // view.setScaleAndCenter(1f, new PointF(3900, 3120));
+                        view.zoomOutAndCenterAnim();
+                    } else {
+                        view.zoomInAndCenterAnim();
+                    }
+                    currentlyZoomedIn = !currentlyZoomedIn;
+                }
+            });
         } else {
             view.setZoomEnabled(true);
         }
