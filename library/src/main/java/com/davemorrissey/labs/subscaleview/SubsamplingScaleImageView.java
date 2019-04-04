@@ -279,6 +279,8 @@ public class SubsamplingScaleImageView extends View {
     private Matrix tileMatrix;
     private boolean matrixDirty = true;
     private Matrix matrix;
+    private boolean invertMatrixDirty = true;
+    private Matrix invertMatrix;
     private boolean minMatrixDirty = true;
     private Matrix minMatrix;
     private RectF sRect;
@@ -1000,7 +1002,7 @@ public class SubsamplingScaleImageView extends View {
     }
 
     /**
-     * get (or calculate if needed) current matrix
+     * get (or calculate if needed) current matrix (source image mapping to view)
      * @return
      */
     @Nullable
@@ -1042,6 +1044,25 @@ public class SubsamplingScaleImageView extends View {
             matrix.postTranslate(0, scale * sWidth);
         }
         return matrix;
+    }
+
+    @Nullable
+    public Matrix getInvertImageMatrix() {
+        if (invertMatrixDirty || invertMatrix == null) {
+            if (invertMatrix == null) {
+                invertMatrix = new Matrix();
+            }
+            Matrix matrix = getImageMatrix();
+            if (matrix == null) return null;
+
+            if (matrix.invert(invertMatrix)) {
+                invertMatrixDirty = false;
+                return invertMatrix;
+            } else {
+                return null;
+            }
+        }
+        return invertMatrix;
     }
 
 
@@ -2989,6 +3010,7 @@ public class SubsamplingScaleImageView extends View {
 
     private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
         matrixDirty = true;
+        invertMatrixDirty = true;
         if (onStateChangedListener != null) {
             if (scale != oldScale) {
                 onStateChangedListener.onScaleChanged(scale, origin);
