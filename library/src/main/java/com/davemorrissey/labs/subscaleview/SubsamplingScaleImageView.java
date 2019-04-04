@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -276,8 +277,10 @@ public class SubsamplingScaleImageView extends View {
     // Volatile fields used to reduce object creation
     private ScaleAndTranslate satTemp;
     private Matrix tileMatrix;
-    private boolean matrixDirty = false;
+    private boolean matrixDirty = true;
     private Matrix matrix;
+    private boolean minMatrixDirty = true;
+    private Matrix minMatrix;
     private RectF sRect;
     private final float[] srcArray = new float[8];
     private final float[] dstArray = new float[8];
@@ -619,7 +622,13 @@ public class SubsamplingScaleImageView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         debug("onSizeChanged %dx%d -> %dx%d", oldw, oldh, w, h);
         PointF sCenter = getCenter();
+        minMatrixDirty = true;
         if (readySent && sCenter != null) {
+            if (this.anim != null && this.anim.listener != null) {
+                debug("animation interrupted because of onSizeChanged");
+                this.anim.listener.onInterruptedByUser();
+            }
+
             this.anim = null;
             this.pendingScale = scale;
             this.sPendingCenter = sCenter;
@@ -969,6 +978,32 @@ public class SubsamplingScaleImageView extends View {
     }
 
     @Nullable
+    public Matrix getImageMinMatrix() {
+        if (minMatrix == null || minMatrixDirty) {
+            minMatrix = calculateMinMatrix();
+            matrixDirty = (minMatrix == null);
+        }
+
+        return minMatrix;
+    }
+
+    private Matrix calculateMinMatrix() {
+        if (!checkReady()) return null;
+        float minScale = getMinScale();
+        if (minMatrix == null) { minMatrix = new Matrix(); }
+        minMatrix.reset();
+        minMatrix.postScale(minScale, minScale);
+        minMatrix.postRotate(getRequiredRotation());
+        PointF vTranslate = vTranslateForSCenter(sWidth() / 2.f, sHeight() / 2.f, minScale);
+        minMatrix.postTranslate(vTranslate.x, vTranslate.y);
+        return minMatrix;
+    }
+
+    /**
+     * get (or calculate if needed) current matrix
+     * @return
+     */
+    @Nullable
     public Matrix getImageMatrix() {
         if (matrix == null || matrixDirty) {
             matrix = calculateMatrix();
@@ -979,7 +1014,7 @@ public class SubsamplingScaleImageView extends View {
 
     @Nullable
     private Matrix calculateMatrix() {
-        if (!isReady()) return null;
+        if (!checkReady()) return null;
 
         float xScale = scale, yScale = scale;
         if (bitmapIsPreview) {
@@ -993,8 +1028,8 @@ public class SubsamplingScaleImageView extends View {
         matrix.postRotate(getRequiredRotation());
         if (vTranslate == null) {
             vTranslate = new PointF();
-            vTranslate.x = (getWidth()/2) - (scale * sPendingCenter.x);
-            vTranslate.y = (getHeight()/2) - (scale * sPendingCenter.y);
+            vTranslate.x = (getWidth()/2.f) - (scale * sPendingCenter.x);
+            vTranslate.y = (getHeight()/2.f) - (scale * sPendingCenter.y);
         }
 
         matrix.postTranslate(vTranslate.x, vTranslate.y);
@@ -1008,6 +1043,8 @@ public class SubsamplingScaleImageView extends View {
         }
         return matrix;
     }
+
+
 
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
@@ -1505,7 +1542,7 @@ public class SubsamplingScaleImageView extends View {
         scale = satTemp.scale;
         vTranslate.set(satTemp.vTranslate);
         if (init && minimumScaleType != SCALE_TYPE_START) {
-            vTranslate.set(vTranslateForSCenter(sWidth()/2, sHeight()/2, scale));
+            vTranslate.set(vTranslateForSCenter(sWidth()/2f, sHeight()/2f, scale));
         }
     }
 
@@ -1864,10 +1901,12 @@ public class SubsamplingScaleImageView extends View {
     @AnyThread
     private int getExifOrientation(Context context, String sourceUri) {
         int exifOrientation = ORIENTATION_0;
+        String filePath = null;
+
         if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
             Cursor cursor = null;
             try {
-                String[] columns = { MediaStore.Images.Media.ORIENTATION };
+                String[] columns = { MediaStore.Images.Media.ORIENTATION, MediaStore.Images.Media.DATA };
                 cursor = context.getContentResolver().query(Uri.parse(sourceUri), columns, null, null, null);
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
@@ -1875,7 +1914,8 @@ public class SubsamplingScaleImageView extends View {
                         if (VALID_ORIENTATIONS.contains(orientation) && orientation != ORIENTATION_USE_EXIF) {
                             exifOrientation = orientation;
                         } else {
-                            Log.w(TAG, "Unsupported orientation: " + orientation);
+                            filePath = cursor.getString(1);
+                            Log.w(TAG, "Unsupported orientation: " + orientation + " retry with filePath: " + filePath);
                         }
                     }
                 }
@@ -1886,9 +1926,15 @@ public class SubsamplingScaleImageView extends View {
                     cursor.close();
                 }
             }
-        } else if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
+        }
+
+        if (sourceUri.startsWith(ImageSource.FILE_SCHEME) && !sourceUri.startsWith(ImageSource.ASSET_SCHEME)) {
+            filePath = sourceUri.substring(ImageSource.FILE_SCHEME.length() - 1);
+        }
+
+        if (filePath != null && filePath.length() != 0) {
             try {
-                ExifInterface exifInterface = new ExifInterface(sourceUri.substring(ImageSource.FILE_SCHEME.length() - 1));
+                ExifInterface exifInterface = new ExifInterface(filePath);
                 int orientationAttr = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
                 if (orientationAttr == ExifInterface.ORIENTATION_NORMAL || orientationAttr == ExifInterface.ORIENTATION_UNDEFINED) {
                     exifOrientation = ORIENTATION_0;
