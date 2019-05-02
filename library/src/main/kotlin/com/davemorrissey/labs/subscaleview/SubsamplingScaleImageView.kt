@@ -37,7 +37,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private const val EASE_IN_OUT_QUAD = 2
 
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
-        private const val ANIMATION_DURATION = 300L
+        private const val ANIMATION_DURATION = 200L
         private val TWENTY_DEGREES = Math.toRadians(20.0)
     }
 
