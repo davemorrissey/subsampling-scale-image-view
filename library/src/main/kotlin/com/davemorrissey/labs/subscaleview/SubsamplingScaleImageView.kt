@@ -38,7 +38,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val ANIMATION_DURATION = 300L
-        private val FIFTEEN_DEGREES = Math.toRadians(15.0)
+        private val TWENTY_DEGREES = Math.toRadians(20.0)
     }
 
     var maxScale = 2f
@@ -397,11 +397,11 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     if (touchCount >= 2) {
                         if (rotationEnabled) {
                             var angle = Math.atan2((event.getY(0) - event.getY(1)).toDouble(), (event.getX(0) - event.getX(1)).toDouble()).toFloat()
-                            if (Math.abs(lastAngle - angle.toDouble()) > FIFTEEN_DEGREES) {
+                            if (Math.abs(lastAngle - angle.toDouble()) > TWENTY_DEGREES) {
                                 if (lastAngle - angle > 0) {
-                                    angle += FIFTEEN_DEGREES.toFloat()
+                                    angle += TWENTY_DEGREES.toFloat()
                                 } else {
-                                    angle -= FIFTEEN_DEGREES.toFloat()
+                                    angle -= TWENTY_DEGREES.toFloat()
                                 }
                                 setRotationInternal(imageRotation + angle - lastAngle)
                                 lastAngle = angle
