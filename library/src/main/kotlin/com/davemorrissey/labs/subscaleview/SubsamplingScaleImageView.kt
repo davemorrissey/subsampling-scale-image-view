@@ -37,6 +37,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val ANIMATION_DURATION = 200L
+        private const val FLING_DURATION = 300L
         private val TWENTY_DEGREES = Math.toRadians(20.0)
     }
 
@@ -257,6 +258,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                     AnimationBuilder(PointF(sCenterXEnd, sCenterYEnd)).apply {
                         interruptible = true
                         easing = EASE_OUT_QUAD
+                        duration = FLING_DURATION
                         start()
                     }
                     return true
@@ -1571,7 +1573,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private val targetScale: Float
         private var targetSCenter: PointF?
         private var targetRotation = imageRotation
-        private val duration = ANIMATION_DURATION
+        var duration = ANIMATION_DURATION
         var easing = EASE_IN_OUT_QUAD
         var interruptible = false
 
