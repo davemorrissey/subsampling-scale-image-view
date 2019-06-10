@@ -10,7 +10,6 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
 import android.widget.ImageView
 import java.io.File
 import java.io.UnsupportedEncodingException
@@ -307,12 +306,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthSpecMode = View.MeasureSpec.getMode(widthMeasureSpec)
-        val heightSpecMode = View.MeasureSpec.getMode(heightMeasureSpec)
-        val parentWidth = View.MeasureSpec.getSize(widthMeasureSpec)
-        val parentHeight = View.MeasureSpec.getSize(heightMeasureSpec)
-        val resizeWidth = widthSpecMode != View.MeasureSpec.EXACTLY
-        val resizeHeight = heightSpecMode != View.MeasureSpec.EXACTLY
+        val widthSpecMode = MeasureSpec.getMode(widthMeasureSpec)
+        val heightSpecMode = MeasureSpec.getMode(heightMeasureSpec)
+        val parentWidth = MeasureSpec.getSize(widthMeasureSpec)
+        val parentHeight = MeasureSpec.getSize(heightMeasureSpec)
+        val resizeWidth = widthSpecMode != MeasureSpec.EXACTLY
+        val resizeHeight = heightSpecMode != MeasureSpec.EXACTLY
         var width = parentWidth
         var height = parentHeight
         if (sWidth > 0 && sHeight > 0) {
