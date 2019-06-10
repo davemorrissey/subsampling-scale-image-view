@@ -331,8 +331,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (anim?.interruptible == false) {
-            parent?.requestDisallowInterceptTouchEvent(true)
-            return false
+            return super.onTouchEvent(null)
         } else {
             anim = null
         }
