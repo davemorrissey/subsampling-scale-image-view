@@ -38,6 +38,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         private const val TILE_SIZE_AUTO = Integer.MAX_VALUE
         private const val ANIMATION_DURATION = 200L
         private const val FLING_DURATION = 300L
+        private const val INSTANT_ANIMATION_DURATION = 10L
         private val TWENTY_DEGREES = Math.toRadians(20.0)
     }
 
@@ -333,6 +334,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (anim?.interruptible == false) {
+            if (event.actionMasked == MotionEvent.ACTION_UP) {
+                isZooming = false
+            }
             return super.onTouchEvent(null)
         } else {
             anim = null
@@ -548,7 +552,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
                         animateToBounds()
                     }
 
-                    if (touchCount < 3) {
+                    if (touchCount == 1) {
                         isZooming = false
                     }
 
@@ -1052,8 +1056,12 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         val fullScale = getFullScale()
 
         if (scale >= fullScale) {
+            val isZoomedIn = height < sHeight * scale && width < sWidth * scale
             val center = viewToSourceCoord(PointF(width / 2f, height / 2f))!!
-            AnimationBuilder(center, rightAngle).start()
+            AnimationBuilder(center, rightAngle).apply {
+                duration = if (isZoomedIn) INSTANT_ANIMATION_DURATION else ANIMATION_DURATION
+                start()
+            }
         } else {
             val center = PointF(sWidth / 2f, sHeight / 2f)
             AnimationBuilder(center, fullScale, rightAngle).start()
