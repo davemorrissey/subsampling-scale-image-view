@@ -83,6 +83,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     private var isQuickScaling = false
     private var maxTouchCount = 0
     private var didZoomInGesture = false
+    private var ignoreTouches = false
     private var prevDegrees = 0
 
     private var detector: GestureDetector? = null
@@ -333,13 +334,24 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (anim?.interruptible == false) {
+        if (anim?.interruptible == false || ignoreTouches) {
             if (event.actionMasked == MotionEvent.ACTION_UP) {
                 isZooming = false
             }
-            return super.onTouchEvent(null)
+
+            ignoreTouches = true
+            parent?.requestDisallowInterceptTouchEvent(true)
+            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+                ignoreTouches = false
+            }
+
+            return true
         } else {
             anim = null
+        }
+
+        if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+            ignoreTouches = false
         }
 
         if (vTranslate == null) {
