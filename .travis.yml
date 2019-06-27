@@ -20,8 +20,6 @@ android:
     - platform-tools
     - build-tools-29.0.0
     - android-29
-  licenses:
-    - 'android-sdk-license-.+'
 
 script:
   ./gradlew build
