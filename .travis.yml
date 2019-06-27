@@ -5,7 +5,7 @@ before_cache:
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
   
 before_install:
-  - yes | sdkmanager "platforms;android-27"
+  - yes | sdkmanager "platforms;android-29"
 
 cache:
   directories:
@@ -15,10 +15,11 @@ cache:
 
 android:
   components:
-    - tools
-    - build-tools-26.0.2
-    - android-27
+    - tools # to get the new `repository-11.xml`
+    - tools # see https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
     - platform-tools
+    - build-tools-29.0.0
+    - android-29
   licenses:
     - 'android-sdk-license-.+'
 

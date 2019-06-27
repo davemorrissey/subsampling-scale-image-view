@@ -5,11 +5,11 @@ archivesBaseName = 'subsampling-scale-image-view'
 version = '3.10.1'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion 29
         consumerProguardFiles 'proguard-rules.txt'
     }
 }
@@ -20,8 +20,8 @@ configurations {
 
 dependencies {
     javadocs 'androidx.exifinterface:exifinterface:1.0.0'
-    javadocs 'androidx.annotation:annotation:1.1.0-beta01'
-    implementation 'androidx.annotation:annotation:1.1.0-beta01'
+    javadocs 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
 }
 
