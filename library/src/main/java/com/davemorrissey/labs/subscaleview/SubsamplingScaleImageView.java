@@ -2701,6 +2701,10 @@ public class SubsamplingScaleImageView extends View {
     public final void zoomOutAndCenterAnim(OnAnimationEventListener listener) {
         if (!checkReady()) {
             Log.e(TAG, "view is not ready, unable to zoomOutAndCenterAnim");
+            if (listener != null) {
+                listener.onComplete()
+            }
+            return
         }
         new AnimationBuilder(getMinScale(), getCenter())
                 .withInterruptible(false)
@@ -2716,6 +2720,10 @@ public class SubsamplingScaleImageView extends View {
     public final void zoomInAndCenterAnim(OnAnimationEventListener listener) {
         if (!checkReady()) {
             Log.e(TAG, "view is not ready, unable to zoomInAndCenterAnim");
+            if (listener != null) {
+                listener.onComplete()
+            }
+            return
         }
         new AnimationBuilder(getMaxScale(), getCenter())
                 .withInterruptible(false)
