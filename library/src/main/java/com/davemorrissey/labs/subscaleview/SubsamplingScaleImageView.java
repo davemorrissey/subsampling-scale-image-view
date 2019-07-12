@@ -3019,6 +3019,7 @@ public class SubsamplingScaleImageView extends View {
     private void sendStateChanged(float oldScale, PointF oldVTranslate, int origin) {
         matrixDirty = true;
         invertMatrixDirty = true;
+        onViewPortChanged(oldScale, oldVTranslate, origin);
         if (onStateChangedListener != null) {
             if (scale != oldScale) {
                 onStateChangedListener.onScaleChanged(scale, origin);
@@ -3030,6 +3031,10 @@ public class SubsamplingScaleImageView extends View {
                 onStateChangedListener.onStateChanged(scale, getCenter(), origin);
             }
         }
+    }
+
+    public void onViewPortChanged(float oldScale, PointF oldVTranslate, int origin){
+
     }
 
     /**
