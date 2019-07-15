@@ -5,9 +5,11 @@ archivesBaseName = 'subsampling-scale-image-view'
 version = '3.10.0'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 27
         consumerProguardFiles 'proguard-rules.txt'
     }
 }
