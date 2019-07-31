@@ -985,7 +985,6 @@ public class SubsamplingScaleImageView extends View {
             minMatrix = calculateMinMatrix();
             matrixDirty = (minMatrix == null);
         }
-
         return minMatrix;
     }
 
@@ -1009,7 +1008,8 @@ public class SubsamplingScaleImageView extends View {
     public Matrix getImageMatrix() {
         if (matrix == null || matrixDirty) {
             matrix = calculateMatrix();
-            matrixDirty = (matrix != null);
+            matrixDirty = (matrix == null);
+            invertMatrixDirty = true;
         }
         return matrix;
     }
