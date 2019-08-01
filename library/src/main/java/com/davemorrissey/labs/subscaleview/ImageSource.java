@@ -73,7 +73,7 @@ public final class ImageSource {
      * @return an {@link ImageSource} instance.
      */
     @NonNull
-    public static ImageSource resource(int resId) {
+    public static com.davemorrissey.labs.subscaleview.ImageSource createImage(int resId) {
         return new ImageSource(resId);
     }
 
