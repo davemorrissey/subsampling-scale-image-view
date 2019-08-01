@@ -1,17 +1,23 @@
 language: android
+dist: trusty
+
+
+git:
+  depth: 1
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
   
 before_install:
-  - chmod +x gradlew
-  - mkdir "$ANDROID_HOME/licenses" || true
-  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
-  - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-  - yes | sdkmanager --update
-  - yes | sdkmanager --licenses
-  - yes | sdkmanager "platforms;android-29"
+    - touch $HOME/.android/repositories.cfg
+    - export LANG=en_US.UTF-8
+    - yes | sdkmanager "platforms;android-29"
+    - yes | sdkmanager "build-tools;29.0.1"
+    - yes | sdkmanager "build-tools;29.0.0"
+
+script:
+   - ./gradlew build
 
 cache:
   directories:
@@ -21,11 +27,17 @@ cache:
 
 android:
   components:
-    - tools # to get the new `repository-11.xml`
     - tools # see https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
     - platform-tools
-    - build-tools-29.0.0
+    - build-tools-29.0.1
     - android-29
+
+  licenses:
+    - 'android-sdk-preview-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+    # White list all the licenses.
+    - '.+'
 
 script:
   ./gradlew build
