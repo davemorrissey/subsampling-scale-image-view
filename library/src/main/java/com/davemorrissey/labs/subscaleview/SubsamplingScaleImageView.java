@@ -1280,6 +1280,9 @@ public class SubsamplingScaleImageView extends View {
         if (!readySent && ready) {
             preDraw();
             readySent = true;
+            minMatrixDirty = true;
+            matrixDirty = true;
+            invertMatrixDirty = true;
             onReady();
             if (onImageEventListener != null) {
                 onImageEventListener.onReady();
