@@ -12,6 +12,11 @@ android {
         targetSdkVersion 29
         consumerProguardFiles 'proguard-rules.txt'
     }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 configurations {

@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -1185,7 +1186,7 @@ public class SubsamplingScaleImageView extends View {
                 }
             }
 
-        } else if (bitmap != null) {
+        } else if (bitmap != null && !bitmap.isRecycled()) {
             Matrix matrix = getImageMatrix();
 
             if (tileBgPaint != null) {
@@ -1203,6 +1204,31 @@ public class SubsamplingScaleImageView extends View {
             PointF center = getCenter();
             //noinspection ConstantConditions
             canvas.drawText("Source center: " + String.format(Locale.ENGLISH, "%.2f", center.x) + ":" + String.format(Locale.ENGLISH, "%.2f", center.y), px(5), px(45), debugTextPaint);
+            int top = 45 + 15;
+
+            List<String> messages = getDebugTextDraw();
+
+            if (messages != null && messages.size() > 0) {
+                for(int i = 0; i < messages.size(); i++) {
+                    String msg = messages.get(i);
+                    if (msg != null && msg.length() != 0) {
+                        canvas.drawText(msg, px(5), px(top), debugTextPaint);
+                        top += 15;
+                    }
+                }
+            }
+
+            String[] messages2 = getDebugTextArrayDraw();
+            if (messages2 != null && messages2.length > 0) {
+                for (String msg : messages2) {
+                    if (msg != null && msg.length() != 0) {
+                        canvas.drawText(msg, px(5), px(top), debugTextPaint);
+                        top += 15;
+                    }
+                }
+            }
+
+
             if (anim != null) {
                 PointF vCenterStart = sourceToViewCoord(anim.sCenterStart);
                 PointF vCenterEndRequested = sourceToViewCoord(anim.sCenterEndRequested);
@@ -1233,6 +1259,17 @@ public class SubsamplingScaleImageView extends View {
             debugLinePaint.setColor(Color.MAGENTA);
         }
     }
+
+    @Nullable
+    protected List<String> getDebugTextDraw() {
+        return null;
+    }
+
+    @Nullable
+    protected String[] getDebugTextArrayDraw() {
+        return null;
+    }
+
 
     /**
      * Helper method for setting the values of a tile matrix array.
@@ -1891,7 +1928,7 @@ public class SubsamplingScaleImageView extends View {
      * Called by worker task when full size image bitmap is ready (tiling is disabled).
      */
     private synchronized void onImageLoaded(Bitmap bitmap, int sOrientation, boolean bitmapIsCached) {
-        debug("onImageLoaded");
+        debug("onImageLoaded sOrientation:%d", sOrientation);
         // If actual dimensions don't match the declared size, reset everything.
         if (this.sWidth > 0 && this.sHeight > 0 && (this.sWidth != bitmap.getWidth() || this.sHeight != bitmap.getHeight())) {
             reset(false);
@@ -1975,6 +2012,7 @@ public class SubsamplingScaleImageView extends View {
                 Log.w(TAG, "Could not get EXIF orientation of image");
             }
         }
+        debug("getExifOrientation result:%d, uri:%s", exifOrientation, uri);
         return exifOrientation;
     }
 
@@ -2983,6 +3021,10 @@ public class SubsamplingScaleImageView extends View {
      */
     public final void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public final boolean isDebug() {
+        return this.debug;
     }
 
     /**
