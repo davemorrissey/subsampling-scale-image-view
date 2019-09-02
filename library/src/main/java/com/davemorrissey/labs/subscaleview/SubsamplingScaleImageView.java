@@ -379,6 +379,7 @@ public class SubsamplingScaleImageView extends View {
             throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
         this.orientation = orientation;
+        sendStateChanged(scale, vTranslate, ORIGIN_PROGRAMMATIC);
         reset(false);
         invalidate();
         requestLayout();
@@ -1188,14 +1189,16 @@ public class SubsamplingScaleImageView extends View {
 
         } else if (bitmap != null && !bitmap.isRecycled()) {
             Matrix matrix = getImageMatrix();
-
-            if (tileBgPaint != null) {
-                if (sRect == null) { sRect = new RectF(); }
-                sRect.set(0f, 0f, bitmapIsPreview ? bitmap.getWidth() : sWidth, bitmapIsPreview ? bitmap.getHeight() : sHeight);
-                matrix.mapRect(sRect);
-                canvas.drawRect(sRect, tileBgPaint);
+            if (matrix != null) {
+                if (tileBgPaint != null) {
+                    if (sRect == null) { sRect = new RectF(); }
+                    sRect.set(0f, 0f, bitmapIsPreview ? bitmap.getWidth() : sWidth, bitmapIsPreview ? bitmap.getHeight() : sHeight);
+                    matrix.mapRect(sRect);
+                    canvas.drawRect(sRect, tileBgPaint);
+                }
+                canvas.drawBitmap(bitmap, matrix, bitmapPaint);
             }
-            canvas.drawBitmap(bitmap, matrix, bitmapPaint);
+
         }
 
         if (debug) {

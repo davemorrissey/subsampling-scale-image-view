@@ -1,5 +1,6 @@
 language: android
-dist: trusty
+jdk: oraclejdk8
+sudo: false
 
 
 git:
@@ -40,4 +41,4 @@ android:
     - '.+'
 
 script:
-  ./gradlew build
+  - ./gradlew clean build
