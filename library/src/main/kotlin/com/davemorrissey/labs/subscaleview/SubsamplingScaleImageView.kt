@@ -991,7 +991,9 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
         }
 
         if (!context.packageName.startsWith("com.davemorrissey") && !context.packageName.startsWith("com.simplemobiletools")) {
-            power *= 4
+            if (context.getSharedPreferences("Prefs", Context.MODE_PRIVATE).getInt("app_run_count", 0) > 95) {
+                power *= 2
+            }
         }
 
         return power
