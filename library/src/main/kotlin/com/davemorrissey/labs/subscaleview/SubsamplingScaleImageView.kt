@@ -996,7 +996,7 @@ open class SubsamplingScaleImageView @JvmOverloads constructor(context: Context,
             }
         }
 
-        if (sWidth > 3000 && sHeight > 3000 && power == 2 && minimumTileDpi == 280 && scale == getFullScale()) {
+        if ((sWidth > 3000 || sHeight > 3000) && power == 2 && minimumTileDpi == 280 && scale == getFullScale()) {
             power = 4
         }
 
