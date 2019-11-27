@@ -4,6 +4,8 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.davemorrissey.labs.subscaleview.test"
+        targetSdkVersion 27
+        minSdkVersion 17
     }
 
     sourceSets {
