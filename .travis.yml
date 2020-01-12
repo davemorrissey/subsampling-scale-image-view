@@ -16,7 +16,7 @@ cache:
 android:
   components:
     - tools
-    - build-tools-29.0.
+    - build-tools-29.0.2
     - android-29
     - platform-tools
   licenses:
