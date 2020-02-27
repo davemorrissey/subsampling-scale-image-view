@@ -84,36 +84,44 @@ Versions 3.9.0, 3.8.0 and 3.0.0 contain breaking changes. Migration instructions
 
 **1)** Add this library as a dependency in your app's build.gradle file.
 
-    dependencies {
-        implementation 'com.davemorrissey.labs:subsampling-scale-image-view:3.10.0'
-    }
+```gradle
+dependencies {
+    implementation 'com.davemorrissey.labs:subsampling-scale-image-view:3.10.0'
+}
+```
 
 **2)** Add the view to your layout XML.
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+        android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"/>
 
-        <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-            android:id="@+id/imageView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
-    </LinearLayout>
+</LinearLayout>
+```
 
 **3a)** Now, in your fragment or activity, set the image resource, asset name or file path.
 
-    SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-    imageView.setImage(ImageSource.resource(R.drawable.monkey));
-    // ... or ...
-    imageView.setImage(ImageSource.asset("map.png"))
-    // ... or ...
-    imageView.setImage(ImageSource.uri("/sdcard/DCIM/DSCM00123.JPG"));
+```java
+SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
+imageView.setImage(ImageSource.resource(R.drawable.monkey));
+// ... or ...
+imageView.setImage(ImageSource.asset("map.png"))
+// ... or ...
+imageView.setImage(ImageSource.uri("/sdcard/DCIM/DSCM00123.JPG"));
+```
 
 **3b)** Or, if you have a `Bitmap` object in memory, load it into the view. This is unsuitable for large images because it bypasses subsampling - you may get an `OutOfMemoryError`.
 
-    SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
-    imageView.setImage(ImageSource.bitmap(bitmap));
+```java
+SubsamplingScaleImageView imageView = (SubsamplingScaleImageView)findViewById(id.imageView);
+imageView.setImage(ImageSource.bitmap(bitmap));
+```
 
 ## Photo credits
 
