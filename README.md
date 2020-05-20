@@ -88,6 +88,14 @@ dependencies {
 }
 ```
 
+If your project uses AndroidX, change the artifact name as follows:
+
+```gradle
+dependencies {
+    implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
+}
+```
+
 **2)** Add the view to your layout XML.
 
 ```xml
