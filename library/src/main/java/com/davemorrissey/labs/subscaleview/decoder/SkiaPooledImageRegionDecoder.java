@@ -14,7 +14,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 import android.text.TextUtils;
 import android.util.Log;
 
