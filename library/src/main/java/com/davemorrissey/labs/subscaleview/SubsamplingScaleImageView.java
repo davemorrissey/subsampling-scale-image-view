@@ -685,12 +685,15 @@ public class SubsamplingScaleImageView extends View {
         }
 
         if (vTranslateStart == null) { vTranslateStart = new PointF(0, 0); }
-        if (vTranslateBefore == null) { vTranslateBefore = new PointF(0, 0); }
+        if (vTranslateBefore == null) {
+            vTranslateBefore = new PointF(vTranslate.x, vTranslate.y);
+        } else {
+            vTranslateBefore.set(vTranslate);
+        }
         if (vCenterStart == null) { vCenterStart = new PointF(0, 0); }
 
         // Store current values so we can send an event if they change
         float scaleBefore = scale;
-        vTranslateBefore.set(vTranslate);
 
         boolean handled = onTouchEventInternal(event);
         sendStateChanged(scaleBefore, vTranslateBefore, ORIGIN_TOUCH);
