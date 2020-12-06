@@ -3164,7 +3164,7 @@ public class SubsamplingScaleImageView extends View {
         void onPreviewLoadError(Exception e);
 
         /**
-         * Indicates an error initiliasing the decoder when using a tiling, or when loading the full
+         * Indicates an error initialising the decoder when using a tiling, or when loading the full
          * size bitmap when tiling is disabled. This method cannot be relied upon; certain encoding
          * types of supported image formats can result in corrupt or blank images being loaded and
          * displayed with no detectable error.
