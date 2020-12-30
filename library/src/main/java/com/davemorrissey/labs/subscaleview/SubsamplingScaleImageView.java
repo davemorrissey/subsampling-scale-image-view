@@ -200,6 +200,12 @@ public class SubsamplingScaleImageView extends View {
     private PointF vTranslateStart;
     private PointF vTranslateBefore;
 
+    // Extra space that artificially increases size of an image
+    private float vExtraSpaceLeft;
+    private float vExtraSpaceTop;
+    private float vExtraSpaceRight;
+    private float vExtraSpaceBottom;
+
     // Source coordinate to center on, used when new position is set externally before view is ready
     private Float pendingScale;
     private PointF sPendingCenter;
@@ -1420,15 +1426,21 @@ public class SubsamplingScaleImageView extends View {
         float scaleWidth = scale * sWidth();
         float scaleHeight = scale * sHeight();
 
+        boolean extra = panLimit == PAN_LIMIT_INSIDE;
+        float extraLeft   = extra ? vExtraSpaceLeft : 0;
+        float extraRight  = extra ? vExtraSpaceRight : 0;
+        float extraTop    = extra ? vExtraSpaceTop : 0;
+        float extraBottom = extra ? vExtraSpaceBottom : 0;
+
         if (panLimit == PAN_LIMIT_CENTER && isReady()) {
             vTranslate.x = Math.max(vTranslate.x, getWidth()/2 - scaleWidth);
             vTranslate.y = Math.max(vTranslate.y, getHeight()/2 - scaleHeight);
         } else if (center) {
-            vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth);
-            vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight);
+            vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth - extraRight);
+            vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight - extraBottom);
         } else {
-            vTranslate.x = Math.max(vTranslate.x, -scaleWidth);
-            vTranslate.y = Math.max(vTranslate.y, -scaleHeight);
+            vTranslate.x = Math.max(vTranslate.x, -scaleWidth - extraRight);
+            vTranslate.y = Math.max(vTranslate.y, -scaleHeight - extraBottom);
         }
 
         // Asymmetric padding adjustments
@@ -1441,11 +1453,11 @@ public class SubsamplingScaleImageView extends View {
             maxTx = Math.max(0, getWidth()/2);
             maxTy = Math.max(0, getHeight()/2);
         } else if (center) {
-            maxTx = Math.max(0, (getWidth() - scaleWidth) * xPaddingRatio);
-            maxTy = Math.max(0, (getHeight() - scaleHeight) * yPaddingRatio);
+            maxTx = Math.max(extraLeft, (getWidth() - scaleWidth) * xPaddingRatio);
+            maxTy = Math.max(extraTop, (getHeight() - scaleHeight) * yPaddingRatio);
         } else {
-            maxTx = Math.max(0, getWidth());
-            maxTy = Math.max(0, getHeight());
+            maxTx = Math.max(extraLeft, getWidth());
+            maxTy = Math.max(extraTop, getHeight());
         }
 
         vTranslate.x = Math.min(vTranslate.x, maxTx);
@@ -2266,8 +2278,12 @@ public class SubsamplingScaleImageView extends View {
      * Returns the minimum allowed scale.
      */
     private float minScale() {
-        int vPadding = getPaddingBottom() + getPaddingTop();
-        int hPadding = getPaddingLeft() + getPaddingRight();
+        boolean extra = panLimit == PAN_LIMIT_INSIDE;
+        int vExtra = extra ? Math.round(vExtraSpaceBottom + vExtraSpaceTop) : 0;
+        int hExtra = extra ? Math.round(vExtraSpaceLeft + vExtraSpaceRight) : 0;
+
+        int vPadding = getPaddingBottom() + getPaddingTop() + vExtra;
+        int hPadding = getPaddingLeft() + getPaddingRight() + hExtra;
         if (minimumScaleType == SCALE_TYPE_CENTER_CROP || minimumScaleType == SCALE_TYPE_START) {
             return Math.max((getWidth() - hPadding) / (float) sWidth(), (getHeight() - vPadding) / (float) sHeight());
         } else if (minimumScaleType == SCALE_TYPE_CUSTOM && minScale > 0) {
@@ -2546,6 +2562,96 @@ public class SubsamplingScaleImageView extends View {
             reset(false);
             invalidate();
         }
+    }
+
+    /**
+     * Sets extra space for the view.
+     * Extra space artificially increases image size, allowing to pan further from the side.
+     * Extra space also lowers minScale.
+     * Extra space is zoom-agnostic thus constant in terms of view pixels not source pixels.
+     * Extra space is respected only in {@link #PAN_LIMIT_INSIDE} pan mode and ignored in others.
+     * @param vLeft extra space on the left
+     * @param vTop extra space on the top
+     * @param vRight extra space on the right
+     * @param vBottom extra space on the bottom
+     */
+    public void setExtraSpace(float vLeft, float vTop, float vRight, float vBottom) {
+        vExtraSpaceLeft = vLeft;
+        vExtraSpaceTop = vTop;
+        vExtraSpaceRight = vRight;
+        vExtraSpaceBottom = vBottom;
+    }
+
+    /**
+     * Returns extra space for the view contained in {@link RectF}.
+     * @return extra space for all sides of view in view pixels
+     */
+    public RectF getExtraSpace() {
+        return new RectF(vExtraSpaceLeft, vExtraSpaceTop, vExtraSpaceRight, vExtraSpaceBottom);
+    }
+
+    /**
+     * @see #setExtraSpace(float, float, float, float)
+     * @return left extra space in view pixels
+     */
+    public float getExtraSpaceLeft() {
+        return vExtraSpaceLeft;
+    }
+
+    /**
+     * Sets left extra space for the view in view pixels.
+     * @see #setExtraSpace(float, float, float, float)
+     */
+    public void setExtraSpaceLeft(float vLeft) {
+        this.vExtraSpaceLeft = vLeft;
+    }
+
+    /**
+     * @see #setExtraSpace(float, float, float, float)
+     * @return top extra space in view pixels
+     */
+    public float getExtraSpaceTop() {
+        return vExtraSpaceTop;
+    }
+
+    /**
+     * Sets top extra space for the view in view pixels.
+     * @see #setExtraSpace(float, float, float, float)
+     */
+    public void setExtraSpaceTop(float vTop) {
+        this.vExtraSpaceTop = vTop;
+    }
+
+    /**
+     * @see #setExtraSpace(float, float, float, float)
+     * @return right extra space in view pixels
+     */
+    public float getExtraSpaceRight() {
+        return vExtraSpaceRight;
+    }
+
+    /**
+     * Sets right extra space for the view in view pixels.
+     * @see #setExtraSpace(float, float, float, float)
+     */
+    public void setExtraSpaceRight(float vRight) {
+        this.vExtraSpaceRight = vRight;
+    }
+
+    /**
+     * @see #setExtraSpace(float, float, float, float)
+     * @return bottom extra space in view pixels
+     */
+    public float getExtraSpaceBottom() {
+        return vExtraSpaceBottom;
+    }
+
+    /**
+     * Sets bottom extra space for the view in view pixels.
+     * @see #setExtraSpace(float, float, float, float)
+     */
+    public void setExtraSpaceBottom(float vBottom) {
+        this.vExtraSpaceBottom = vBottom;
     }
 
     /**
@@ -3180,9 +3286,9 @@ public class SubsamplingScaleImageView extends View {
         void onTileLoadError(Exception e);
 
         /**
-        * Called when a bitmap set using ImageSource.cachedBitmap is no longer being used by the View.
-        * This is useful if you wish to manage the bitmap after the preview is shown
-        */
+         * Called when a bitmap set using ImageSource.cachedBitmap is no longer being used by the View.
+         * This is useful if you wish to manage the bitmap after the preview is shown
+         */
         void onPreviewReleased();
     }
 
