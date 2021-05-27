@@ -6,6 +6,12 @@ version = '3.10.0'
 
 apply from: "${rootDir.path}/gradle/base.gradle"
 
+android {
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.txt'
+    }
+}
+
 configurations {
     javadocs
 }
