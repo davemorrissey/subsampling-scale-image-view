@@ -6,12 +6,6 @@ android {
     defaultConfig {
         applicationId "com.davemorrissey.labs.subscaleview.test"
     }
-
-    sourceSets {
-        main {
-            assets.srcDirs = ['assets']
-        }
-    }
 }
 
 dependencies {
