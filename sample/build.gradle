@@ -1,10 +1,9 @@
 apply plugin: 'com.android.application'
 
+apply from: "${rootDir.path}/gradle/base.gradle"
+
 android {
-    compileSdkVersion 29
     defaultConfig {
-        minSdkVersion 17
-        targetSdkVersion 27
         applicationId "com.davemorrissey.labs.subscaleview.test"
     }
 

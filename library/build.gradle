@@ -4,15 +4,7 @@ group = 'com.davemorrissey.labs'
 archivesBaseName = 'subsampling-scale-image-view-androidx'
 version = '3.10.0'
 
-android {
-    compileSdkVersion 30
-
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 30
-        consumerProguardFiles 'proguard-rules.txt'
-    }
-}
+apply from: "${rootDir.path}/gradle/base.gradle"
 
 configurations {
     javadocs
@@ -20,10 +12,11 @@ configurations {
 
 dependencies {
     implementation "androidx.appcompat:appcompat:1.3.0"
-    javadocs 'androidx.annotation:annotation:1.2.0'
-    javadocs 'androidx.exifinterface:exifinterface:1.3.2'
     implementation 'androidx.annotation:annotation:1.2.0'
     implementation 'androidx.exifinterface:exifinterface:1.3.2'
+
+    javadocs 'androidx.annotation:annotation:1.2.0'
+    javadocs 'androidx.exifinterface:exifinterface:1.3.2'
 }
 
 task javadoc(type: Javadoc) {
