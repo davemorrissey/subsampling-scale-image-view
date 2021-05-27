@@ -22,4 +22,4 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Build
-        run: ./gradlew --parallel app:assembleRelease
+        run: ./gradlew --parallel sample:assembleRelease
