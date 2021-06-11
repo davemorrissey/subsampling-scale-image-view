@@ -292,7 +292,7 @@ public class SubsamplingScaleImageView extends View {
         setGestureDetector(context);
         this.handler = new Handler(new Handler.Callback() {
             public boolean handleMessage(Message message) {
-                if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null) {
+                if (message.what == MESSAGE_LONG_CLICK && onLongClickListener != null && isLongClickable()) {
                     maxTouchCount = 0;
                     SubsamplingScaleImageView.super.setOnLongClickListener(onLongClickListener);
                     performLongClick();
@@ -2856,6 +2856,9 @@ public class SubsamplingScaleImageView extends View {
      */
     @Override
     public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
+        if (!isLongClickable()) {
+            setLongClickable(true);
+        }
         this.onLongClickListener = onLongClickListener;
     }
 
