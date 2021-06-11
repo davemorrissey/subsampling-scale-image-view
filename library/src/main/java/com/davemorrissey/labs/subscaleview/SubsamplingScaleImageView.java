@@ -922,6 +922,13 @@ public class SubsamplingScaleImageView extends View {
                     maxTouchCount = 0;
                 }
                 return true;
+            case MotionEvent.ACTION_CANCEL:
+                handler.removeMessages(MESSAGE_LONG_CLICK);
+                isQuickScaling = false;
+                isZooming = false;
+                isPanning = false;
+                maxTouchCount = 0;
+                return true;
         }
         return false;
     }
