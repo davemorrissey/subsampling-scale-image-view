@@ -5,11 +5,11 @@ archivesBaseName = 'subsampling-scale-image-view'
 version = '3.9.1'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 31
         consumerProguardFiles 'proguard-rules.txt'
     }
 }
@@ -19,10 +19,10 @@ configurations {
 }
 
 dependencies {
-    javadocs 'androidx.annotation:annotation:1.0.0'
-    javadocs 'androidx.exifinterface:exifinterface:1.0.0'
-    implementation 'androidx.annotation:annotation:1.0.0'
-    implementation 'androidx.exifinterface:exifinterface:1.0.0'
+    javadocs 'androidx.annotation:annotation:1.3.0'
+    javadocs 'androidx.exifinterface:exifinterface:1.3.3'
+    implementation 'androidx.annotation:annotation:1.3.0'
+    implementation 'androidx.exifinterface:exifinterface:1.3.3'
 }
 
 task javadoc(type: Javadoc) {

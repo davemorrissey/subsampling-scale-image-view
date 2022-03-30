@@ -14,9 +14,10 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.media.ExifInterface;
+import androidx.exifinterface.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -1887,7 +1888,7 @@ public class SubsamplingScaleImageView extends View {
     private int[] getExifOrientation(Context context, String sourceUri) {
         int exifOrientation = ORIENTATION_0;
         int exifFlip = FLIP_NONE;
-        if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT)) {
+        if (sourceUri.startsWith(ContentResolver.SCHEME_CONTENT) && Build.VERSION.SDK_INT >= 29) {
             Cursor cursor = null;
             try {
                 String[] columns = { MediaStore.Images.Media.ORIENTATION };
